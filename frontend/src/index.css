@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100;
+  }
+}
+
+/* Custom Scrollbar Styles for Premium Look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-slate-950;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-slate-800 rounded-full border border-transparent hover:bg-gray-400 dark:hover:bg-slate-700 transition-colors;
+}
+
+/* Chrome autofill styling reset */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f8fafc;
+  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
