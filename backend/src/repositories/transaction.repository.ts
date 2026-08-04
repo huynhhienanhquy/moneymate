@@ -1,5 +1,5 @@
 import prisma from '../config/db';
-import { TransactionType, Prisma } from '@prisma/client';
+import { CategoryType, Frequency, TransactionType, Prisma } from '@prisma/client';
 import { AppError } from '../common/app-error';
 
 export interface TransactionFilter {
@@ -17,6 +17,98 @@ export interface TransactionFilter {
 }
 
 export class TransactionRepository {
+  private calculateNextDate(current: Date, frequency: Frequency): Date {
+    const next = new Date(current);
+    switch (frequency) {
+      case Frequency.DAILY:
+        next.setDate(next.getDate() + 1);
+        break;
+      case Frequency.WEEKLY:
+        next.setDate(next.getDate() + 7);
+        break;
+      case Frequency.MONTHLY:
+        next.setMonth(next.getMonth() + 1);
+        break;
+      case Frequency.YEARLY:
+        next.setFullYear(next.getFullYear() + 1);
+        break;
+    }
+    return next;
+  }
+
+  private async getProjectedRecurringAmount(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+    type: CategoryType
+  ) {
+    const transactionType = type === CategoryType.INCOME ? TransactionType.INCOME : TransactionType.EXPENSE;
+    const recurringItems = await prisma.recurringTransaction.findMany({
+      where: {
+        userId,
+        isActive: true,
+        type,
+        startDate: { lte: endDate },
+      },
+      include: { category: true },
+    });
+
+    let total = 0;
+    const byCategory: Record<string, { id: string; name: string; color: string; amount: number }> = {};
+
+    for (const item of recurringItems) {
+      let executionDate = new Date(item.startDate);
+      const existingTransactions = await prisma.transaction.findMany({
+        where: {
+          userId,
+          walletId: item.walletId,
+          categoryId: item.categoryId,
+          type: transactionType,
+          amount: item.amount,
+          transactionDate: { gte: startDate, lte: endDate },
+        },
+        select: { transactionDate: true },
+      });
+      const existingDates = new Set(
+        existingTransactions.map((tx) => tx.transactionDate.toISOString().slice(0, 10))
+      );
+
+      while (executionDate <= endDate) {
+        if (executionDate >= startDate) {
+          const dateKey = executionDate.toISOString().slice(0, 10);
+          if (existingDates.has(dateKey)) {
+            executionDate = this.calculateNextDate(executionDate, item.frequency);
+            continue;
+          }
+
+          const amount = Number(item.amount);
+          total += amount;
+
+          if (!byCategory[item.categoryId]) {
+            byCategory[item.categoryId] = {
+              id: item.categoryId,
+              name: item.category.name,
+              color: item.category.color,
+              amount: 0,
+            };
+          }
+          byCategory[item.categoryId].amount += amount;
+        }
+        executionDate = this.calculateNextDate(executionDate, item.frequency);
+      }
+    }
+
+    return { total, byCategory };
+  }
+
+  private async getProjectedRecurringExpenses(userId: string, startDate: Date, endDate: Date) {
+    return this.getProjectedRecurringAmount(userId, startDate, endDate, CategoryType.EXPENSE);
+  }
+
+  private async getProjectedRecurringIncome(userId: string, startDate: Date, endDate: Date) {
+    return this.getProjectedRecurringAmount(userId, startDate, endDate, CategoryType.INCOME);
+  }
+
   async create(data: {
     userId: string;
     walletId: string;
@@ -261,21 +353,35 @@ export class TransactionRepository {
     });
 
     let totalIncome = 0;
-    let totalExpense = 0;
+    let actualExpense = 0;
 
     transactions.forEach((tx) => {
       const amountVal = Number(tx.amount);
       if (tx.type === TransactionType.INCOME) {
         totalIncome += amountVal;
       } else if (tx.type === TransactionType.EXPENSE) {
-        totalExpense += amountVal;
+        actualExpense += amountVal;
       }
     });
 
+    const recurringIncomeData = await this.getProjectedRecurringIncome(userId, startDate, endDate);
+    const recurringIncome = recurringIncomeData.total;
+    const recurring = await this.getProjectedRecurringExpenses(userId, startDate, endDate);
+    const recurringExpense = recurring.total;
+    const actualIncome = totalIncome;
+    totalIncome = actualIncome + recurringIncome;
+    const totalExpense = actualExpense + recurringExpense;
+    const remainingAmount = totalIncome - totalExpense;
+
     return {
       totalIncome,
+      actualIncome,
+      recurringIncome,
       totalExpense,
-      netSavings: totalIncome - totalExpense
+      actualExpense,
+      recurringExpense,
+      netSavings: remainingAmount,
+      remainingAmount
     };
   }
 
@@ -315,6 +421,15 @@ export class TransactionRepository {
       categoriesMap[catId].amount += amountVal;
     });
 
+    const recurring = await this.getProjectedRecurringExpenses(userId, startDate, endDate);
+    Object.values(recurring.byCategory).forEach((cat) => {
+      if (!categoriesMap[cat.id]) {
+        categoriesMap[cat.id] = { ...cat };
+      } else {
+        categoriesMap[cat.id].amount += cat.amount;
+      }
+    });
+
     return Object.values(categoriesMap);
   }
 
@@ -333,6 +448,7 @@ export class TransactionRepository {
         label: `T${month}`,
         income: summary.totalIncome,
         expense: summary.totalExpense,
+        remaining: summary.remainingAmount,
       });
     }
 
@@ -354,6 +470,7 @@ export class TransactionRepository {
         income: summary.totalIncome,
         expense: summary.totalExpense,
         savings: summary.netSavings,
+        remaining: summary.remainingAmount,
       });
     }
 

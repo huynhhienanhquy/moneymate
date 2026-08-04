@@ -111,35 +111,46 @@ export class RecurringService {
       try {
         const amountDec = new Prisma.Decimal(item.amount);
         const txType = item.type === CategoryType.INCOME ? TransactionType.INCOME : TransactionType.EXPENSE;
+        const generatedDates: Date[] = [];
+        let executionDate = new Date(item.nextExecutionDate);
+
+        while (executionDate <= today) {
+          generatedDates.push(new Date(executionDate));
+          executionDate = calculateNextDate(executionDate, item.frequency);
+        }
+
+        if (generatedDates.length === 0) continue;
 
         await prisma.$transaction(async (tx) => {
-          await tx.transaction.create({
-            data: {
-              userId: item.userId,
-              walletId: item.walletId,
-              categoryId: item.categoryId,
-              amount: amountDec,
-              type: txType,
-              note: item.note || `Giao dịch định kỳ: ${item.category.name}`,
-              transactionDate: item.nextExecutionDate,
-            },
-          });
+          for (const transactionDate of generatedDates) {
+            await tx.transaction.create({
+              data: {
+                userId: item.userId,
+                walletId: item.walletId,
+                categoryId: item.categoryId,
+                amount: amountDec,
+                type: txType,
+                note: item.note || `Giao dịch định kỳ: ${item.category.name}`,
+                transactionDate,
+              },
+            });
 
-          if (txType === TransactionType.INCOME) {
-            await tx.wallet.update({
-              where: { id: item.walletId },
-              data: { initialBalance: { increment: amountDec } },
-            });
-          } else {
-            await tx.wallet.update({
-              where: { id: item.walletId },
-              data: { initialBalance: { decrement: amountDec } },
-            });
+            if (txType === TransactionType.INCOME) {
+              await tx.wallet.update({
+                where: { id: item.walletId },
+                data: { initialBalance: { increment: amountDec } },
+              });
+            } else {
+              await tx.wallet.update({
+                where: { id: item.walletId },
+                data: { initialBalance: { decrement: amountDec } },
+              });
+            }
           }
 
           await tx.recurringTransaction.update({
             where: { id: item.id },
-            data: { nextExecutionDate: calculateNextDate(item.nextExecutionDate, item.frequency) },
+            data: { nextExecutionDate: executionDate },
           });
         });
 
@@ -149,7 +160,7 @@ export class RecurringService {
           type: NotificationType.RECURRING_TRANSACTION,
         });
 
-        processed++;
+        processed += generatedDates.length;
       } catch (err) {
         console.error(`Failed to process recurring transaction ${item.id}:`, err);
       }

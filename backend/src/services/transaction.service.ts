@@ -2,6 +2,7 @@ import { TransactionRepository, TransactionFilter } from '../repositories/transa
 import { WalletRepository } from '../repositories/wallet.repository';
 import { CategoryRepository } from '../repositories/category.repository';
 import { BudgetService } from './budget.service';
+import { RecurringService } from './recurring.service';
 import { AppError } from '../common/app-error';
 import { TransactionType, CategoryType, Prisma } from '@prisma/client';
 import prisma from '../config/db';
@@ -11,6 +12,7 @@ export class TransactionService {
   private walletRepository = new WalletRepository();
   private categoryRepository = new CategoryRepository();
   private budgetService = new BudgetService();
+  private recurringService = new RecurringService();
 
   async createTransaction(userId: string, data: {
     walletId: string;
@@ -241,13 +243,15 @@ export class TransactionService {
   }
 
   async getDashboardSummary(userId: string) {
+    await this.recurringService.processDueTransactions();
+
     // Current date values
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
 
     const wallets = await this.walletRepository.findAllByUserId(userId);
-    const netWorth = wallets.reduce((sum, w) => sum + Number(w.initialBalance), 0);
+    const walletBalanceTotal = wallets.reduce((sum, w) => sum + Number(w.initialBalance), 0);
 
     const monthlyStats = await this.transactionRepository.getMonthlySummary(userId, currentMonth, currentYear);
     
@@ -260,10 +264,16 @@ export class TransactionService {
     });
 
     return {
-      netWorth,
+      netWorth: walletBalanceTotal,
+      walletBalanceTotal,
       monthlyIncome: monthlyStats.totalIncome,
+      actualIncome: monthlyStats.actualIncome,
+      recurringIncome: monthlyStats.recurringIncome,
       monthlyExpense: monthlyStats.totalExpense,
-      monthlySavings: monthlyStats.netSavings,
+      actualExpense: monthlyStats.actualExpense,
+      recurringExpense: monthlyStats.recurringExpense,
+      monthlySavings: walletBalanceTotal + monthlyStats.totalIncome - monthlyStats.totalExpense,
+      monthlyRemaining: walletBalanceTotal + monthlyStats.totalIncome - monthlyStats.totalExpense,
       recentTransactions
     };
   }
@@ -287,6 +297,12 @@ export class TransactionService {
 
   async getYearlyReport(userId: string, year: number) {
     const summary = await this.transactionRepository.getYearlySummary(userId, year);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { createdAt: true },
+    });
+    const wallets = await this.walletRepository.findAllByUserId(userId);
+    const walletBalanceTotal = wallets.reduce((sum, w) => sum + Number(w.initialBalance), 0);
 
     const yearlyCategories: Record<string, { id: string; name: string; color: string; amount: number }> = {};
     for (let month = 1; month <= 12; month++) {
@@ -302,6 +318,8 @@ export class TransactionService {
 
     return {
       ...summary,
+      accountCreatedAt: user?.createdAt,
+      walletBalanceTotal,
       categoryExpenses: Object.values(yearlyCategories).sort((a, b) => b.amount - a.amount),
     };
   }
