@@ -1,178 +1,182 @@
-# MoneyMate — Personal Finance Management
+# MoneyMate
 
-Quản lý tài chính cá nhân toàn diện: theo dõi thu chi, quản lý ngân sách, mục tiêu tiết kiệm, giao dịch định kỳ, và hỗ trợ AI.
+MoneyMate là ứng dụng quản lý tài chính cá nhân, hỗ trợ theo dõi thu chi, quản lý ví và ngân sách, đặt mục tiêu tiết kiệm, tự động hóa giao dịch định kỳ, đọc hóa đơn và đưa ra gợi ý bằng AI.
 
-## Tech Stack
+## Công nghệ
 
-| Layer | Technology |
-|-------|------------|
-| Backend | Node.js, Express, TypeScript, Prisma ORM |
-| Database | MySQL 8.0 |
-| Frontend | React 18, Vite, TypeScript, TailwindCSS |
-| State | Zustand + TanStack Query |
-| Charts | Recharts |
-| AI | OpenAI API + Tesseract.js (OCR fallback) |
-| Docker | Multi-stage builds, Docker Compose |
+| Thành phần | Công nghệ |
+| --- | --- |
+| Web | React 18, Vite, TypeScript, Tailwind CSS |
+| State & data | Zustand, TanStack Query, Axios |
+| API | Node.js, Express, TypeScript, Zod |
+| Database | MySQL 8, Prisma ORM |
+| AI & OCR | OpenAI API, Tesseract.js |
+| Kiểm thử | Jest, ts-jest, Supertest |
+| Triển khai | Docker, Docker Compose, Nginx |
 
-## Features
+## Chức năng chính
 
-- **Tài khoản & Xác thực**: JWT access/refresh tokens, đăng ký, đăng nhập
-- **Ví**: Quản lý nhiều ví (tiền mặt, ngân hàng), xem số dư
-- **Danh mục**: Danh mục thu/chi hệ thống + tự tạo
-- **Giao dịch**: Thêm/sửa/xóa, phân trang, tìm kiếm, lọc theo loại/thời gian
-- **Chuyển tiền**: Chuyển giữa các ví, tự động tạo giao dịch
-- **Ngân sách**: Đặt hạn mức chi tiêu theo danh mục, cảnh báo vượt ngân sách
-- **Mục tiêu tiết kiệm**: Đặt mục tiêu, theo dõi tiến độ
-- **Giao dịch định kỳ**: Lên lịch tự động (hàng ngày/tuần/tháng/năm)
-- **Báo cáo**: Xuất Excel/PDF, biểu đồ thu chi, xu hướng
-- **AI Advisor**: Phân tích chi tiêu thông minh, dự báo ngân sách, chat tư vấn
-- **Quét hóa đơn**: Chụp/quét hóa đơn, tự động trích xuất số tiền, danh mục
-- **Thông báo**: Thông báo trong ứng dụng
-- **API Docs**: Swagger UI tại `/api-docs`
+- Đăng ký, đăng nhập và phân quyền người dùng/quản trị viên bằng JWT.
+- Quản lý ví, danh mục, giao dịch và chuyển tiền giữa các ví.
+- Theo dõi ngân sách, mục tiêu tiết kiệm và giao dịch định kỳ.
+- Dashboard, báo cáo tháng, biểu đồ xu hướng và xuất Excel/PDF.
+- Thông báo trong ứng dụng và đính kèm chứng từ giao dịch.
+- Phân tích chi tiêu, dự báo ngân sách, chat tư vấn và quét hóa đơn bằng AI/OCR.
+- Tài liệu OpenAPI qua Swagger UI.
 
-## Quick Start
+## Cấu trúc dự án
 
-### Yêu cầu
-
-- Node.js 20+
-- MySQL 8.0 (hoặc Docker)
-- npm
-
-### 1. Clone & cài đặt
-
-```bash
-git clone <repo-url> && cd MyFinance
-
-# Backend
-cd backend
-npm install
-npx prisma generate
-
-# Frontend
-cd ../frontend
-npm install
-```
-
-### 2. Cấu hình
-
-Copy `.env.example` thành `.env` và điền các giá trị:
-
-```bash
-cp .env.example .env
-# Sau đó sửa file .env
-```
-
-### 3. Chạy với Docker (khuyên dùng)
-
-```bash
-docker compose up -d
-```
-
-Mở http://localhost (frontend) và http://localhost:5000/api-docs (Swagger).
-
-### 4. Hoặc chạy thủ công
-
-```bash
-# Tạo database MySQL (tên mặc định: moneymate)
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS moneymate;"
-
-# Backend
-cd backend
-cp .env.example .env   # Cấu hình DATABASE_URL, JWT secrets...
-npm run prisma:migrate
-npm run prisma:seed    # Tạo user demo + danh mục mặc định
-npm run dev            # http://localhost:5000
-
-# Frontend (terminal riêng)
-cd frontend
-VITE_API_URL=http://localhost:5000/api npm run dev  # http://localhost:5173
-```
-
-### User demo
-
-- Email: `demo@moneymate.com`
-- Mật khẩu: `password`
-
-## API Endpoints
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | `/api/auth/register` | Đăng ký |
-| POST | `/api/auth/login` | Đăng nhập |
-| POST | `/api/auth/refresh` | Refresh token |
-| GET/POST | `/api/wallets` | Danh sách / Tạo ví |
-| GET/PUT/DELETE | `/api/wallets/:id` | Chi tiết / Sửa / Xóa ví |
-| GET/POST | `/api/categories` | Danh sách / Tạo danh mục |
-| GET/POST | `/api/transactions` | Danh sách (phân trang) / Tạo giao dịch |
-| POST | `/api/transactions/transfer` | Chuyển tiền giữa các ví |
-| GET | `/api/transactions/dashboard` | Tổng quan dashboard |
-| GET | `/api/transactions/report` | Báo cáo tháng |
-| GET | `/api/transactions/trend` | Xu hướng 6 tháng |
-| GET/POST | `/api/budgets` | Danh sách / Tạo ngân sách |
-| GET/POST | `/api/saving-goals` | Danh sách / Tạo mục tiêu |
-| GET/POST | `/api/recurring-transactions` | Danh sách / Tạo giao dịch định kỳ |
-| POST | `/api/ai/analyze/expenses` | Phân tích chi tiêu (AI) |
-| POST | `/api/ai/budget/forecast` | Dự báo ngân sách |
-| POST | `/api/ai/scan-receipt` | Quét hóa đơn |
-| POST | `/api/ai/chat` | Chat với AI Advisor |
-| GET/POST | `/api/attachments/transactions/:id` | Upload / Xem file đính kèm |
-| GET | `/api/attachments/export/excel` | Xuất Excel |
-| GET | `/api/attachments/export/pdf` | Xuất PDF |
-
-## Environment Variables
-
-| Variable | Default | Mô tả |
-|----------|---------|-------|
-| `PORT` | `5000` | Cổng backend |
-| `DATABASE_URL` | `mysql://root:password@localhost:3306/moneymate` | URL kết nối MySQL |
-| `JWT_ACCESS_SECRET` | (required) | Secret cho access token |
-| `JWT_REFRESH_SECRET` | (required) | Secret cho refresh token |
-| `FRONTEND_URL` | `http://localhost:5173` | URL frontend (CORS) |
-| `OPENAI_API_KEY` | (optional) | API key cho AI features |
-| `MYSQL_ROOT_PASSWORD` | `password` | MySQL root password (Docker) |
-
-## Testing
-
-```bash
-cd backend
-npm test            # Unit tests (27 tests)
-npm run test:watch  # Watch mode
-```
-
-Integration tests yêu cầu MySQL instance đang chạy với database `moneymate_test`.
-
-## Project Structure
-
-```
-MyFinance/
+```text
+moneymate/
 ├── backend/
-│   ├── prisma/           # Schema, migrations, seed
+│   ├── prisma/                 # schema, migrations và seed
 │   ├── src/
-│   │   ├── common/       # AppError, response helpers, utils
-│   │   ├── config/       # DB, Swagger, AI config
-│   │   ├── controllers/  # Route handlers
-│   │   ├── middlewares/   # Auth, error, upload
-│   │   ├── repositories/ # Prisma data access
-│   │   ├── routes/       # Express route definitions
-│   │   ├── services/     # Business logic (+ AI/)
-│   │   ├── validators/   # Zod schemas
-│   │   └── __tests__/    # Unit + integration tests
-│   ├── uploads/          # Uploaded files
+│   │   ├── common/             # lỗi, response và tiện ích dùng chung
+│   │   ├── config/             # Prisma, Swagger và cấu hình AI
+│   │   ├── controllers/        # xử lý request/response
+│   │   ├── middlewares/        # auth, validation, upload, error
+│   │   ├── repositories/       # truy cập dữ liệu
+│   │   ├── routes/             # khai báo API routes
+│   │   ├── services/           # nghiệp vụ và các dịch vụ AI
+│   │   ├── validators/         # Zod schemas
+│   │   └── __tests__/          # unit và integration tests
+│   ├── uploads/                # file runtime, không commit lên Git
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # Reusable UI components
-│   │   ├── pages/        # Page components
-│   │   ├── routes/       # AppRouter, PrivateRoute
-│   │   ├── services/     # Axios API client
-│   │   └── store/        # Zustand stores (auth, theme)
-│   ├── public/
+│   │   ├── app/                # App root và router
+│   │   ├── features/           # màn hình nhóm theo nghiệp vụ
+│   │   └── shared/             # API client, component và store dùng chung
+│   ├── nginx.conf
 │   └── Dockerfile
-├── docs/                 # Tài liệu dự án
+├── docs/                       # yêu cầu và tài liệu thiết kế
 ├── docker-compose.yml
-└── .env.example
+└── package.json                # npm workspaces
 ```
 
+Repo dùng npm workspaces. `package-lock.json` ở thư mục gốc phục vụ cài đặt local; lockfile trong từng ứng dụng được giữ riêng để Docker có thể build với từng context độc lập.
+
+## Yêu cầu
+
+- Node.js 20 trở lên (phiên bản khuyến nghị nằm trong `.nvmrc`).
+- npm.
+- MySQL 8 nếu chạy local, hoặc Docker và Docker Compose.
+
+## Chạy nhanh bằng Docker
+
+```bash
+docker compose up --build
+```
+
+Sau khi các container khởi động:
+
+- Web: <http://localhost>
+- API: <http://localhost:5000/api>
+- Swagger: <http://localhost:5000/api-docs>
+
+Các giá trị mặc định trong `docker-compose.yml` chỉ phù hợp cho môi trường phát triển. Hãy cung cấp secret mạnh qua biến môi trường khi triển khai thật.
+
+## Chạy local
+
+### 1. Cài dependency
+
+Tại thư mục gốc:
+
+```bash
+npm ci
+```
+
+### 2. Cấu hình môi trường
+
+PowerShell:
+
+```powershell
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env
+```
+
+Bash:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Cập nhật `DATABASE_URL` và hai JWT secret trong `backend/.env`. `OPENAI_API_KEY` là tùy chọn; khi bỏ trống, các chức năng cần OpenAI sẽ không hoạt động.
+
+### 3. Chuẩn bị database
+
+Tạo database MySQL tên `moneymate`, sau đó chạy:
+
+```bash
+npm run prisma:generate --workspace=moneymate-backend
+npm run prisma:migrate --workspace=moneymate-backend
+npm run prisma:seed --workspace=moneymate-backend
+```
+
+### 4. Khởi động ứng dụng
+
+Mở hai terminal tại thư mục gốc:
+
+```bash
+npm run dev:backend
+```
+
+```bash
+npm run dev:frontend
+```
+
+Frontend chạy tại <http://localhost:5173>, backend tại <http://localhost:5000>.
+
+## Scripts
+
+| Lệnh | Mục đích |
+| --- | --- |
+| `npm run dev:frontend` | Chạy Vite dev server |
+| `npm run dev:backend` | Chạy API với Nodemon |
+| `npm run build` | Build cả backend và frontend |
+| `npm test` | Chạy test backend |
+| `npm run test:watch --workspace=moneymate-backend` | Chạy test ở watch mode |
+| `npm run test:coverage --workspace=moneymate-backend` | Tạo báo cáo coverage |
+
+## Biến môi trường
+
+### Backend
+
+| Biến | Bắt buộc | Mô tả |
+| --- | --- | --- |
+| `PORT` | Không | Cổng API, mặc định `5000` |
+| `DATABASE_URL` | Có | Chuỗi kết nối MySQL cho Prisma |
+| `JWT_ACCESS_SECRET` | Có | Secret ký access token |
+| `JWT_REFRESH_SECRET` | Có | Secret ký refresh token |
+| `FRONTEND_URL` | Có | Origin frontend được phép qua CORS |
+| `NODE_ENV` | Không | `development`, `test` hoặc `production` |
+| `OPENAI_API_KEY` | Không | Bật các chức năng dùng OpenAI |
+| `AI_MODEL` | Không | Model OpenAI, mặc định `gpt-4o-mini` |
+| `AI_MAX_TOKENS` | Không | Giới hạn token phản hồi, mặc định `1500` |
+
+### Frontend
+
+| Biến | Bắt buộc | Mô tả |
+| --- | --- | --- |
+| `VITE_API_URL` | Có | Base URL của API, mặc định local là `http://localhost:5000/api` |
+
+## Kiểm thử và build
+
+```bash
+npm test
+npm run build
+```
+
+Integration test cần một MySQL test database tương ứng với cấu hình trong `backend/.env.test`.
+
+## Tài liệu
+
+Các tài liệu chi tiết nằm trong [`docs`](./docs): kiến trúc, yêu cầu, quy tắc nghiệp vụ, ERD, sơ đồ và user stories.
+
+## API
+
+Khi backend đang chạy, Swagger UI tại <http://localhost:5000/api-docs> là nguồn đầy đủ và cập nhật nhất cho endpoint, request và response schema.
 
 
 admin@moneymate.com	password	Admin
