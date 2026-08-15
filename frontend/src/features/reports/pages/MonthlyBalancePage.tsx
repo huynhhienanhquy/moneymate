@@ -22,16 +22,16 @@ const MonthlyBalancePage: React.FC = () => {
   const [year, setYear] = useState(new Date().getFullYear());
 
   const { data, isLoading } = useQuery({
-    queryKey: ['monthly-balance', year],
+    queryKey: ['monthly-balance-v4', year],
     queryFn: () => api.get('/transactions/report/yearly', { params: { year } }).then((r) => r.data.data),
-    staleTime: 60_000,
+    staleTime: 0,
   });
 
-  const walletBalanceTotal = Number(data?.walletBalanceTotal || 0);
   const accountCreatedAt = data?.accountCreatedAt ? new Date(data.accountCreatedAt) : null;
   const now = new Date();
   const currentMonthBoundary = new Date(now.getFullYear(), now.getMonth(), 1);
 
+  let cumulativeSavings = 0;
   const monthlyData = (data?.monthlyData || [])
     .filter((item: any) => {
       const itemDate = new Date(year, item.month - 1, 1);
@@ -40,17 +40,25 @@ const MonthlyBalancePage: React.FC = () => {
       const createdMonth = new Date(accountCreatedAt.getFullYear(), accountCreatedAt.getMonth(), 1);
       return itemDate >= createdMonth;
     })
-    .map((item: any) => ({
-      month: item.month,
-      label: item.label || MONTHS[item.month - 1],
-      income: Number(item.income || 0),
-      expense: Number(item.expense || 0),
-      remaining: walletBalanceTotal + Number(item.income || 0) - Number(item.expense || 0),
-    }));
+    .map((item: any) => {
+      const salaryIncome = Number(item.salaryIncome || 0);
+      const expense = Number(item.expense || 0);
+      const remaining = salaryIncome - expense;
+      cumulativeSavings += remaining;
 
-  const totalIncome = monthlyData.reduce((sum: number, item: any) => sum + item.income, 0);
+      return {
+        month: item.month,
+        label: item.label || MONTHS[item.month - 1],
+        salaryIncome,
+        expense,
+        remaining,
+        cumulativeSavings,
+      };
+    });
+
+  const totalSalary = monthlyData.reduce((sum: number, item: any) => sum + item.salaryIncome, 0);
   const totalExpense = monthlyData.reduce((sum: number, item: any) => sum + item.expense, 0);
-  const averageAssets = monthlyData.length
+  const averageSavings = monthlyData.length
     ? monthlyData.reduce((sum: number, item: any) => sum + item.remaining, 0) / monthlyData.length
     : 0;
   const bestMonth = monthlyData.reduce((best: any, item: any) => (!best || item.remaining > best.remaining ? item : best), null);
@@ -107,9 +115,9 @@ const MonthlyBalancePage: React.FC = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10">
                   <TrendingUp size={18} className="text-emerald-500" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng thu nhập</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng lương</p>
               </div>
-              <p className="text-2xl font-extrabold text-emerald-500">{formatVND(totalIncome)}</p>
+              <p className="text-2xl font-extrabold text-emerald-500">{formatVND(totalSalary)}</p>
             </div>
 
             <div className="app-card app-card-hover p-5">
@@ -127,10 +135,10 @@ const MonthlyBalancePage: React.FC = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-500/10">
                   <WalletCards size={18} className="text-brand-500" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tài sản trung bình</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiết kiệm trung bình</p>
               </div>
-              <p className={`text-2xl font-extrabold ${averageAssets >= 0 ? 'text-brand-500' : 'text-rose-500'}`}>
-                {formatVND(averageAssets)}
+              <p className={`text-2xl font-extrabold ${averageSavings >= 0 ? 'text-brand-500' : 'text-rose-500'}`}>
+                {formatVND(averageSavings)}
               </p>
               {bestMonth && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Tháng tốt nhất: {bestMonth.label}</p>}
             </div>
@@ -140,7 +148,7 @@ const MonthlyBalancePage: React.FC = () => {
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
               <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Công thức: tổng tài sản + thu nhập - chi tiêu.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Tổng lương tháng được tính bằng tổng tài sản cuối tháng. Tiết kiệm tháng = tổng lương tháng - chi tiêu tháng.</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={320}>
@@ -170,19 +178,23 @@ const MonthlyBalancePage: React.FC = () => {
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800">
                     <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Tháng</th>
-                    <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Thu nhập</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Tổng lương tháng</th>
                     <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Chi tiêu</th>
                     <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Tiết kiệm tháng</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Tổng tiền tiết kiệm được</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {monthlyData.map((item: any) => (
                     <tr key={item.month} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="px-5 py-3.5 text-sm font-semibold text-slate-900 dark:text-slate-100">Tháng {item.month}</td>
-                      <td className="px-5 py-3.5 text-right text-sm font-semibold text-emerald-500">{formatVND(item.income)}</td>
+                      <td className="px-5 py-3.5 text-right text-sm font-semibold text-emerald-500">{formatVND(item.salaryIncome)}</td>
                       <td className="px-5 py-3.5 text-right text-sm font-semibold text-rose-500">{formatVND(item.expense)}</td>
                       <td className={`px-5 py-3.5 text-right text-sm font-extrabold ${item.remaining >= 0 ? 'text-brand-500' : 'text-rose-500'}`}>
                         {formatVND(item.remaining)}
+                      </td>
+                      <td className={`px-5 py-3.5 text-right text-sm font-extrabold ${item.cumulativeSavings >= 0 ? 'text-brand-500' : 'text-rose-500'}`}>
+                        {formatVND(item.cumulativeSavings)}
                       </td>
                     </tr>
                   ))}

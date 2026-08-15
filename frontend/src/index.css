@@ -12,17 +12,23 @@
   }
 
   * {
-    @apply border-gray-200 dark:border-slate-800;
+    @apply border-slate-200/80 dark:border-slate-800/80;
   }
 
   body {
-    @apply antialiased text-slate-800 dark:text-slate-100;
+    @apply antialiased text-slate-800 dark:text-slate-100 selection:bg-brand-500/20 selection:text-brand-600 dark:selection:text-brand-400;
     min-height: 100vh;
-    background: linear-gradient(135deg, #eef5ff 0%, #f0fafc 30%, #fff8f0 60%, #f5f0ff 100%);
+    background: radial-gradient(circle at 0% 0%, rgba(42, 149, 255, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 45%),
+                radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+                linear-gradient(135deg, #f4f8ff 0%, #f0fafc 40%, #faf5ff 100%);
   }
 
   .dark body {
-    background: linear-gradient(135deg, #0b1120 0%, #0f172a 30%, #111827 60%, #0f0f1a 100%);
+    background: radial-gradient(circle at 0% 0%, rgba(42, 149, 255, 0.18) 0%, transparent 50%),
+                radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #070b14 0%, #0b1120 40%, #0d0e1a 100%);
   }
 
   input,
@@ -33,16 +39,18 @@
 }
 
 @layer components {
+  /* Glass Shell Cards */
   .app-shell-card {
-    @apply rounded-3xl border border-white/60 bg-white/90 shadow-lg shadow-brand-200/30 backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-900/90 dark:shadow-black/20;
+    @apply rounded-3xl border border-white/80 bg-white/75 shadow-xl shadow-brand-500/5 backdrop-blur-2xl transition-all duration-300 dark:border-slate-800/80 dark:bg-slate-900/75 dark:shadow-black/40;
   }
 
+  /* Standard Component Cards */
   .app-card {
-    @apply rounded-2xl border border-slate-200/70 bg-white/95 shadow-md shadow-slate-200/40 transition-all duration-300 dark:border-slate-700/60 dark:bg-slate-900/95 dark:shadow-black/20;
+    @apply rounded-2xl border border-slate-200/70 bg-white/85 shadow-md shadow-slate-300/20 backdrop-blur-xl transition-all duration-300 dark:border-slate-800/80 dark:bg-slate-900/80 dark:shadow-black/30;
   }
 
   .app-card-hover {
-    @apply hover:-translate-y-1.5 hover:border-brand-300/40 hover:shadow-xl hover:shadow-brand-500/10 dark:hover:border-slate-600 dark:hover:shadow-brand-500/5;
+    @apply hover:-translate-y-1 hover:border-brand-400/40 hover:shadow-xl hover:shadow-brand-500/10 dark:hover:border-slate-700 dark:hover:shadow-brand-500/10;
   }
 
   .app-card-vibrant {
@@ -51,14 +59,14 @@
 
   .app-card-vibrant::before {
     content: '';
-    @apply absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-bl from-brand-400/20 to-transparent rounded-full blur-2xl;
-    animation: float 6s ease-in-out infinite;
+    @apply absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-bl from-brand-400/25 via-cyan-400/15 to-transparent rounded-full blur-3xl;
+    animation: float 7s ease-in-out infinite;
   }
 
   .app-card-vibrant::after {
     content: '';
-    @apply absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tr from-cyan-400/20 to-transparent rounded-full blur-2xl;
-    animation: float 6s ease-in-out infinite reverse;
+    @apply absolute -bottom-10 -left-10 w-36 h-36 bg-gradient-to-tr from-violet-400/20 via-brand-500/15 to-transparent rounded-full blur-3xl;
+    animation: float 7s ease-in-out infinite reverse;
   }
 
   .app-card-glow {
@@ -67,7 +75,7 @@
 
   .app-card-glow::before {
     content: '';
-    @apply absolute -inset-[1px] rounded-[inherit] bg-gradient-to-br from-brand-400/15 via-transparent to-cyan-400/15 opacity-0 transition-all duration-500;
+    @apply absolute -inset-[1px] rounded-[inherit] bg-gradient-to-br from-brand-400/25 via-cyan-400/10 to-violet-400/20 opacity-0 transition-all duration-500;
     z-index: -1;
   }
 
@@ -77,57 +85,60 @@
 
   .app-card-glow::after {
     content: '';
-    @apply absolute -inset-1 rounded-[inherit] bg-gradient-to-br from-brand-500/10 to-cyan-500/10 opacity-0 transition-all duration-500;
-    filter: blur(10px);
+    @apply absolute -inset-1 rounded-[inherit] bg-gradient-to-br from-brand-500/15 to-cyan-500/15 opacity-0 transition-all duration-500;
+    filter: blur(12px);
     z-index: -2;
   }
 
   .app-card-glow:hover::after {
-    @apply opacity-80;
+    @apply opacity-90;
   }
 
+  /* Form Elements */
   .app-input {
-    @apply w-full rounded-xl border border-slate-200 bg-white/95 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 transition-all duration-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100 dark:placeholder:text-slate-500;
+    @apply w-full rounded-xl border border-slate-200/90 bg-white/90 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-200 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-400 dark:focus:bg-slate-800 dark:focus:ring-brand-500/20;
   }
 
   .app-select {
-    @apply w-full rounded-xl border border-slate-200 bg-white/95 px-4 py-2.5 text-sm text-slate-800 transition-all duration-200 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100;
+    @apply w-full rounded-xl border border-slate-200/90 bg-white/90 px-4 py-2.5 text-sm text-slate-800 shadow-sm transition-all duration-200 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-brand-400 dark:focus:bg-slate-800 dark:focus:ring-brand-500/20;
   }
 
+  /* Buttons */
   .app-primary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-all duration-200 hover:from-brand-500 hover:to-brand-400 hover:shadow-brand-500/30 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:from-brand-600 disabled:hover:to-brand-500;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/25 transition-all duration-200 hover:from-brand-500 hover:to-cyan-400 hover:shadow-brand-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-brand-500/25;
   }
 
   .app-secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition-all duration-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600 active:scale-[0.97] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/90 bg-white/90 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all duration-200 hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-600 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100;
   }
 
   .app-danger-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-600/20 transition-all duration-200 hover:from-rose-500 hover:to-rose-400 hover:shadow-rose-500/30 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-600/25 transition-all duration-200 hover:from-rose-500 hover:to-rose-400 hover:shadow-rose-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
+  /* Badges */
   .app-badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md;
   }
 
   .app-badge-success {
-    @apply app-badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400;
+    @apply app-badge bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20;
   }
 
   .app-badge-warning {
-    @apply app-badge bg-amber-500/10 text-amber-600 dark:text-amber-400;
+    @apply app-badge bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-500/20;
   }
 
   .app-badge-danger {
-    @apply app-badge bg-rose-500/10 text-rose-600 dark:text-rose-400;
+    @apply app-badge bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border border-rose-500/20;
   }
 
   .app-badge-info {
-    @apply app-badge bg-brand-500/10 text-brand-600 dark:text-brand-400;
+    @apply app-badge bg-brand-500/15 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400 border border-brand-500/20;
   }
 
   .app-badge-neutral {
-    @apply app-badge bg-slate-500/10 text-slate-600 dark:text-slate-400;
+    @apply app-badge bg-slate-500/15 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400 border border-slate-500/20;
   }
 
   .app-page-header {
@@ -136,7 +147,7 @@
 
   .app-page-header::after {
     content: '';
-    @apply absolute -right-8 -top-8 h-40 w-40 rounded-full bg-gradient-to-br from-brand-400/10 to-cyan-400/10 blur-2xl dark:from-brand-500/10 dark:to-cyan-500/10;
+    @apply absolute -right-8 -top-8 h-44 w-44 rounded-full bg-gradient-to-br from-brand-400/20 via-cyan-400/15 to-violet-400/15 blur-3xl dark:from-brand-500/20 dark:to-cyan-500/20;
   }
 
   .app-empty-state {
@@ -144,12 +155,12 @@
   }
 
   .app-modal-overlay {
-    @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm;
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md;
   }
 
   .app-modal {
     @apply app-shell-card w-full max-w-md p-6 shadow-2xl max-h-[90vh] overflow-y-auto;
-    animation: slideUpFade 0.25s ease-out;
+    animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .app-stat-card {
@@ -188,29 +199,29 @@
     left: -1px;
     right: -1px;
     height: 1px;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent);
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
     border-radius: inherit;
     z-index: 1;
   }
 
   .dark .app-shell-card::before {
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.12), transparent);
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
   }
 }
 
 @layer utilities {
   .bg-radial-gradient {
     background-image:
-      radial-gradient(ellipse at 0% 0%, rgba(42, 149, 255, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 0%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, rgba(168, 85, 247, 0.04) 0%, transparent 50%);
+      radial-gradient(ellipse at 0% 0%, rgba(42, 149, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
   }
 
   .dark .bg-radial-gradient {
     background-image:
-      radial-gradient(ellipse at 0% 0%, rgba(42, 149, 255, 0.12) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+      radial-gradient(ellipse at 0% 0%, rgba(42, 149, 255, 0.16) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
   }
 }
 
@@ -258,13 +269,13 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(42, 149, 255, 0.1); }
-  50% { box-shadow: 0 0 30px rgba(42, 149, 255, 0.2); }
+  0%, 100% { box-shadow: 0 0 20px rgba(42, 149, 255, 0.15); }
+  50% { box-shadow: 0 0 35px rgba(42, 149, 255, 0.3); }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
 }
 
 @keyframes gradient-x {
@@ -289,7 +300,7 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.08) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.12) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
@@ -309,7 +320,7 @@
 
 .animate-stagger > * {
   opacity: 0;
-  animation: slideUpFade 0.4s ease-out forwards;
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-stagger > *:nth-child(1) { animation-delay: 0.05s; }
@@ -331,7 +342,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-slate-700 rounded-full hover:bg-gray-400 dark:hover:bg-slate-600 transition-colors;
+  @apply bg-slate-300 dark:bg-slate-700/80 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
 }
 
 input:-webkit-autofill,
@@ -348,3 +359,4 @@ input:-webkit-autofill:focus {
   -webkit-text-fill-color: #f1f5f9;
   -webkit-box-shadow: 0 0 0px 1000px #1e293b inset;
 }
+

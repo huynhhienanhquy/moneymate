@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight } from 'lucide-react';
+import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -19,20 +19,37 @@ const StatCard: React.FC<{
   value: string;
   icon: React.ReactNode;
   iconBg: string;
+  variant: 'asset' | 'expense' | 'savings';
   trend?: string;
   trendColor?: string;
-}> = ({ title, value, icon, iconBg, trend, trendColor }) => (
-  <div className="app-card app-card-hover p-5 flex items-start gap-4">
-    <div className={`flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0 ${iconBg}`}>
-      {icon}
+}> = ({ title, value, icon, iconBg, variant, trend, trendColor }) => {
+  const variantClass = {
+    asset: 'app-stat-card-asset',
+    expense: 'app-stat-card-expense',
+    savings: 'app-stat-card-savings',
+  }[variant];
+
+  return (
+    <div className={`app-stat-card ${variantClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
+          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100 truncate tracking-tight">{value}</p>
+        </div>
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl flex-shrink-0 shadow-md ${iconBg}`}>
+          {icon}
+        </div>
+      </div>
+      {trend && (
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+          <p className={`text-xs font-semibold ${trendColor || 'text-slate-500 dark:text-slate-400'} truncate`}>
+            {trend}
+          </p>
+        </div>
+      )}
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
-      <p className="mt-1 text-xl font-extrabold text-slate-950 dark:text-slate-100 truncate">{value}</p>
-      {trend && <p className={`text-xs mt-1 font-medium ${trendColor}`}>{trend}</p>}
-    </div>
-  </div>
-);
+  );
+};
 
 const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
 
@@ -70,20 +87,17 @@ const DashboardPage: React.FC = () => {
     return (
       <div className="flex h-full min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 size={32} className="animate-spin text-brand-500" />
-          <p className="text-slate-400 text-sm">Đang tải dữ liệu tổng quan...</p>
+          <Loader2 size={36} className="animate-spin text-brand-500" />
+          <p className="text-slate-400 font-medium text-sm">Đang tải tổng quan tài chính...</p>
         </div>
       </div>
     );
   }
 
   const netWorth: number = dashData?.netWorth || 0;
-  const monthlyIncome: number = dashData?.monthlyIncome || 0;
   const monthlyExpense: number = dashData?.monthlyExpense || 0;
-  const monthlySavings: number = dashData?.monthlySavings || 0;
+  const monthlySavings = netWorth - monthlyExpense;
   const actualExpense: number = dashData?.actualExpense || 0;
-  const recurringExpense: number = dashData?.recurringExpense || 0;
-  const walletBalanceTotal: number = dashData?.walletBalanceTotal || 0;
   const recentTransactions: any[] = dashData?.recentTransactions || [];
   const categoryExpenses: any[] = reportData?.categoryExpenses || [];
 
@@ -93,170 +107,186 @@ const DashboardPage: React.FC = () => {
     expense: item.expense,
   }));
 
-  const prevMonthIdx = trendData.length >= 2 ? trendData.length - 2 : -1;
-  const prevIncome = prevMonthIdx >= 0 ? Number(trendData[prevMonthIdx].income) : 0;
-  const incomeTrend = prevIncome > 0 && monthlyIncome > 0
-    ? `${monthlyIncome >= prevIncome ? '+' : '-'}${Math.abs(Math.round(((monthlyIncome - prevIncome) / prevIncome) * 100))}% so với tháng trước`
-    : '';
-
-  const savingsRate = monthlyIncome > 0 ? Math.round((monthlySavings / monthlyIncome) * 100) : 0;
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Page Header */}
-      <div className="app-shell-card overflow-hidden p-6 md:p-8 relative">
-        <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-brand-500/10 blur-2xl" />
-        <p className="text-sm font-semibold text-brand-600 dark:text-brand-400">Dashboard</p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">
-          Xin chào, {user?.fullName?.split(' ').pop() || 'bạn'}
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Đây là tổng quan tài chính tháng {now.getMonth() + 1}/{now.getFullYear()} của bạn.
-        </p>
+      <div className="app-page-header">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
+              <Zap size={14} /> Tổng quan tài chính
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+              Xin chào, {user?.fullName?.split(' ').pop() || 'bạn'} 👋
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
+              Báo cáo thông minh cho tháng <span className="font-bold text-slate-800 dark:text-slate-200">{now.getMonth() + 1}/{now.getFullYear()}</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link to="/transactions" className="app-primary-button shadow-md">
+              + Thêm giao dịch
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* AI Insight Banner */}
       {aiInsight?.insights?.[0] && (
-        <Link to="/ai" className="app-card app-card-hover flex items-center gap-4 p-4 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/20 flex-shrink-0">
-            <Sparkles size={20} className="text-brand-400" />
+        <Link to="/ai" className="app-card app-card-glow flex items-center gap-4 p-4.5 border-brand-500/30 group">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-cyan-400 text-white shadow-lg shadow-brand-500/25 flex-shrink-0">
+            <Sparkles size={22} className="animate-pulse" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-brand-300">{aiInsight.insights[0].title}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{aiInsight.insights[0].message}</p>
+            <div className="flex items-center gap-2">
+              <span className="app-badge app-badge-info">AI Advisor</span>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{aiInsight.insights[0].title}</p>
+            </div>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">{aiInsight.insights[0].message}</p>
           </div>
-          <ChevronRight size={16} className="text-brand-400 group-hover:translate-x-0.5 transition flex-shrink-0" />
+          <ChevronRight size={18} className="text-brand-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
         </Link>
       )}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <StatCard
           title="Tổng tài sản"
           value={formatVND(netWorth)}
-          icon={<Wallet size={20} className="text-brand-400" />}
+          icon={<Wallet size={24} className="text-brand-500" />}
           iconBg="bg-brand-500/10"
-          trend="Tổng số dư hiện có trong tất cả ví"
+          variant="asset"
+          trend="Số dư khả dụng trong tất cả ví"
           trendColor="text-slate-500 dark:text-slate-400"
-        />
-        <StatCard
-          title="Thu nhập tháng này"
-          value={formatVND(monthlyIncome)}
-          icon={<TrendingUp size={20} className="text-emerald-400" />}
-          iconBg="bg-emerald-500/10"
-          trend={incomeTrend || undefined}
-          trendColor={monthlyIncome >= prevIncome ? 'text-emerald-400' : 'text-rose-400'}
         />
         <StatCard
           title="Chi tiêu tháng này"
           value={formatVND(monthlyExpense)}
-          icon={<TrendingDown size={20} className="text-rose-400" />}
+          icon={<TrendingDown size={24} className="text-rose-500" />}
           iconBg="bg-rose-500/10"
-          trend={`Đã chi ${formatVND(actualExpense)} + định kỳ ${formatVND(recurringExpense)}`}
+          variant="expense"
+          trend={`Chi trực tiếp: ${formatVND(actualExpense)}`}
           trendColor="text-slate-500 dark:text-slate-400"
         />
         <StatCard
           title="Tiết kiệm tháng này"
           value={formatVND(monthlySavings)}
-          icon={<Sparkles size={20} className="text-amber-400" />}
+          icon={<Sparkles size={24} className="text-amber-500" />}
           iconBg="bg-amber-500/10"
-          trend={`Tài sản ${formatVND(walletBalanceTotal)} + thu nhập ${formatVND(monthlyIncome)} - chi ${formatVND(monthlyExpense)}`}
-          trendColor={savingsRate > 20 ? 'text-emerald-400' : 'text-amber-400'}
+          variant="savings"
+          trend="Tổng tài sản - chi tiêu tháng này"
+          trendColor={monthlySavings >= 0 ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}
         />
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Pie Chart - Category Breakdown */}
-        <div className="app-card lg:col-span-2 p-6">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-5">Chi tiêu theo danh mục</h2>
-          {categoryExpenses.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={categoryExpenses}
-                    dataKey="amount"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={3}
-                    strokeWidth={0}
-                  >
-                    {categoryExpenses.map((entry, index) => (
-                      <Cell key={entry.id} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: any) => formatVND(value)}
-                    contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9', fontSize: '12px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <ul className="mt-2 space-y-2">
-                {categoryExpenses.slice(0, 5).map((cat, i) => (
-                  <li key={cat.id} className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                      <span className="inline-block h-2 w-2 rounded-full" style={{ background: cat.color || PIE_COLORS[i % PIE_COLORS.length] }}></span>
-                      {cat.name}
-                    </span>
-                    <span className="font-semibold text-slate-900 dark:text-slate-200">{formatVND(cat.amount)}</span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
-              Chưa có dữ liệu chi tiêu tháng này
+        <div className="app-card lg:col-span-2 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Chi tiêu theo danh mục</h2>
+              <span className="text-xs font-semibold text-slate-400 uppercase">Tháng này</span>
             </div>
-          )}
+            {categoryExpenses.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={210}>
+                  <PieChart>
+                    <Pie
+                      data={categoryExpenses}
+                      dataKey="amount"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={62}
+                      outerRadius={92}
+                      paddingAngle={4}
+                      strokeWidth={0}
+                    >
+                      {categoryExpenses.map((entry, index) => (
+                        <Cell key={entry.id} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: any) => formatVND(value)}
+                      contentStyle={{ background: '#0b1120', border: '1px solid #1e293b', borderRadius: '12px', color: '#f1f5f9', fontSize: '12px', fontWeight: 600 }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <ul className="mt-4 space-y-2.5">
+                  {categoryExpenses.slice(0, 5).map((cat, i) => (
+                    <li key={cat.id} className="flex items-center justify-between text-xs font-medium">
+                      <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: cat.color || PIE_COLORS[i % PIE_COLORS.length] }}></span>
+                        {cat.name}
+                      </span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{formatVND(cat.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-52 text-slate-400 text-sm">
+                <Wallet size={36} className="mb-2 opacity-30" />
+                <p>Chưa có dữ liệu chi tiêu tháng này</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bar Chart - Income vs Expense */}
-        <div className="app-card lg:col-span-3 p-6">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-5">Thu nhập & Chi tiêu 6 tháng</h2>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={barData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}M`} />
-              <Tooltip
-                contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9', fontSize: '12px' }}
-                formatter={(value: any) => formatVND(value)}
-              />
-              <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
-              <Bar dataKey="income" name="Thu nhập" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expense" name="Chi tiêu" fill="#ef4444" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="app-card lg:col-span-3 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Thu nhập & Chi tiêu 6 tháng</h2>
+              <span className="text-xs font-semibold text-brand-500 uppercase">Xu hướng</span>
+            </div>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={barData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}M`} />
+                <Tooltip
+                  contentStyle={{ background: '#0b1120', border: '1px solid #1e293b', borderRadius: '12px', color: '#f1f5f9', fontSize: '12px', fontWeight: 600 }}
+                  formatter={(value: any) => formatVND(value)}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', paddingTop: '10px' }} />
+                <Bar dataKey="income" name="Thu nhập" fill="#10b981" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="expense" name="Chi tiêu" fill="#ef4444" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
       {/* Recent Transactions */}
       <div className="app-card p-6">
-        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-5">Giao dịch gần đây</h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Giao dịch gần đây</h2>
+          <Link to="/transactions" className="text-xs font-bold text-brand-500 hover:text-brand-400 transition">
+            Xem tất cả →
+          </Link>
+        </div>
         {recentTransactions.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {recentTransactions.map((tx: any) => {
               const isIncome = tx.type === 'INCOME';
               return (
-                <div key={tx.id} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors group">
+                <div key={tx.id} className="flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 hover:border-brand-300 dark:hover:border-slate-700 transition-all group">
                   <div
-                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${isIncome ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}
                   >
                     {isIncome
-                      ? <ArrowUpRight size={16} className="text-emerald-400" />
-                      : <ArrowDownLeft size={16} className="text-rose-400" />}
+                      ? <ArrowUpRight size={18} />
+                      : <ArrowDownLeft size={18} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 truncate">{tx.note || tx.category?.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{tx.note || tx.category?.name}</p>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                       {tx.category?.name} · {new Date(tx.transactionDate).toLocaleDateString('vi-VN')}
                     </p>
                   </div>
-                  <span className={`text-sm font-bold flex-shrink-0 ${isIncome ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`text-base font-extrabold flex-shrink-0 ${isIncome ? 'text-emerald-500' : 'text-rose-500'}`}>
                     {isIncome ? '+' : '-'}{formatVND(Number(tx.amount))}
                   </span>
                 </div>
@@ -264,9 +294,9 @@ const DashboardPage: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 text-slate-600">
-            <Wallet size={36} className="mb-3 opacity-40" />
-            <p className="text-sm">Chưa có giao dịch nào. Hãy thêm giao dịch đầu tiên!</p>
+          <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+            <Wallet size={40} className="mb-3 opacity-30" />
+            <p className="text-sm font-medium">Chưa có giao dịch nào. Hãy thêm giao dịch đầu tiên!</p>
           </div>
         )}
       </div>

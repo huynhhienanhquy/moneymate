@@ -272,8 +272,8 @@ export class TransactionService {
       monthlyExpense: monthlyStats.totalExpense,
       actualExpense: monthlyStats.actualExpense,
       recurringExpense: monthlyStats.recurringExpense,
-      monthlySavings: walletBalanceTotal + monthlyStats.totalIncome - monthlyStats.totalExpense,
-      monthlyRemaining: walletBalanceTotal + monthlyStats.totalIncome - monthlyStats.totalExpense,
+      monthlySavings: walletBalanceTotal - monthlyStats.totalExpense,
+      monthlyRemaining: walletBalanceTotal - monthlyStats.totalExpense,
       recentTransactions
     };
   }

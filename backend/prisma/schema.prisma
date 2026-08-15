@@ -13,25 +13,43 @@ enum Role {
 }
 
 model User {
-  id                   String                 @id @default(uuid())
-  email                String                 @unique
-  passwordHash         String
-  fullName             String
-  avatarUrl            String?
-  role                 Role                   @default(USER)
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  wallets              Wallet[]
-  categories           Category[]
-  transactions         Transaction[]
-  budgets              Budget[]
-  savingGoals          SavingGoal[]
-  recurringTransactions RecurringTransaction[]
-  notifications        Notification[]
-  refreshTokens        RefreshToken[]
-  walletTransfers      WalletTransfer[]
+  id                      String                   @id @default(uuid())
+  email                   String                   @unique
+  passwordHash            String
+  fullName                String
+  avatarUrl               String?
+  role                    Role                     @default(USER)
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  wallets                 Wallet[]
+  categories              Category[]
+  transactions            Transaction[]
+  budgets                 Budget[]
+  savingGoals             SavingGoal[]
+  recurringTransactions   RecurringTransaction[]
+  notifications           Notification[]
+  refreshTokens           RefreshToken[]
+  walletTransfers         WalletTransfer[]
+  monthlySavingsSnapshots MonthlySavingsSnapshot[]
 
   @@map("users")
+}
+
+model MonthlySavingsSnapshot {
+  id             String   @id @default(uuid())
+  userId         String
+  month          Int
+  year           Int
+  salaryIncome   Decimal  @db.Decimal(15, 2)
+  otherIncome    Decimal  @db.Decimal(15, 2)
+  expense        Decimal  @db.Decimal(15, 2)
+  savings        Decimal  @db.Decimal(15, 2)
+  formulaVersion Int      @default(4)
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year])
+  @@map("monthly_savings_snapshots")
 }
 
 enum WalletType {
@@ -43,20 +61,20 @@ enum WalletType {
 }
 
 model Wallet {
-  id                  String           @id @default(uuid())
-  userId              String
-  name                String
-  type                WalletType
-  currency            String           @default("VND")
-  initialBalance      Decimal          @default(0.00) @db.Decimal(15, 2)
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions        Transaction[]
+  id                    String                 @id @default(uuid())
+  userId                String
+  name                  String
+  type                  WalletType
+  currency              String                 @default("VND")
+  initialBalance        Decimal                @default(0.00) @db.Decimal(15, 2)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions          Transaction[]
   recurringTransactions RecurringTransaction[]
-  sourceTransfers     WalletTransfer[] @relation("SourceWalletRelation")
-  destinationTransfers WalletTransfer[] @relation("DestinationWalletRelation")
-  goalTransactions    GoalTransaction[]
+  sourceTransfers       WalletTransfer[]       @relation("SourceWalletRelation")
+  destinationTransfers  WalletTransfer[]       @relation("DestinationWalletRelation")
+  goalTransactions      GoalTransaction[]
 
   @@map("wallets")
 }
@@ -67,17 +85,17 @@ enum CategoryType {
 }
 
 model Category {
-  id                   String                 @id @default(uuid())
-  userId               String?
-  name                 String
-  type                 CategoryType
-  color                String                 @default("#CCCCCC")
-  icon                 String                 @default("tag")
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  user                 User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions         Transaction[]
-  budgets              Budget[]
+  id                    String                 @id @default(uuid())
+  userId                String?
+  name                  String
+  type                  CategoryType
+  color                 String                 @default("#CCCCCC")
+  icon                  String                 @default("tag")
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  user                  User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions          Transaction[]
+  budgets               Budget[]
   recurringTransactions RecurringTransaction[]
 
   @@unique([userId, name, type])
@@ -166,22 +184,22 @@ enum Frequency {
 }
 
 model RecurringTransaction {
-  id                String          @id @default(uuid())
+  id                String       @id @default(uuid())
   userId            String
   walletId          String
   categoryId        String
-  amount            Decimal         @db.Decimal(15, 2)
+  amount            Decimal      @db.Decimal(15, 2)
   type              CategoryType
   frequency         Frequency
-  note              String?         @db.Text
+  note              String?      @db.Text
   startDate         DateTime
   nextExecutionDate DateTime
-  isActive          Boolean         @default(true)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wallet            Wallet          @relation(fields: [walletId], references: [id], onDelete: Restrict)
-  category          Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet            Wallet       @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  category          Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   @@map("recurring_transactions")
 }
@@ -218,17 +236,17 @@ model RefreshToken {
 }
 
 model WalletTransfer {
-  id                 String   @id @default(uuid())
-  userId             String
-  sourceWalletId     String
+  id                  String   @id @default(uuid())
+  userId              String
+  sourceWalletId      String
   destinationWalletId String
-  amount             Decimal  @db.Decimal(15, 2)
-  note               String?  @db.Text
-  transferDate       DateTime
-  createdAt          DateTime @default(now())
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sourceWallet       Wallet   @relation("SourceWalletRelation", fields: [sourceWalletId], references: [id], onDelete: Restrict)
-  destinationWallet  Wallet   @relation("DestinationWalletRelation", fields: [destinationWalletId], references: [id], onDelete: Restrict)
+  amount              Decimal  @db.Decimal(15, 2)
+  note                String?  @db.Text
+  transferDate        DateTime
+  createdAt           DateTime @default(now())
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceWallet        Wallet   @relation("SourceWalletRelation", fields: [sourceWalletId], references: [id], onDelete: Restrict)
+  destinationWallet   Wallet   @relation("DestinationWalletRelation", fields: [destinationWalletId], references: [id], onDelete: Restrict)
 
   @@map("wallet_transfers")
 }

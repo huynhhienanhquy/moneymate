@@ -179,5 +179,5 @@ Các tài liệu chi tiết nằm trong [`docs`](./docs): kiến trúc, yêu c�
 Khi backend đang chạy, Swagger UI tại <http://localhost:5000/api-docs> là nguồn đầy đủ và cập nhật nhất cho endpoint, request và response schema.
 
 
-admin@moneymate.com	password	Admin
-demo@moneymate.com	password	User
+admin@gmail.com	password	12345678
+a@gmail.com	password	12345678
