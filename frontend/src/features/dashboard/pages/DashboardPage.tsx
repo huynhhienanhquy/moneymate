@@ -108,9 +108,9 @@ const DashboardPage: React.FC = () => {
   }));
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="dashboard-page space-y-6 animate-fade-in">
       {/* Page Header */}
-      <div className="app-page-header">
+      <div className="dashboard-hero app-page-header">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
@@ -129,11 +129,9 @@ const DashboardPage: React.FC = () => {
             </Link>
           </div>
         </div>
-      </div>
-
       {/* AI Insight Banner */}
       {aiInsight?.insights?.[0] && (
-        <Link to="/ai" className="app-card app-card-glow flex items-center gap-4 p-4.5 border-brand-500/30 group">
+        <Link to="/ai" className="dashboard-insight app-card flex items-center gap-4 p-3.5 group">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-cyan-400 text-white shadow-lg shadow-brand-500/25 flex-shrink-0">
             <Sparkles size={22} className="animate-pulse" />
           </div>
@@ -147,6 +145,7 @@ const DashboardPage: React.FC = () => {
           <ChevronRight size={18} className="text-brand-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
         </Link>
       )}
+      </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

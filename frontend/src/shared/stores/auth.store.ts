@@ -1,28 +1,21 @@
 import { create } from 'zustand';
-
-interface User {
-  id: string;
-  email: string;
-  fullName: string;
-  avatarUrl: string | null;
-  role?: string;
-}
+import type { UserDto } from '@moneymate/contracts';
 
 interface AuthState {
-  user: User | null;
+  user: UserDto | null;
   accessToken: string | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
-  login: (user: User, accessToken: string) => void;
+  login: (user: UserDto, accessToken: string) => void;
   logout: () => void;
   setToken: (accessToken: string) => void;
-  setUser: (user: User) => void;
+  setUser: (user: UserDto) => void;
   setInitializing: (isInitializing: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
   // Try to load cached user info on startup
-  let initialUser: User | null = null;
+  let initialUser: UserDto | null = null;
   try {
     const cachedUser = localStorage.getItem('mm_user');
     if (cachedUser) initialUser = JSON.parse(cachedUser);

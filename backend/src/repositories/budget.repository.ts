@@ -69,6 +69,7 @@ export class BudgetRepository {
 
     const where: Prisma.TransactionWhereInput = {
       userId,
+      deletedAt: null,
       type: 'EXPENSE',
       transactionDate: { gte: startDate, lte: endDate },
     };

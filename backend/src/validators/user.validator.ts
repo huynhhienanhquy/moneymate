@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+export const deleteAccountSchema = z.object({
+  body: z.object({ password: z.string().min(1, 'Password is required') })
+});
+
 export const updateProfileSchema = z.object({
   body: z.object({
     fullName: z.string().min(1, 'Full name is required').optional(),

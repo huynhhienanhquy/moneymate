@@ -17,12 +17,32 @@ import notificationRoutes from './routes/notification.routes';
 import attachmentRoutes from './routes/attachment.routes';
 import aiRoutes from './routes/ai.routes';
 import adminRoutes from './routes/admin.routes';
+import { requestId } from './middlewares/request-id';
 
 const app = express();
 
+const configuredOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin?: string) => {
+  if (!origin) return true;
+  const normalized = origin.replace(/\/$/, '');
+  if (configuredOrigins.includes(normalized)) return true;
+  if (process.env.NODE_ENV === 'production') return false;
+  try {
+    const url = new URL(normalized);
+    return url.protocol === 'http:' && ['localhost', '127.0.0.1', '10.10.10.183'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+};
+
 // Middlewares
+app.use(requestId);
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
   credentials: true
 }));
 app.use(express.json());

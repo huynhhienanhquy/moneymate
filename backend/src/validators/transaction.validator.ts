@@ -19,7 +19,19 @@ export const updateTransactionSchema = z.object({
     amount: z.number().positive('Amount must be positive and non-zero').optional(),
     type: z.nativeEnum(TransactionType).optional(),
     note: z.string().optional(),
-    transactionDate: z.coerce.date().optional()
+    transactionDate: z.coerce.date().optional(),
+    version: z.number().int().positive().optional()
+  })
+});
+
+export const deleteTransactionSchema = z.object({
+  query: z.object({ version: z.coerce.number().int().positive().optional() })
+});
+
+export const transactionSyncSchema = z.object({
+  query: z.object({
+    cursor: z.string().datetime().optional(),
+    take: z.coerce.number().int().min(1).max(200).default(100)
   })
 });
 

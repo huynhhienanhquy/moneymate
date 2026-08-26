@@ -1,12 +1,42 @@
 import { NotificationRepository } from '../repositories/notification.repository';
 import { NotificationType } from '@prisma/client';
 import { AppError } from '../common/app-error';
+import { PushService } from './push.service';
 
 export class NotificationService {
   private notificationRepository = new NotificationRepository();
+  private pushService = new PushService();
 
   async create(userId: string, data: { title: string; message: string; type: NotificationType }) {
-    return this.notificationRepository.create({ userId, ...data });
+    const notification = await this.notificationRepository.create({ userId, ...data });
+    try {
+      await this.pushService.sendToUser(userId, data);
+    } catch (error) {
+      console.error('Push notification delivery failed', {
+        userId,
+        notificationId: notification.id,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+    return notification;
+  }
+
+  registerDevice(userId: string, data: {
+    deviceId: string;
+    token: string;
+    platform: string;
+    provider: string;
+    appVersion?: string;
+    locale?: string;
+    timezone?: string;
+  }) {
+    return this.notificationRepository.registerDevice(userId, data);
+  }
+
+  async unregisterDevice(userId: string, deviceId: string) {
+    const result = await this.notificationRepository.unregisterDevice(userId, deviceId);
+    if (result.count === 0) throw new AppError('Device not found', 404);
+    return true;
   }
 
   async getNotifications(userId: string, unreadOnly?: boolean) {

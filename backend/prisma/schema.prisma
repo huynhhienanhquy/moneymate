@@ -31,6 +31,8 @@ model User {
   refreshTokens           RefreshToken[]
   walletTransfers         WalletTransfer[]
   monthlySavingsSnapshots MonthlySavingsSnapshot[]
+  deviceTokens            DeviceToken[]
+  idempotencyRecords      IdempotencyRecord[]
 
   @@map("users")
 }
@@ -119,12 +121,15 @@ model Transaction {
   transactionDate DateTime
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  version         Int             @default(1)
+  deletedAt       DateTime?
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   wallet          Wallet          @relation(fields: [walletId], references: [id], onDelete: Restrict)
   category        Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   attachments     Attachment[]
 
   @@map("transactions")
+  @@index([userId, updatedAt])
 }
 
 model Budget {
@@ -225,14 +230,62 @@ model Notification {
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique @map("token") @db.VarChar(64)
+  tokenFamily String    @db.VarChar(36)
+  deviceId    String?   @db.VarChar(191)
+  deviceName  String?   @db.VarChar(191)
+  platform    String    @default("web") @db.VarChar(16)
+  appVersion  String?   @db.VarChar(32)
+  timezone    String?   @db.VarChar(64)
+  expiresAt   DateTime
+  lastSeenAt  DateTime  @default(now())
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, revokedAt])
+  @@index([tokenFamily])
   @@map("refresh_tokens")
+}
+
+model DeviceToken {
+  id         String    @id @default(uuid())
+  userId     String
+  deviceId   String
+  token      String    @unique @db.VarChar(255)
+  platform   String    @db.VarChar(16)
+  provider   String    @default("expo") @db.VarChar(16)
+  appVersion String?   @db.VarChar(32)
+  locale     String?   @db.VarChar(32)
+  timezone   String?   @db.VarChar(64)
+  isActive   Boolean   @default(true)
+  lastSeenAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId, provider])
+  @@index([userId, isActive])
+  @@map("device_tokens")
+}
+
+model IdempotencyRecord {
+  id           String    @id @default(uuid())
+  userId       String
+  key          String    @db.VarChar(100)
+  requestHash  String    @db.VarChar(64)
+  status       String    @default("PENDING") @db.VarChar(16)
+  statusCode   Int?
+  responseBody Json?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([expiresAt])
+  @@map("idempotency_records")
 }
 
 model WalletTransfer {

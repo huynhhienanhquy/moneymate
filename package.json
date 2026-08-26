@@ -4,15 +4,28 @@
   "version": "1.0.0",
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=moneymate-backend && npm run build --workspace=moneymate-frontend",
+    "build": "npm run build:packages && npm run build --workspace=moneymate-backend && npm run build --workspace=moneymate-frontend && npm run build --workspace=moneymate-mobile",
+    "build:packages": "npm run build --workspace=@moneymate/contracts --workspace=@moneymate/validation --workspace=@moneymate/domain --workspace=@moneymate/api-core --workspace=@moneymate/design-tokens",
     "test": "npm run test --workspace=moneymate-backend",
+    "lint": "npm run lint --workspace=moneymate-frontend && npm run lint --workspace=moneymate-mobile",
     "dev:backend": "npm run dev --workspace=moneymate-backend",
-    "dev:frontend": "npm run dev --workspace=moneymate-frontend"
+    "dev:frontend": "npm run dev --workspace=moneymate-frontend",
+    "dev:mobile": "npm run start --workspace=moneymate-mobile"
   },
   "engines": {
     "node": ">=20"
+  },
+  "overrides": {
+    "body-parser": "1.20.6",
+    "minimatch@3.1.5": { "brace-expansion": "1.1.18" },
+    "minimatch@5.1.9": { "brace-expansion": "2.1.4" },
+    "minimatch@10.2.5": { "brace-expansion": "5.0.9" },
+    "ajv@8.20.0": { "fast-uri": "3.1.5" },
+    "@apidevtools/json-schema-ref-parser@14.0.1": { "js-yaml": "4.3.1" }
   }
 }

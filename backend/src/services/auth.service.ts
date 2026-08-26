@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { UserRepository } from '../repositories/user.repository';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { AppError } from '../common/app-error';
@@ -14,23 +15,23 @@ export class AuthService {
   }
 
   private generateRefreshToken(): string {
-    // Generate a random standard token string
-    return jwt.sign(
-      { rand: Math.random().toString(36).substring(2, 15) },
-      process.env.JWT_REFRESH_SECRET || 'super_secret_refresh_token_key_money_mate_2026',
-      { expiresIn: '7d' }
-    );
+    return randomBytes(48).toString('base64url');
+  }
+
+  private hashRefreshToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   async register(data: { email: string; password: string; fullName: string }) {
-    const existingUser = await this.userRepository.findByEmail(data.email);
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const existingUser = await this.userRepository.findByEmail(normalizedEmail);
     if (existingUser) {
       throw new AppError('Email is already in use', 400);
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
     const user = await this.userRepository.create({
-      email: data.email,
+      email: normalizedEmail,
       fullName: data.fullName,
       passwordHash
     });
@@ -42,8 +43,19 @@ export class AuthService {
     };
   }
 
-  async login(email: string, password: string) {
-    const user = await this.userRepository.findByEmail(email);
+  async login(
+    email: string,
+    password: string,
+    session: {
+      platform?: 'web' | 'ios' | 'android';
+      deviceId?: string;
+      deviceName?: string;
+      appVersion?: string;
+      timezone?: string;
+    } = {}
+  ) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await this.userRepository.findByEmail(normalizedEmail);
     if (!user) {
       throw new AppError('Invalid email or password', 401);
     }
@@ -59,7 +71,17 @@ export class AuthService {
     // Store refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
-    await this.tokenRepository.create(user.id, refreshTokenString, expiresAt);
+    await this.tokenRepository.create({
+      userId: user.id,
+      tokenHash: this.hashRefreshToken(refreshTokenString),
+      tokenFamily: randomUUID(),
+      expiresAt,
+      platform: session.platform || 'web',
+      deviceId: session.deviceId,
+      deviceName: session.deviceName,
+      appVersion: session.appVersion,
+      timezone: session.timezone
+    });
 
     return {
       user: {
@@ -75,28 +97,35 @@ export class AuthService {
   }
 
   async refresh(token: string) {
-    const tokenRecord = await this.tokenRepository.findByToken(token);
-    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      if (tokenRecord) {
-        await this.tokenRepository.deleteByToken(token);
-      }
+    if (!token) {
       throw new AppError('Refresh token is invalid or expired', 401);
     }
+
+    const now = new Date();
+    const tokenRecord = await this.tokenRepository.consume(this.hashRefreshToken(token), now);
+    if (!tokenRecord) throw new AppError('Refresh token is invalid or expired', 401);
 
     const user = await this.userRepository.findById(tokenRecord.userId);
     if (!user) {
       throw new AppError('User not found', 401);
     }
 
-    // Refresh Token Rotation
-    await this.tokenRepository.deleteByToken(token);
-
     const accessToken = this.generateAccessToken(user.id, user.email, user.role);
     const newRefreshToken = this.generateRefreshToken();
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
-    await this.tokenRepository.create(user.id, newRefreshToken, expiresAt);
+    await this.tokenRepository.create({
+      userId: user.id,
+      tokenHash: this.hashRefreshToken(newRefreshToken),
+      tokenFamily: tokenRecord.tokenFamily,
+      expiresAt,
+      platform: tokenRecord.platform as 'web' | 'ios' | 'android',
+      deviceId: tokenRecord.deviceId || undefined,
+      deviceName: tokenRecord.deviceName || undefined,
+      appVersion: tokenRecord.appVersion || undefined,
+      timezone: tokenRecord.timezone || undefined
+    });
 
     return {
       accessToken,
@@ -105,6 +134,19 @@ export class AuthService {
   }
 
   async logout(token: string) {
-    await this.tokenRepository.deleteByToken(token);
+    if (token) await this.tokenRepository.revokeByHash(this.hashRefreshToken(token));
+  }
+
+  listSessions(userId: string) {
+    return this.tokenRepository.findActiveByUserId(userId);
+  }
+
+  async revokeSession(userId: string, sessionId: string) {
+    const result = await this.tokenRepository.revokeById(userId, sessionId);
+    if (result.count === 0) throw new AppError('Session not found', 404);
+  }
+
+  async revokeAllSessions(userId: string) {
+    await this.tokenRepository.revokeByUserId(userId);
   }
 }

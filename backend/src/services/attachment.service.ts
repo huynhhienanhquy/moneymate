@@ -1,12 +1,12 @@
 import { AttachmentRepository } from '../repositories/attachment.repository';
 import { TransactionRepository } from '../repositories/transaction.repository';
 import { AppError } from '../common/app-error';
-import fs from 'fs';
-import path from 'path';
+import { createObjectStorage } from './storage.service';
 
 export class AttachmentService {
   private attachmentRepository = new AttachmentRepository();
   private transactionRepository = new TransactionRepository();
+  private storage = createObjectStorage();
 
   async uploadAttachment(
     userId: string,
@@ -16,14 +16,19 @@ export class AttachmentService {
     const tx = await this.transactionRepository.findById(transactionId);
     if (!tx || tx.userId !== userId) throw new AppError('Transaction not found', 404);
 
-    const url = `/uploads/${file.filename}`;
-    return this.attachmentRepository.create({
-      transactionId,
-      url,
-      filename: file.originalname,
-      fileType: file.mimetype,
-      fileSize: file.size,
-    });
+    const stored = await this.storage.put(`users/${userId}/transactions/${transactionId}`, file);
+    try {
+      return await this.attachmentRepository.create({
+        transactionId,
+        url: stored.url,
+        filename: file.originalname,
+        fileType: file.mimetype,
+        fileSize: file.size,
+      });
+    } catch (error) {
+      await this.storage.remove(stored.url).catch(() => undefined);
+      throw error;
+    }
   }
 
   async getAttachments(userId: string, transactionId: string) {
@@ -40,9 +45,7 @@ export class AttachmentService {
     const tx = await this.transactionRepository.findById(attachment.transactionId);
     if (!tx || tx.userId !== userId) throw new AppError('Unauthorized', 403);
 
-    const filePath = path.join(process.cwd(), 'uploads', path.basename(attachment.url));
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-
+    await this.storage.remove(attachment.url);
     await this.attachmentRepository.delete(id);
     return true;
   }

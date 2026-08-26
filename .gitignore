@@ -19,3 +19,5 @@ uploads/*
 .idea/
 .DS_Store
 Thumbs.db
+
+codex-agent-kit/

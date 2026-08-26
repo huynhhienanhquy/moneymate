@@ -22,7 +22,7 @@ export class TransactionRepository {
     const [wallets, laterTransactions] = await Promise.all([
       prisma.wallet.findMany({ where: { userId }, select: { initialBalance: true } }),
       prisma.transaction.findMany({
-        where: { userId, transactionDate: { gt: endDate } },
+        where: { userId, deletedAt: null, transactionDate: { gt: endDate } },
         select: { amount: true, type: true },
       }),
     ]);
@@ -80,6 +80,7 @@ export class TransactionRepository {
       const existingTransactions = await prisma.transaction.findMany({
         where: {
           userId,
+          deletedAt: null,
           walletId: item.walletId,
           categoryId: item.categoryId,
           type: transactionType,
@@ -151,8 +152,8 @@ export class TransactionRepository {
   }
 
   async findById(id: string) {
-    return prisma.transaction.findUnique({
-      where: { id },
+    return prisma.transaction.findFirst({
+      where: { id, deletedAt: null },
       include: {
         wallet: true,
         category: true
@@ -162,7 +163,8 @@ export class TransactionRepository {
 
   async findAll(filter: TransactionFilter) {
     const where: Prisma.TransactionWhereInput = {
-      userId: filter.userId
+      userId: filter.userId,
+      deletedAt: null
     };
 
     if (filter.walletId) {
@@ -212,7 +214,8 @@ export class TransactionRepository {
 
   async count(filter: TransactionFilter): Promise<number> {
     const where: Prisma.TransactionWhereInput = {
-      userId: filter.userId
+      userId: filter.userId,
+      deletedAt: null
     };
 
     if (filter.walletId) {
@@ -268,8 +271,30 @@ export class TransactionRepository {
   }
 
   async delete(id: string) {
-    return prisma.transaction.delete({
-      where: { id }
+    return prisma.transaction.update({
+      where: { id },
+      data: { deletedAt: new Date(), version: { increment: 1 } }
+    });
+  }
+
+  async findSyncDelta(userId: string, cursor: Date | undefined, take: number) {
+    return prisma.transaction.findMany({
+      where: { userId, ...(cursor ? { updatedAt: { gt: cursor } } : {}) },
+      orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
+      take,
+      select: {
+        id: true,
+        walletId: true,
+        categoryId: true,
+        amount: true,
+        type: true,
+        note: true,
+        transactionDate: true,
+        version: true,
+        deletedAt: true,
+        createdAt: true,
+        updatedAt: true
+      }
     });
   }
 
@@ -364,6 +389,7 @@ export class TransactionRepository {
     const transactions = await prisma.transaction.findMany({
       where: {
         userId,
+        deletedAt: null,
         transactionDate: {
           gte: startDate,
           lte: endDate
@@ -431,6 +457,7 @@ export class TransactionRepository {
     const expenses = await prisma.transaction.findMany({
       where: {
         userId,
+        deletedAt: null,
         type: TransactionType.EXPENSE,
         transactionDate: {
           gte: startDate,

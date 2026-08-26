@@ -6,7 +6,8 @@ MoneyMate là ứng dụng quản lý tài chính cá nhân, hỗ trợ theo dõ
 
 | Thành phần | Công nghệ |
 | --- | --- |
-| Web | React 18, Vite, TypeScript, Tailwind CSS |
+| Web | React 19, Vite, TypeScript, Tailwind CSS |
+| Mobile | React Native, Expo SDK 54, Expo Router, SQLite |
 | State & data | Zustand, TanStack Query, Axios |
 | API | Node.js, Express, TypeScript, Zod |
 | Database | MySQL 8, Prisma ORM |
@@ -49,6 +50,9 @@ moneymate/
 │   │   └── shared/             # API client, component và store dùng chung
 │   ├── nginx.conf
 │   └── Dockerfile
+├── apps/
+│   └── mobile/                 # iOS/Android app dùng Expo Router
+├── packages/                   # Contracts, validation, domain, API core và design tokens
 ├── docs/                       # yêu cầu và tài liệu thiết kế
 ├── docker-compose.yml
 └── package.json                # npm workspaces
@@ -128,13 +132,23 @@ npm run dev:frontend
 
 Frontend chạy tại <http://localhost:5173>, backend tại <http://localhost:5000>.
 
+Mobile chạy bằng:
+
+```bash
+npm run dev:mobile
+```
+
+Sao chép `apps/mobile/.env.example` thành `apps/mobile/.env` và đặt `EXPO_PUBLIC_API_URL` thành địa chỉ backend mà thiết bị/emulator truy cập được. Android emulator thường dùng `http://10.0.2.2:5000/api`; thiết bị thật cần IP LAN hoặc HTTPS staging.
+
 ## Scripts
 
 | Lệnh | Mục đích |
 | --- | --- |
 | `npm run dev:frontend` | Chạy Vite dev server |
 | `npm run dev:backend` | Chạy API với Nodemon |
-| `npm run build` | Build cả backend và frontend |
+| `npm run dev:mobile` | Chạy Expo development server |
+| `npm run build` | Build shared packages, backend, web và typecheck mobile |
+| `npm run lint` | Lint web và mobile |
 | `npm test` | Chạy test backend |
 | `npm run test:watch --workspace=moneymate-backend` | Chạy test ở watch mode |
 | `npm run test:coverage --workspace=moneymate-backend` | Tạo báo cáo coverage |
@@ -154,6 +168,9 @@ Frontend chạy tại <http://localhost:5173>, backend tại <http://localhost:5
 | `OPENAI_API_KEY` | Không | Bật các chức năng dùng OpenAI |
 | `AI_MODEL` | Không | Model OpenAI, mặc định `gpt-4o-mini` |
 | `AI_MAX_TOKENS` | Không | Giới hạn token phản hồi, mặc định `1500` |
+| `STORAGE_DRIVER` | Không | `local` (mặc định) hoặc `s3` |
+| `S3_BUCKET`, `S3_REGION`, `S3_PUBLIC_URL` | Khi dùng S3 | Bucket, region và public base URL cho file đính kèm |
+| `S3_ENDPOINT`, `S3_FORCE_PATH_STYLE` | Không | Hỗ trợ dịch vụ S3-compatible |
 
 ### Frontend
 

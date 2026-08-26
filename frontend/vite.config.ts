@@ -5,6 +5,7 @@ import path from 'node:path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  publicDir: path.resolve(__dirname, '../assets/images'),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -12,6 +13,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    host: true
+    // Windows resolves localhost to ::1 first. Listening on IPv6 also keeps
+    // the dev server reachable from IPv4/LAN on dual-stack Windows.
+    host: '::'
   }
 });

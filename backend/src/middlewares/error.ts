@@ -9,7 +9,7 @@ export const errorHandler = (
   next: NextFunction
 ) => {
   if (err instanceof AppError) {
-    return sendError(res, err.message, err.statusCode, err.errors);
+    return sendError(res, err.message, err.statusCode, err.errors, err.code);
   }
 
   // Unhandled server errors
@@ -20,6 +20,7 @@ export const errorHandler = (
     res,
     message,
     500,
-    process.env.NODE_ENV === 'development' ? [err.stack] : []
+    process.env.NODE_ENV === 'development' ? [err.stack] : [],
+    'INTERNAL_ERROR'
   );
 };

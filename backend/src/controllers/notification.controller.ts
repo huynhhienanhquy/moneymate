@@ -35,6 +35,24 @@ export class NotificationController {
     } catch (error) { next(error); }
   };
 
+  public registerDevice = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) throw new AppError('Unauthorized', 401);
+      const result = await this.notificationService.registerDevice(userId, req.body);
+      return sendSuccess(res, result, 'Device registered for notifications');
+    } catch (error) { next(error); }
+  };
+
+  public unregisterDevice = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) throw new AppError('Unauthorized', 401);
+      await this.notificationService.unregisterDevice(userId, req.body.deviceId);
+      return sendSuccess(res, null, 'Device notifications disabled');
+    } catch (error) { next(error); }
+  };
+
   public deleteNotification = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

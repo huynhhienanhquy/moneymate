@@ -1,26 +1,28 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
 import AdminRoute from './AdminRoute';
 import Layout from '@/shared/components/Layout';
-import LoginPage from '@/features/auth/pages/LoginPage';
-import RegisterPage from '@/features/auth/pages/RegisterPage';
-import DashboardPage from '@/features/dashboard/pages/DashboardPage';
-import WalletsPage from '@/features/wallets/pages/WalletsPage';
-import CategoriesPage from '@/features/categories/pages/CategoriesPage';
-import TransactionsPage from '@/features/transactions/pages/TransactionsPage';
-import ReportsPage from '@/features/reports/pages/ReportsPage';
-import MonthlyBalancePage from '@/features/reports/pages/MonthlyBalancePage';
-import BudgetsPage from '@/features/budgets/pages/BudgetsPage';
-import SavingGoalsPage from '@/features/saving-goals/pages/SavingGoalsPage';
-import RecurringPage from '@/features/recurring/pages/RecurringPage';
-import AiAdvisorPage from '@/features/ai/pages/AiAdvisorPage';
-import ProfilePage from '@/features/profile/pages/ProfilePage';
-import AdminPage from '@/features/admin/pages/AdminPage';
+import LoadingState from '@/shared/components/LoadingState';
+
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
+const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
+const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'));
+const WalletsPage = lazy(() => import('@/features/wallets/pages/WalletsPage'));
+const CategoriesPage = lazy(() => import('@/features/categories/pages/CategoriesPage'));
+const TransactionsPage = lazy(() => import('@/features/transactions/pages/TransactionsPage'));
+const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'));
+const MonthlyBalancePage = lazy(() => import('@/features/reports/pages/MonthlyBalancePage'));
+const BudgetsPage = lazy(() => import('@/features/budgets/pages/BudgetsPage'));
+const SavingGoalsPage = lazy(() => import('@/features/saving-goals/pages/SavingGoalsPage'));
+const RecurringPage = lazy(() => import('@/features/recurring/pages/RecurringPage'));
+const AiAdvisorPage = lazy(() => import('@/features/ai/pages/AiAdvisorPage'));
+const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
+const AdminPage = lazy(() => import('@/features/admin/pages/AdminPage'));
 
 export const AppRoutes: React.FC = () => {
   return (
-    <Routes>
+    <Suspense fallback={<LoadingState className="min-h-screen items-center" />}><Routes>
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -48,7 +50,7 @@ export const AppRoutes: React.FC = () => {
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminPage />} />
       </Route>
-    </Routes>
+    </Routes></Suspense>
   );
 };
 

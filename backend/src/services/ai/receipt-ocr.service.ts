@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
+import { randomUUID } from 'crypto';
 import { CategoryRepository } from '../../repositories/category.repository';
 import { LlmProvider } from './llm.provider';
 import { CategoryType } from '@prisma/client';
@@ -30,10 +32,11 @@ export class ReceiptOcrService {
   private llm = new LlmProvider();
 
   async scanReceipt(userId: string, file: Express.Multer.File): Promise<ReceiptScanResult> {
-    const filePath = path.join(process.cwd(), 'uploads', file.filename);
+    const filePath = path.join(os.tmpdir(), `moneymate-ocr-${randomUUID()}${path.extname(file.originalname)}`);
     let rawText = '';
 
     try {
+      await fs.promises.writeFile(filePath, file.buffer);
       if (file.mimetype === 'application/pdf') {
         rawText = await this.extractPdfText(filePath);
       } else if (this.llm.isAvailable()) {
@@ -66,7 +69,7 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
 
       return await this.parseReceiptText(userId, rawText || file.originalname);
     } finally {
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      await fs.promises.rm(filePath, { force: true });
     }
   }
 

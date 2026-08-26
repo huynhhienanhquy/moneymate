@@ -46,4 +46,13 @@ export class UserController {
       next(error);
     }
   };
+
+  public deleteAccount = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) throw new AppError('Unauthorized', 401);
+      await this.userService.deleteAccount(userId, req.body.password);
+      return sendSuccess(res, null, 'Account deleted successfully');
+    } catch (error) { next(error); }
+  };
 }

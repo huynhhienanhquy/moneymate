@@ -4,14 +4,17 @@ export const sendSuccess = (res: Response, data: any, message: string = 'Success
   return res.status(statusCode).json({
     success: true,
     message,
-    data
+    data,
+    requestId: res.locals.requestId
   });
 };
 
-export const sendError = (res: Response, message: string, statusCode: number = 400, errors: any[] = []) => {
+export const sendError = (res: Response, message: string, statusCode: number = 400, errors: any[] = [], code: string = 'REQUEST_FAILED') => {
   return res.status(statusCode).json({
     success: false,
+    code,
     message,
-    errors
+    errors,
+    requestId: res.locals.requestId
   });
 };

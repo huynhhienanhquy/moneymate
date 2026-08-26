@@ -98,6 +98,16 @@ export class TransactionService {
     };
   }
 
+  async syncTransactions(userId: string, cursor?: Date, take = 100) {
+    const items = await this.transactionRepository.findSyncDelta(userId, cursor, Math.min(take, 200));
+    const last = items.at(-1);
+    return {
+      items,
+      nextCursor: last?.updatedAt.toISOString() || cursor?.toISOString() || null,
+      hasMore: items.length === Math.min(take, 200)
+    };
+  }
+
   async getTransaction(userId: string, id: string) {
     const tx = await this.transactionRepository.findById(id);
     if (!tx || tx.userId !== userId) {
@@ -113,8 +123,12 @@ export class TransactionService {
     type?: TransactionType;
     note?: string;
     transactionDate?: Date;
+    version?: number;
   }) {
     const oldTx = await this.getTransaction(userId, id);
+    if (data.version !== undefined && data.version !== oldTx.version) {
+      throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
+    }
 
     // Validate wallet and category if changed
     const targetWalletId = data.walletId || oldTx.walletId;
@@ -154,16 +168,23 @@ export class TransactionService {
       }
 
       // 2. Perform the update
-      const updatedTx = await tx.transaction.update({
-        where: { id },
+      const updateResult = await tx.transaction.updateMany({
+        where: { id, version: oldTx.version, deletedAt: null },
         data: {
           walletId: targetWalletId,
           categoryId: targetCategoryId,
           amount: newAmount,
           type: newType,
           note: data.note,
-          transactionDate: data.transactionDate
-        },
+          transactionDate: data.transactionDate,
+          version: { increment: 1 }
+        }
+      });
+      if (updateResult.count !== 1) {
+        throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
+      }
+      const updatedTx = await tx.transaction.findUniqueOrThrow({
+        where: { id },
         include: {
           wallet: { select: { name: true } },
           category: { select: { name: true, color: true } }
@@ -187,14 +208,21 @@ export class TransactionService {
     });
   }
 
-  async deleteTransaction(userId: string, id: string) {
+  async deleteTransaction(userId: string, id: string, version?: number) {
     const txVal = await this.getTransaction(userId, id);
+    if (version !== undefined && version !== txVal.version) {
+      throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
+    }
     const amountDec = new Prisma.Decimal(txVal.amount);
 
     return prisma.$transaction(async (tx) => {
-      await tx.transaction.delete({
-        where: { id }
+      const deleteResult = await tx.transaction.updateMany({
+        where: { id, version: txVal.version, deletedAt: null },
+        data: { deletedAt: new Date(), version: { increment: 1 } }
       });
+      if (deleteResult.count !== 1) {
+        throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
+      }
 
       // Reverse balance change on wallet
       if (txVal.type === TransactionType.INCOME) {

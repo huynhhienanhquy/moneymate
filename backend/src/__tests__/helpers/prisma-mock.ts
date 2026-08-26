@@ -35,8 +35,7 @@ const mockPrismaClient = {
   refreshToken: {
     findUnique: jest.fn(),
     create: jest.fn(),
-    delete: jest.fn(),
-    deleteMany: jest.fn(),
+    updateMany: jest.fn(),
   },
   walletTransfer: {
     create: jest.fn(),
@@ -59,6 +58,17 @@ const mockPrismaClient = {
     update: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
+  },
+  deviceToken: {
+    upsert: jest.fn(),
+    updateMany: jest.fn(),
+    findMany: jest.fn(),
+  },
+  idempotencyRecord: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    updateMany: jest.fn(),
+    deleteMany: jest.fn(),
   },
   recurringTransaction: {
     findUnique: jest.fn(),

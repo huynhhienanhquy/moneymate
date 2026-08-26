@@ -19,6 +19,14 @@ export class AttachmentRepository {
     return prisma.attachment.findUnique({ where: { id } });
   }
 
+  async findUrlsByUserId(userId: string) {
+    const attachments = await prisma.attachment.findMany({
+      where: { transaction: { userId } },
+      select: { url: true }
+    });
+    return attachments.map(({ url }) => url);
+  }
+
   async delete(id: string) {
     return prisma.attachment.delete({ where: { id } });
   }

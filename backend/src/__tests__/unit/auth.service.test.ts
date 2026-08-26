@@ -102,8 +102,16 @@ describe('AuthService', () => {
       mockTokenRepo.create.mockResolvedValue({
         id: 'token-id',
         userId: 'uuid-123',
-        token: 'mock-refresh-token',
+        tokenHash: 'hashed-refresh-token',
+        tokenFamily: 'family-id',
+        deviceId: null,
+        deviceName: null,
+        platform: 'web',
+        appVersion: null,
+        timezone: null,
         expiresAt: new Date(),
+        lastSeenAt: new Date(),
+        revokedAt: null,
         createdAt: new Date(),
       });
 
@@ -113,6 +121,11 @@ describe('AuthService', () => {
       expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword123');
       expect(result.user).toMatchObject({ id: 'uuid-123', email: 'test@example.com' });
       expect(result.accessToken).toBe('mock-access-token');
+      expect(mockTokenRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'uuid-123',
+        platform: 'web',
+        tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/)
+      }));
     });
 
     it('should throw AppError for invalid email', async () => {
@@ -133,35 +146,69 @@ describe('AuthService', () => {
 
   // ─── LOGOUT ───────────────────────────────────────────────────────────────────
   describe('logout()', () => {
-    it('should call deleteByToken on the repository', async () => {
-      mockTokenRepo.deleteByToken.mockResolvedValue(null);
+    it('should revoke the hashed refresh token', async () => {
+      mockTokenRepo.revokeByHash.mockResolvedValue({ count: 1 });
       await authService.logout('some-refresh-token');
-      expect(mockTokenRepo.deleteByToken).toHaveBeenCalledWith('some-refresh-token');
+      expect(mockTokenRepo.revokeByHash).toHaveBeenCalledWith(
+        expect.stringMatching(/^[a-f0-9]{64}$/)
+      );
     });
   });
 
   // ─── REFRESH ──────────────────────────────────────────────────────────────────
   describe('refresh()', () => {
     it('should throw AppError for expired/invalid refresh token', async () => {
-      const expiredDate = new Date(Date.now() - 1000); // 1 second in the past
-      mockTokenRepo.findByToken.mockResolvedValue({
-        id: 'token-id',
-        userId: 'uuid-123',
-        token: 'expired-token',
-        expiresAt: expiredDate,
-        createdAt: new Date(),
-      });
-      mockTokenRepo.deleteByToken.mockResolvedValue(null);
+      mockTokenRepo.consume.mockResolvedValue(null);
 
       await expect(authService.refresh('expired-token'))
         .rejects.toThrow('Refresh token is invalid or expired');
     });
 
     it('should throw AppError when token not found in database', async () => {
-      mockTokenRepo.findByToken.mockResolvedValue(null);
+      mockTokenRepo.consume.mockResolvedValue(null);
 
       await expect(authService.refresh('non-existent-token'))
         .rejects.toThrow('Refresh token is invalid or expired');
+    });
+
+    it('should consume a token once and preserve its token family during rotation', async () => {
+      const tokenRecord = {
+        id: 'token-id',
+        userId: 'uuid-123',
+        tokenHash: 'stored-hash',
+        tokenFamily: 'family-id',
+        deviceId: 'device-id',
+        deviceName: 'Test phone',
+        platform: 'android',
+        appVersion: '1.0.0',
+        timezone: 'Asia/Bangkok',
+        expiresAt: new Date(Date.now() + 60_000),
+        lastSeenAt: new Date(),
+        revokedAt: null,
+        createdAt: new Date()
+      };
+      mockTokenRepo.consume.mockResolvedValue(tokenRecord);
+      mockUserRepo.findById.mockResolvedValue({
+        id: 'uuid-123',
+        email: 'test@example.com',
+        fullName: 'Test User',
+        passwordHash: 'hashedPassword123',
+        avatarUrl: null,
+        role: Role.USER,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      (jwt.sign as jest.Mock).mockReturnValue('new-access-token');
+      mockTokenRepo.create.mockResolvedValue(tokenRecord);
+
+      const result = await authService.refresh('raw-refresh-token');
+
+      expect(result.accessToken).toBe('new-access-token');
+      expect(mockTokenRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+        tokenFamily: 'family-id',
+        platform: 'android',
+        deviceId: 'device-id'
+      }));
     });
   });
 });

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { loginRequestSchema } from '@moneymate/validation';
 
 export const registerSchema = z.object({
   body: z.object({
@@ -9,8 +10,5 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  body: z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(1, 'Password is required')
-  })
+  body: loginRequestSchema
 });

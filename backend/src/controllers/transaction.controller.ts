@@ -97,7 +97,8 @@ export class TransactionController {
       if (!userId) {
         throw new AppError('Unauthorized', 401);
       }
-      await this.transactionService.deleteTransaction(userId, transactionId);
+      const version = req.query.version ? safeParseInt(req.query.version) : undefined;
+      await this.transactionService.deleteTransaction(userId, transactionId, version);
       return sendSuccess(res, null, 'Transaction deleted successfully');
     } catch (error) {
       next(error);
@@ -175,5 +176,15 @@ export class TransactionController {
     } catch (error) {
       next(error);
     }
+  };
+
+  public syncTransactions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) throw new AppError('Unauthorized', 401);
+      const cursor = req.query.cursor ? new Date(String(req.query.cursor)) : undefined;
+      const take = safeParseInt(req.query.take) || 100;
+      return sendSuccess(res, await this.transactionService.syncTransactions(userId, cursor, take), 'Transaction sync delta retrieved');
+    } catch (error) { next(error); }
   };
 }
