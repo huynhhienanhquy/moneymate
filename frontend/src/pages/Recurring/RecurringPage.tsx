@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, RefreshCw, Pencil, Trash2, Loader2, X, Pause, Play, Repeat, Search, Filter, MoreVertical, ArrowDownRight, ArrowUpRight } from 'lucide-react';
@@ -32,17 +33,17 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{item ? 'Sửa giao dịch định kỳ' : 'Thêm giao dịch định kỳ'}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></button>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="space-y-4">
           <div className="flex gap-2 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
             {['INCOME', 'EXPENSE'].map((t) => (
-              <button key={t} onClick={() => setForm(p => ({ ...p, type: t, categoryId: '' }))}
+              <AppButton unstyled key={t} onClick={() => setForm(p => ({ ...p, type: t, categoryId: '' }))}
                 className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${form.type === t
                   ? t === 'INCOME' ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-500 dark:text-rose-400'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
                 {t === 'INCOME' ? 'Thu nhập' : 'Chi tiêu'}
-              </button>
+              </AppButton>
             ))}
           </div>
           <div className="relative">
@@ -70,12 +71,12 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
             className="app-input" />
         </div>
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button onClick={() => onSave({ ...form, amount: parseFloat(form.amount), startDate: new Date(form.startDate) })}
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled onClick={() => onSave({ ...form, amount: parseFloat(form.amount), startDate: new Date(form.startDate) })}
             disabled={loading || !form.walletId || !form.categoryId || !form.amount}
             className="app-primary-button flex-1">
             {loading ? <Loader2 size={16} className="animate-spin" /> : 'Lưu'}
-          </button>
+          </AppButton>
         </div>
     </AppModal>
   );
@@ -128,7 +129,7 @@ const RecurringPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description="Lương, hóa đơn, Netflix... tự động mỗi kỳ" actions={<button onClick={() => setShowModal(true)} className="app-primary-button"><Plus size={16} /><span>Thêm định kỳ</span></button>} />
+      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description="Lương, hóa đơn, Netflix... tự động mỗi kỳ" actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus size={16} /><span>Thêm định kỳ</span></AppButton>} />
 
       {isLoading ? (
         <LoadingState />
@@ -159,7 +160,7 @@ const RecurringPage: React.FC = () => {
 
             <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
               {visibleItems.length === 0 ? (
-                <div className="flex flex-col items-center py-16 text-slate-500"><RefreshCw size={30} className="mb-3 opacity-40" /><p className="font-semibold">Không tìm thấy giao dịch định kỳ</p><button onClick={() => setShowModal(true)} className="app-primary-button mt-4"><Plus size={16} /> Thêm định kỳ</button></div>
+                <div className="flex flex-col items-center py-16 text-slate-500"><RefreshCw size={30} className="mb-3 opacity-40" /><p className="font-semibold">Không tìm thấy giao dịch định kỳ</p><AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button mt-4"><Plus size={16} /> Thêm định kỳ</AppButton></div>
               ) : <div className="overflow-x-auto"><table className="w-full min-w-[760px] table-fixed text-left">
                 <thead className="border-b border-slate-100 dark:border-slate-800"><tr className="uppercase tracking-wide text-slate-500 dark:text-slate-400"><th className="w-[32%] px-4 py-3">Giao dịch</th><th className="w-[25%] px-3 py-3">Tần suất &amp; ví</th><th className="w-[20%] px-3 py-3">Ngày tiếp theo</th><th className="w-[17%] px-3 py-3 text-right">Số tiền</th><th className="w-[6%] px-2 py-3 text-center">Thao tác</th></tr></thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -168,7 +169,7 @@ const RecurringPage: React.FC = () => {
                     <td className="px-3 py-3"><p className="font-semibold text-slate-700 dark:text-slate-300">{FREQ_LABELS[item.frequency]}</p><p className="mt-1 text-slate-500 dark:text-slate-400">Ví: {item.wallet?.name}</p></td>
                     <td className="px-3 py-3"><p className="font-bold text-slate-900 dark:text-white">{new Date(item.nextExecutionDate).toLocaleDateString('vi-VN')}</p><span className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 font-semibold text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">Còn lịch</span></td>
                     <td className={`whitespace-nowrap px-3 py-3 text-right font-extrabold ${item.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-500'}`}>{item.type === 'INCOME' ? '+' : '-'}{formatVND(Number(item.amount))}</td>
-                    <td className="relative px-2 py-3 text-center"><button aria-label="Mở thao tác" onClick={() => setActionMenuId((id) => id === item.id ? null : item.id)} className="rounded-md p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical size={17} /></button>{actionMenuId === item.id && <div className="absolute right-3 top-11 z-20 w-40 rounded-lg border border-slate-200 bg-white p-1 text-left shadow-xl dark:border-slate-700 dark:bg-slate-900"><button onClick={() => { toggleMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">{item.isActive ? <Pause size={15} /> : <Play size={15} />}{item.isActive ? 'Tạm dừng' : 'Kích hoạt'}</button><button onClick={() => { setEditItem(item); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"><Pencil size={15} />Chỉnh sửa</button><button onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 size={15} />Xóa</button></div>}</td>
+                    <td className="relative px-2 py-3 text-center"><AppButton unstyled aria-label="Mở thao tác" onClick={() => setActionMenuId((id) => id === item.id ? null : item.id)} className="rounded-md p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical size={17} /></AppButton>{actionMenuId === item.id && <div className="absolute right-3 top-11 z-20 w-40 rounded-lg border border-slate-200 bg-white p-1 text-left shadow-xl dark:border-slate-700 dark:bg-slate-900"><AppButton unstyled onClick={() => { toggleMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">{item.isActive ? <Pause size={15} /> : <Play size={15} />}{item.isActive ? 'Tạm dừng' : 'Kích hoạt'}</AppButton><AppButton unstyled onClick={() => { setEditItem(item); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"><Pencil size={15} />Chỉnh sửa</AppButton><AppButton unstyled onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 size={15} />Xóa</AppButton></div>}</td>
                   </tr>)}
                 </tbody>
               </table></div>}

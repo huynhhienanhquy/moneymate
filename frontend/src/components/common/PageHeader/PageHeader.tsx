@@ -1,4 +1,5 @@
 import React from 'react';
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 
 interface PageHeaderProps {
   title: string;
@@ -10,9 +11,7 @@ interface PageHeaderProps {
 
 const PageHeader = ({ title, description, eyebrow, actions, className = '' }: PageHeaderProps) => (
   <header className={`app-page-header ${className}`}>
-    {eyebrow && <p className="font-semibold text-brand-600 dark:text-brand-400">{eyebrow}</p>}
-    <h1 className={`${eyebrow ? 'mt-1' : ''} font-extrabold tracking-tight text-slate-950 dark:text-slate-100`}>{title}</h1>
-    {description && <p className="mt-1 text-slate-500 dark:text-slate-400">{description}</p>}
+    <AppTitle eyebrow={eyebrow} description={description}>{title}</AppTitle>
     {actions && <div className="mt-4 flex flex-wrap gap-2">{actions}</div>}
   </header>
 );

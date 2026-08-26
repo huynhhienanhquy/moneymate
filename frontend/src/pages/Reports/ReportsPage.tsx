@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -106,23 +107,23 @@ const ReportsPage: React.FC = () => {
         <div className="flex flex-wrap items-stretch gap-3">
           <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
             {(['monthly', 'yearly'] as const).map((t) => (
-              <button key={t} onClick={() => setReportType(t)} className={`min-w-20 rounded-lg px-4 py-2 font-semibold transition ${reportType === t ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300'}`}>
+              <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-20 rounded-lg px-4 py-2 font-semibold transition ${reportType === t ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300'}`}>
                 {t === 'monthly' ? 'Theo tháng' : 'Theo năm'}
-              </button>
+              </AppButton>
             ))}
           </div>
           {reportType === 'monthly' && (
             <>
-              <button onClick={() => handleExport('pdf')} disabled={!!exporting}
+              <AppButton unstyled onClick={() => handleExport('pdf')} disabled={!!exporting}
                 className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                 {exporting === 'pdf' ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
                 <span>Xuất<br />PDF</span>
-              </button>
-              <button onClick={() => handleExport('excel')} disabled={!!exporting}
+              </AppButton>
+              <AppButton unstyled onClick={() => handleExport('excel')} disabled={!!exporting}
                 className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                 {exporting === 'excel' ? <Loader2 size={15} className="animate-spin" /> : <FileSpreadsheet size={15} />}
                 <span>Xuất<br />Excel</span>
-              </button>
+              </AppButton>
             </>
           )}
         </div>
@@ -130,16 +131,16 @@ const ReportsPage: React.FC = () => {
 
       {/* Period Navigator */}
       <div className="flex items-center justify-center gap-3">
-        <button aria-label="Kỳ trước" onClick={prevPeriod} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+        <AppButton unstyled aria-label="Kỳ trước" onClick={prevPeriod} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
           <ChevronLeft size={18} />
-        </button>
+        </AppButton>
         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
           <Calendar size={17} className="text-blue-600" />
           {reportType === 'monthly' ? `${MONTHS[month - 1]}, ${year}` : `Năm ${year}`}
         </div>
-        <button aria-label="Kỳ sau" onClick={nextPeriod} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+        <AppButton unstyled aria-label="Kỳ sau" onClick={nextPeriod} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
           <ChevronRight size={18} />
-        </button>
+        </AppButton>
       </div>
 
       {isLoading ? (

@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, ArrowDownLeft, Pencil, Trash2, Loader2, X, Filter, ChevronDown, Paperclip, ScanLine, CarFront, Utensils, Banknote } from 'lucide-react';
@@ -62,14 +63,14 @@ const TransactionModal: React.FC<{
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{tx ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch'}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition"><X size={20} /></button>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition"><X size={20} /></AppButton>
         </div>
 
         <div className="space-y-4">
           {/* Type Selector */}
           <div className="flex gap-2 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
             {[{ v: 'INCOME', l: 'Thu nhập' }, { v: 'EXPENSE', l: 'Chi tiêu' }].map(({ v, l }) => (
-              <button
+              <AppButton unstyled
                 key={v}
                 id={`tx-type-${v.toLowerCase()}`}
                 type="button"
@@ -79,7 +80,7 @@ const TransactionModal: React.FC<{
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
               >
                 {l}
-              </button>
+              </AppButton>
             ))}
           </div>
 
@@ -169,8 +170,8 @@ const TransactionModal: React.FC<{
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled
             id="tx-save"
             onClick={handleSave}
             disabled={loading || !form.walletId || !form.categoryId || !form.amount}
@@ -178,7 +179,7 @@ const TransactionModal: React.FC<{
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : null}
             {loading ? 'Đang xử lý...' : tx ? 'Lưu' : 'Thêm giao dịch'}
-          </button>
+          </AppButton>
         </div>
         {saveError && <p className="text-xs text-rose-400 text-center mt-2">{saveError}</p>}
         {!loading && !saveError && (!form.walletId || !form.categoryId || !form.amount) && (
@@ -275,12 +276,12 @@ const TransactionsPage: React.FC = () => {
           <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Theo dõi toàn bộ thu chi của bạn</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-[9px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+          <AppButton unstyled onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-[9px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <ScanLine size={12} /><span>Quét hóa đơn</span>
-          </button>
-          <button id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-[#08b8eb] px-3.5 text-[9px] font-bold text-slate-900 shadow-[0_3px_8px_rgba(8,184,235,0.25)] transition hover:bg-[#00a8d8]">
+          </AppButton>
+          <AppButton unstyled id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-[#08b8eb] px-3.5 text-[9px] font-bold text-slate-900 shadow-[0_3px_8px_rgba(8,184,235,0.25)] transition hover:bg-[#00a8d8]">
             <Plus size={12} /><span>Thêm giao dịch</span>
-          </button>
+          </AppButton>
         </div>
       </div>
 
@@ -346,7 +347,7 @@ const TransactionsPage: React.FC = () => {
                               <TransactionIcon size={11} className={isIncome ? 'text-emerald-600' : 'text-rose-500'} />
                             </div>
                             <div className="min-w-0">
-                              <button type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</button>
+                              <AppButton unstyled type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</AppButton>
                               <div className="mt-0.5 flex items-center gap-1">
                                 <span className="inline-block h-1 w-1 rounded-full" style={{ background: tx.category?.color || '#64748b' }}></span>
                                 <p className="truncate text-[7px] leading-[1.4] text-slate-500">{tx.category?.name}</p>
@@ -365,10 +366,10 @@ const TransactionsPage: React.FC = () => {
                             {isIncome ? '↑ +' : '↓ -'}{formatVND(Number(tx.amount))}
                           </span>
                           <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 bg-white pl-2 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">
-                            <button id={`edit-tx-${tx.id}`} aria-label="Chỉnh sửa giao dịch" onClick={() => setEditTx(tx)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={11} /></button>
-                            <button id={`del-tx-${tx.id}`} aria-label="Xóa giao dịch" onClick={() => { if (confirm('Xóa giao dịch này?')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10">
+                            <AppButton unstyled id={`edit-tx-${tx.id}`} aria-label="Chỉnh sửa giao dịch" onClick={() => setEditTx(tx)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={11} /></AppButton>
+                            <AppButton unstyled id={`del-tx-${tx.id}`} aria-label="Xóa giao dịch" onClick={() => { if (confirm('Xóa giao dịch này?')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10">
                               {deletingId === tx.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
-                            </button>
+                            </AppButton>
                           </div>
                         </td>
                       </tr>
@@ -383,8 +384,8 @@ const TransactionsPage: React.FC = () => {
                 <div className="flex items-center justify-between px-5 py-4 border-t border-slate-200 dark:border-slate-800">
                 <p className="text-xs text-slate-500">Hiển thị {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} / {total} giao dịch</p>
                 <div className="flex gap-2">
-                  <button disabled={page === 0} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-sm text-slate-400 hover:bg-slate-800 disabled:opacity-40 transition">← Trước</button>
-                  <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-sm text-slate-400 hover:bg-slate-800 disabled:opacity-40 transition">Sau →</button>
+                  <AppButton unstyled disabled={page === 0} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-sm text-slate-400 hover:bg-slate-800 disabled:opacity-40 transition">← Trước</AppButton>
+                  <AppButton unstyled disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-slate-700 text-sm text-slate-400 hover:bg-slate-800 disabled:opacity-40 transition">Sau →</AppButton>
                 </div>
               </div>
             )}

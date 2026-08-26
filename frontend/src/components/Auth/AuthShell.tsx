@@ -1,5 +1,6 @@
 import React from 'react';
 import { WalletCards } from 'lucide-react';
+import AppFooter from '@/components/common/AppFooter/AppFooter';
 
 interface AuthShellProps {
   titleId: string;
@@ -15,7 +16,7 @@ const AuthShell = ({ titleId, children, register = false }: AuthShellProps) => (
         <div className="auth-brand"><WalletCards aria-hidden="true" /><span>MoneyMate</span></div>
         {children}
       </div>
-      <footer className="auth-footer"><strong>MoneyMate</strong><nav aria-label="Liên kết chân trang"><a href="#terms">Điều khoản</a><a href="#privacy">Bảo mật</a><a href="#contact">Liên hệ</a></nav><p>© 2024 MoneyMate - Hành trình tài chính thông minh</p></footer>
+      <AppFooter className="auth-footer" links={[{ label: 'Điều khoản', href: '#terms' }, { label: 'Bảo mật', href: '#privacy' }, { label: 'Liên hệ', href: '#contact' }]} copyright="© 2024 MoneyMate - Hành trình tài chính thông minh" />
     </section>
   </main>
 );

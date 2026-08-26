@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Target, Pencil, Trash2, Loader2, X, ArrowDownToLine, ArrowUpFromLine, Trophy, TrendingUp, Calendar } from 'lucide-react';
@@ -19,7 +20,7 @@ const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) =>
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{goal ? 'Sửa mục tiêu' : 'Tạo mục tiêu tiết kiệm'}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></button>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="space-y-4">
           <div>
@@ -39,13 +40,13 @@ const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) =>
           </div>
         </div>
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button onClick={() => onSave({ title: form.title, targetAmount: parseFloat(form.targetAmount), targetDate: new Date(form.targetDate) })}
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled onClick={() => onSave({ title: form.title, targetAmount: parseFloat(form.targetAmount), targetDate: new Date(form.targetDate) })}
             disabled={loading || !form.title || !form.targetAmount || !form.targetDate}
             className="app-primary-button flex-1">
             {loading ? <Loader2 size={16} className="animate-spin" /> : null}
             {loading ? 'Đang xử lý...' : 'Lưu'}
-          </button>
+          </AppButton>
         </div>
     </AppModal>
   );
@@ -71,10 +72,10 @@ const DepositModal: React.FC<{ goal: any; wallets: any[]; type: 'deposit' | 'wit
             className="app-input" />
         </div>
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button onClick={() => onSave({ walletId: form.walletId, amount: parseFloat(form.amount) })}
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled onClick={() => onSave({ walletId: form.walletId, amount: parseFloat(form.amount) })}
             disabled={loading || !form.walletId || !form.amount}
-            className="app-primary-button flex-1">Xác nhận</button>
+            className="app-primary-button flex-1">Xác nhận</AppButton>
         </div>
     </AppModal>
   );
@@ -152,8 +153,8 @@ const SavingGoalsPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <button onClick={() => setEditGoal(g)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil size={13} /></button>
-                    <button onClick={() => { if (confirm('Xóa mục tiêu?')) deleteMutation.mutate(g.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 size={13} /></button>
+                    <AppButton unstyled onClick={() => setEditGoal(g)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil size={13} /></AppButton>
+                    <AppButton unstyled onClick={() => { if (confirm('Xóa mục tiêu?')) deleteMutation.mutate(g.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 size={13} /></AppButton>
                   </div>
                 </div>
                 <h2 className="mt-4 font-extrabold text-slate-950 dark:text-slate-100">{g.title}</h2>
@@ -175,28 +176,28 @@ const SavingGoalsPage: React.FC = () => {
                     <div className="mt-2 flex items-center justify-between text-slate-500 dark:text-slate-400"><span className="flex items-center gap-1.5"><Calendar size={14} />{new Date(g.targetDate).toLocaleDateString('vi-VN')}</span><span className="font-bold text-blue-600 dark:text-blue-400">{g.progress}%</span></div>
                   </div>
                   <div className="mt-auto flex gap-2 pt-4">
-                    <button onClick={() => setAction({ goal: g, type: 'deposit' })}
+                    <AppButton unstyled onClick={() => setAction({ goal: g, type: 'deposit' })}
                       className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0873c9] font-semibold text-white transition hover:bg-[#0666b4]">
                       <ArrowDownToLine size={13} /> Nạp
-                    </button>
-                    <button onClick={() => setAction({ goal: g, type: 'withdraw' })}
+                    </AppButton>
+                    <AppButton unstyled onClick={() => setAction({ goal: g, type: 'withdraw' })}
                       className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-100 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">
                       <ArrowUpFromLine size={13} /> Rút
-                    </button>
+                    </AppButton>
                   </div>
                   </>
                 )}
               </div>
             ))}
             {/* Add new goal card */}
-            <button onClick={() => setShowModal(true)}
+            <AppButton unstyled onClick={() => setShowModal(true)}
               className="group flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/35 p-5 text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-[0_5px_18px_rgba(15,23,42,0.10)] transition group-hover:scale-105 dark:bg-slate-800 dark:text-blue-400">
                 <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
               </div>
               <h2 className="font-extrabold text-slate-900 dark:text-white">Thêm mục tiêu mới</h2>
               <p className="max-w-52 text-center text-slate-500 dark:text-slate-400">Bắt đầu lên kế hoạch cho mục tiêu tiếp theo của bạn</p>
-            </button>
+            </AppButton>
           </div>
       )}
 

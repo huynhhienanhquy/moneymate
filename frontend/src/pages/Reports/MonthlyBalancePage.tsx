@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -72,24 +73,24 @@ const MonthlyBalancePage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <AppButton unstyled
             aria-label="Năm trước"
             onClick={() => setYear((y) => y - 1)}
             className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
           >
             <ChevronLeft size={18} />
-          </button>
+          </AppButton>
           <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <Calendar size={17} className="text-blue-600" />
             Năm {year}
           </div>
-          <button
+          <AppButton unstyled
             aria-label="Năm sau"
             onClick={() => setYear((y) => y + 1)}
             className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
           >
             <ChevronRight size={18} />
-          </button>
+          </AppButton>
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { User, Lock, Save, Loader2, CheckCircle2, Shield, Mail, Calendar } from 'lucide-react';
@@ -164,14 +165,14 @@ const ProfilePage: React.FC = () => {
               className="app-input"
             />
           </div>
-          <button
+          <AppButton unstyled
             type="submit"
             disabled={updateProfileMutation.isPending}
             className="app-primary-button"
           >
             {updateProfileMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             Lưu thay đổi
-          </button>
+          </AppButton>
         </form>
       </div>
 
@@ -227,14 +228,14 @@ const ProfilePage: React.FC = () => {
               className="app-input"
             />
           </div>
-          <button
+          <AppButton unstyled
             type="submit"
             disabled={changePasswordMutation.isPending}
             className="app-danger-button"
           >
             {changePasswordMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
             Đổi mật khẩu
-          </button>
+          </AppButton>
         </form>
       </div>
       </div>

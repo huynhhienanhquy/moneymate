@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, PiggyBank, Pencil, Trash2, Loader2, X, ChevronLeft, ChevronRight, AlertTriangle, TrendingDown, CalendarDays, CircleDollarSign, WalletCards } from 'lucide-react';
@@ -39,7 +40,7 @@ const BudgetModal: React.FC<{ budget?: any; categories: any[]; month: number; ye
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{budget ? 'Sửa ngân sách' : 'Thêm ngân sách'}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></button>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl px-4 py-2.5">
           <PiggyBank size={14} /> Tháng {MONTHS[month - 1]} {year}
@@ -60,12 +61,12 @@ const BudgetModal: React.FC<{ budget?: any; categories: any[]; month: number; ye
           </div>
         </div>
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button onClick={() => onSave({ categoryId: form.categoryId || null, amount: parseFloat(form.amount), month, year })}
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled onClick={() => onSave({ categoryId: form.categoryId || null, amount: parseFloat(form.amount), month, year })}
             disabled={loading || !form.amount}
             className="app-primary-button flex-1">
             {loading ? <Loader2 size={16} className="animate-spin" /> : 'Lưu'}
-          </button>
+          </AppButton>
         </div>
     </AppModal>
   );
@@ -127,20 +128,20 @@ const BudgetsPage: React.FC = () => {
             <p className="flex items-center gap-2 font-bold uppercase tracking-wide text-blue-100"><CircleDollarSign size={16} /> Quản lý ngân sách</p>
             <h1 className="mt-2 font-extrabold tracking-normal text-white">Ngân sách</h1>
           </div>
-          <button onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 font-bold text-[#0769be] shadow-md transition hover:bg-blue-50">
+          <AppButton unstyled onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 font-bold text-[#0769be] shadow-md transition hover:bg-blue-50">
             <Plus size={16} /> Thêm Ngân sách
-          </button>
+          </AppButton>
         </div>
       </section>
 
       {/* Period Navigator */}
       <div className="mt-5 flex items-center justify-center gap-3">
-        <button onClick={prev} aria-label="Tháng trước" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-blue-600 dark:hover:bg-slate-900"><ChevronLeft size={18} /></button>
+        <AppButton unstyled onClick={prev} aria-label="Tháng trước" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-blue-600 dark:hover:bg-slate-900"><ChevronLeft size={18} /></AppButton>
         <div className="flex h-10 items-center gap-2 rounded-full bg-white px-5 font-bold text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200">
           <CalendarDays size={16} className="text-[#0873c9]" />
           Tháng {month} {year}
         </div>
-        <button onClick={next} aria-label="Tháng sau" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-blue-600 dark:hover:bg-slate-900"><ChevronRight size={18} /></button>
+        <AppButton unstyled onClick={next} aria-label="Tháng sau" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-blue-600 dark:hover:bg-slate-900"><ChevronRight size={18} /></AppButton>
       </div>
 
       {isLoading ? (
@@ -152,9 +153,9 @@ const BudgetsPage: React.FC = () => {
           </div>
           <p className="text-base font-semibold">Chưa có ngân sách tháng này</p>
           <p className="text-sm mt-1">Hãy thêm ngân sách để kiểm soát chi tiêu tốt hơn!</p>
-          <button onClick={() => setShowModal(true)} className="app-primary-button mt-4">
+          <AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button mt-4">
             <Plus size={16} /> Thêm ngân sách
-          </button>
+          </AppButton>
         </div>
       ) : (
         <>
@@ -179,8 +180,8 @@ const BudgetsPage: React.FC = () => {
                     <div><h2 className="truncate font-extrabold text-slate-900 dark:text-slate-100">{b.category?.name || 'Tổng chi tiêu'}</h2><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 font-semibold ${isExceeded ? 'bg-rose-100 text-rose-600' : isWarning ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>{isExceeded ? 'Vượt mức' : isWarning ? 'Sắp chạm mức' : 'Tốt'}</span></div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <button onClick={() => setEditBudget(b)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil size={14} /></button>
-                    <button onClick={() => { if (confirm('Xóa ngân sách?')) deleteMutation.mutate(b.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 size={14} /></button>
+                    <AppButton unstyled onClick={() => setEditBudget(b)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil size={14} /></AppButton>
+                    <AppButton unstyled onClick={() => { if (confirm('Xóa ngân sách?')) deleteMutation.mutate(b.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 size={14} /></AppButton>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center justify-center"><ProgressRing percentage={b.percentage} tone={tone} /></div>
@@ -196,14 +197,14 @@ const BudgetsPage: React.FC = () => {
               </div>
             )})}
             {/* Add new budget card */}
-            <button onClick={() => setShowModal(true)}
+            <AppButton unstyled onClick={() => setShowModal(true)}
               className="group flex min-h-[310px] flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/35 p-5 text-slate-500 transition-all hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition group-hover:scale-105 dark:bg-blue-500/15 dark:text-blue-400">
                 <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
               </div>
               <h2 className="font-extrabold">Thêm ngân sách</h2>
               <p className="max-w-48 text-center text-slate-500 dark:text-slate-400">Tạo danh mục ngân sách mới để theo dõi chi tiêu</p>
-            </button>
+            </AppButton>
           </div>
         </>
       )}

@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2, Loader2, X, TrendingUp, TrendingDown } from 'lucide-react';
@@ -15,7 +16,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{cat ? 'Chỉnh sửa danh mục' : 'Thêm danh mục'}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></button>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
 
         <div className="space-y-4">
@@ -36,7 +37,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Loại</label>
               <div className="flex gap-2">
                 {(['INCOME', 'EXPENSE'] as const).map((t) => (
-                  <button
+                  <AppButton unstyled
                     key={t}
                     type="button"
                     id={`category-type-${t.toLowerCase()}`}
@@ -46,7 +47,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
                        : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 dark:hover:border-slate-600'}`}
                   >
                     {t === 'INCOME' ? '↑ Thu nhập' : '↓ Chi tiêu'}
-                  </button>
+                  </AppButton>
                 ))}
               </div>
             </div>
@@ -56,7 +57,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Màu sắc</label>
             <div className="flex flex-wrap gap-2">
               {COLORS.map((c) => (
-                <button
+                <AppButton unstyled
                   key={c}
                   type="button"
                   onClick={() => setForm(p => ({ ...p, color: c }))}
@@ -71,14 +72,14 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Icon</label>
             <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto scrollbar-thin">
               {ICONS.map((icon) => (
-                <button
+                <AppButton unstyled
                   key={icon}
                   type="button"
                   onClick={() => setForm(p => ({ ...p, icon }))}
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition ${form.icon === icon ? 'bg-brand-600/20 border-brand-500/40 text-brand-600 dark:text-brand-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-700 dark:hover:text-slate-300'}`}
                 >
                   {icon}
-                </button>
+                </AppButton>
               ))}
             </div>
           </div>
@@ -96,8 +97,8 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled
             id="category-save"
             onClick={() => onSave(form)}
             disabled={loading || !form.name}
@@ -105,7 +106,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
             {cat ? 'Lưu thay đổi' : 'Thêm'}
-          </button>
+          </AppButton>
         </div>
     </AppModal>
   );
@@ -148,15 +149,15 @@ const CategoriesPage: React.FC = () => {
           <h1 className="text-[28px] font-extrabold leading-[1.3] tracking-normal text-black dark:text-slate-100">Danh mục</h1>
           <p className="mt-1 text-slate-600 dark:text-slate-400">Quản lý danh mục thu nhập và chi tiêu</p>
         </div>
-        <button id="add-category-btn" onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#00699b] px-4 font-bold text-white shadow-[0_3px_8px_rgba(0,105,155,0.24)] transition hover:bg-[#005b87]">
+        <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#00699b] px-4 font-bold text-white shadow-[0_3px_8px_rgba(0,105,155,0.24)] transition hover:bg-[#005b87]">
           <Plus size={16} /><span>Thêm danh mục</span>
-        </button>
+        </AppButton>
       </div>
 
       {/* Tabs */}
       <div className="mt-5 flex w-fit gap-1 rounded-full border border-slate-200 bg-slate-100 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         {[{ key: 'EXPENSE', label: 'Chi tiêu', icon: TrendingDown }, { key: 'INCOME', label: 'Thu nhập', icon: TrendingUp }].map(({ key, label, icon: Icon }) => (
-          <button
+          <AppButton unstyled
             key={key}
             id={`tab-${key.toLowerCase()}`}
             onClick={() => setActiveTab(key as any)}
@@ -166,7 +167,7 @@ const CategoriesPage: React.FC = () => {
           >
             <Icon size={15} />
             {label}
-          </button>
+          </AppButton>
         ))}
       </div>
 
@@ -185,8 +186,8 @@ const CategoriesPage: React.FC = () => {
                     </div>
                     <p className="py-0.5 text-center font-semibold leading-[1.5] text-slate-950 dark:text-slate-100">{cat.name}</p>
                     <div className="absolute right-2 top-2 flex gap-1 rounded-md bg-white/90 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900/90">
-                      <button id={`edit-cat-${cat.id}`} aria-label={`Chỉnh sửa ${cat.name}`} onClick={() => setEditCat(cat)} className="rounded p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={14} /></button>
-                      <button id={`del-cat-${cat.id}`} aria-label={`Xóa ${cat.name}`} onClick={() => { if (confirm(`Xóa "${cat.name}"?`)) deleteMutation.mutate(cat.id); }} className="rounded p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"><Trash2 size={14} /></button>
+                      <AppButton unstyled id={`edit-cat-${cat.id}`} aria-label={`Chỉnh sửa ${cat.name}`} onClick={() => setEditCat(cat)} className="rounded p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={14} /></AppButton>
+                      <AppButton unstyled id={`del-cat-${cat.id}`} aria-label={`Xóa ${cat.name}`} onClick={() => { if (confirm(`Xóa "${cat.name}"?`)) deleteMutation.mutate(cat.id); }} className="rounded p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"><Trash2 size={14} /></AppButton>
                     </div>
                   </div>
                 ))}

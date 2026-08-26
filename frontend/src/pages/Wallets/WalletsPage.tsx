@@ -1,3 +1,4 @@
+import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Wallet, CreditCard, Smartphone, PiggyBank, Banknote, Pencil, Trash2, Loader2, X, ArrowLeftRight, ChevronDown } from 'lucide-react';
@@ -28,7 +29,7 @@ const TransferModal: React.FC<{ wallets: any[]; onClose: () => void; onSave: (d:
       <div className="app-shell-card w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">Chuyển tiền giữa ví</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></button>
+          <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="space-y-4">
           <div>
@@ -65,11 +66,11 @@ const TransferModal: React.FC<{ wallets: any[]; onClose: () => void; onSave: (d:
           </div>
         </div>
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button onClick={handleSave} disabled={loading || !form.sourceWalletId || !form.destinationWalletId || !form.amount}
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled onClick={handleSave} disabled={loading || !form.sourceWalletId || !form.destinationWalletId || !form.amount}
             className="app-primary-button flex-1">
             {loading && <Loader2 size={16} className="animate-spin" />} Chuyển tiền
-          </button>
+          </AppButton>
         </div>
       </div>
     </div>
@@ -84,7 +85,7 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
       <div className="app-shell-card w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{wallet ? 'Chỉnh sửa ví' : 'Thêm ví mới'}</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></button>
+          <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
 
         <div className="space-y-4">
@@ -107,7 +108,7 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
                 const Icon = wt.icon;
                 const selected = form.type === wt.value;
                 return (
-                  <button
+                  <AppButton unstyled
                     key={wt.value}
                     type="button"
                     id={`wallet-type-${wt.value.toLowerCase()}`}
@@ -116,7 +117,7 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
                   >
                     <Icon size={18} />
                     {wt.label}
-                  </button>
+                  </AppButton>
                 );
               })}
             </div>
@@ -139,8 +140,8 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="app-secondary-button flex-1">Hủy</button>
-          <button
+          <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
+          <AppButton unstyled
             id="wallet-save"
             onClick={() => onSave(form)}
             disabled={loading || !form.name}
@@ -148,7 +149,7 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
             {wallet ? 'Lưu thay đổi' : 'Tạo ví'}
-          </button>
+          </AppButton>
         </div>
       </div>
     </div>
@@ -203,13 +204,13 @@ const WalletsPage: React.FC = () => {
         </div>
         <div className="flex gap-2">
           {wallets.length >= 2 && (
-            <button onClick={() => setShowTransfer(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-[#0873c9] bg-white px-3 text-[9px] font-bold text-[#0873c9] shadow-sm transition hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800">
+            <AppButton unstyled onClick={() => setShowTransfer(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-[#0873c9] bg-white px-3 text-[9px] font-bold text-[#0873c9] shadow-sm transition hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800">
               <ArrowLeftRight size={12} /><span>Chuyển tiền</span>
-            </button>
+            </AppButton>
           )}
-          <button id="add-wallet-btn" onClick={() => setShowModal(true)} className="inline-flex h-8 items-center gap-2 rounded-md bg-[#00699b] px-3.5 text-[9px] font-bold text-white shadow-[0_3px_8px_rgba(0,105,155,0.25)] transition hover:bg-[#005b87]">
+          <AppButton unstyled id="add-wallet-btn" onClick={() => setShowModal(true)} className="inline-flex h-8 items-center gap-2 rounded-md bg-[#00699b] px-3.5 text-[9px] font-bold text-white shadow-[0_3px_8px_rgba(0,105,155,0.25)] transition hover:bg-[#005b87]">
             <Plus size={12} /><span>Thêm ví</span>
-          </button>
+          </AppButton>
         </div>
       </div>
 
@@ -237,22 +238,22 @@ const WalletsPage: React.FC = () => {
                     <p className="mt-0.5 truncate py-0.5 text-[12px] font-extrabold leading-[1.35] text-slate-950 dark:text-slate-100">{wallet.name}</p>
                   </div>
                   <div className="absolute right-2 top-2 flex gap-0.5 rounded-md bg-white/90 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900/90">
-                    <button
+                    <AppButton unstyled
                       id={`edit-wallet-${wallet.id}`}
                       onClick={() => setEditWallet(wallet)}
                       aria-label={`Chỉnh sửa ví ${wallet.name}`}
                       className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"
                     >
                       <Pencil size={11} />
-                    </button>
-                    <button
+                    </AppButton>
+                    <AppButton unstyled
                       id={`delete-wallet-${wallet.id}`}
                       onClick={() => { if (confirm(`Xóa ví "${wallet.name}"?`)) { setDeletingId(wallet.id); deleteMutation.mutate(wallet.id); } }}
                       aria-label={`Xóa ví ${wallet.name}`}
                       className="rounded p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"
                     >
                       {deletingId === wallet.id && deleteMutation.isPending ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
-                    </button>
+                    </AppButton>
                   </div>
                 </div>
                 <div className="mt-auto pt-4">

@@ -1,6 +1,7 @@
 import React from 'react';
-import { ScanLine, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ScanLine, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ScanResult, useReceiptScanner } from '@/hooks/components/useReceiptScanner';
+import AppButton from '@/components/common/AppButton/AppButton';
 export type { ScanResult } from '@/hooks/components/useReceiptScanner';
 
 const ReceiptScanModal: React.FC<{
@@ -17,7 +18,7 @@ const ReceiptScanModal: React.FC<{
             <ScanLine size={20} className="text-brand-400" />
             <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Quét hóa đơn AI</h2>
           </div>
-          <button onClick={onClose}><X size={20} className="text-slate-500" /></button>
+          <AppButton aria-label="Đóng" variant="icon" size="sm" className="min-h-0 p-2" onClick={onClose}><X size={20} className="text-slate-500" /></AppButton>
         </div>
 
         {!result ? (
@@ -28,11 +29,9 @@ const ReceiptScanModal: React.FC<{
               <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
                 onChange={(e) => setFile(e.target.files?.[0] || null)} />
             </label>
-            <button onClick={scan} disabled={!file || isScanning}
-              className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-600 text-white font-semibold disabled:opacity-60">
-              {isScanning ? <Loader2 size={18} className="animate-spin" /> : <ScanLine size={18} />}
+            <AppButton onClick={scan} disabled={!file} loading={isScanning} fullWidth size="lg" className="mt-4" leadingIcon={<ScanLine size={18} />}>
               {isScanning ? 'Đang quét...' : 'Quét hóa đơn'}
-            </button>
+            </AppButton>
           </>
         ) : (
           <div className="space-y-4">
@@ -48,8 +47,8 @@ const ReceiptScanModal: React.FC<{
               <div className="flex justify-between"><dt className="text-slate-500">Danh mục gợi ý</dt><dd className="text-brand-400">{result.suggestedCategoryName || '—'}</dd></div>
             </dl>
             <div className="flex gap-3 mt-4">
-              <button onClick={reset} className="flex-1 py-2.5 rounded-lg border text-sm text-slate-500">Quét lại</button>
-              <button onClick={() => onApply(result)} className="flex-1 py-2.5 rounded-lg bg-brand-600 text-white text-sm font-semibold">Áp dụng</button>
+              <AppButton onClick={reset} variant="secondary" className="flex-1">Quét lại</AppButton>
+              <AppButton onClick={() => onApply(result)} className="flex-1">Áp dụng</AppButton>
             </div>
           </div>
         )}
