@@ -22,10 +22,26 @@
   },
   "overrides": {
     "body-parser": "1.20.6",
-    "minimatch@3.1.5": { "brace-expansion": "1.1.18" },
-    "minimatch@5.1.9": { "brace-expansion": "2.1.4" },
-    "minimatch@10.2.5": { "brace-expansion": "5.0.9" },
-    "ajv@8.20.0": { "fast-uri": "3.1.5" },
-    "@apidevtools/json-schema-ref-parser@14.0.1": { "js-yaml": "4.3.1" }
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.18"
+    },
+    "minimatch@5.1.9": {
+      "brace-expansion": "2.1.4"
+    },
+    "minimatch@10.2.5": {
+      "brace-expansion": "5.0.9"
+    },
+    "ajv@8.20.0": {
+      "fast-uri": "3.1.5"
+    },
+    "@apidevtools/json-schema-ref-parser@14.0.1": {
+      "js-yaml": "4.3.1"
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   }
 }
