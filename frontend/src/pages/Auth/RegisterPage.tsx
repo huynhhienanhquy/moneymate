@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -10,7 +11,7 @@ const RegisterPage: React.FC = () => {
   const { form, showPassword, setShowPassword, loading, error, success, change, submit } = useRegisterForm();
   return (
     <AuthShell titleId="register-title" register>
-      <h1 id="register-title" className="auth-title">Tạo tài khoản</h1>
+      <AppTitle unstyled level={1} id="register-title" className="auth-title">Tạo tài khoản</AppTitle>
       <p className="auth-subtitle">Bắt đầu hành trình tài chính thông minh của bạn</p>
       {error && <div role="alert" className="auth-alert">{error}</div>}
       {success && <div role="status" className="auth-alert auth-success"><CheckCircle2 size={17} /> Đăng ký thành công! Đang chuyển trang...</div>}

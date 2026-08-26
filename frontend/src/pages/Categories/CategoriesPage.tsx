@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
@@ -17,7 +18,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
   return (
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{cat ? 'Chỉnh sửa danh mục' : 'Thêm danh mục'}</h2>
+          <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{cat ? 'Chỉnh sửa danh mục' : 'Thêm danh mục'}</AppTitle>
           <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
 
@@ -148,7 +149,7 @@ const CategoriesPage: React.FC = () => {
     <div>
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-[28px] font-extrabold leading-[1.3] tracking-normal text-black dark:text-slate-100">Danh mục</h1>
+          <AppTitle unstyled level={1} className="text-[28px] font-extrabold leading-[1.3] tracking-normal text-black dark:text-slate-100">Danh mục</AppTitle>
           <p className="mt-1 text-slate-600 dark:text-slate-400">Quản lý danh mục thu nhập và chi tiêu</p>
         </div>
         <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#00699b] px-4 font-bold text-white shadow-[0_3px_8px_rgba(0,105,155,0.24)] transition hover:bg-[#005b87]">
@@ -179,7 +180,7 @@ const CategoriesPage: React.FC = () => {
         <div className="mt-6 space-y-7">
           {userCats.length > 0 && (
             <div>
-              <h2 className="mb-3 text-[18px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục của bạn</h2>
+              <AppTitle unstyled level={2} className="mb-3 text-[18px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục của bạn</AppTitle>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {userCats.map((cat: any) => (
                   <div key={cat.id} className="group relative flex min-h-[138px] flex-col items-center justify-center gap-2 rounded-lg border border-white/80 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_9px_24px_rgba(15,23,42,0.09)] dark:border-slate-800 dark:bg-slate-900">
@@ -198,7 +199,7 @@ const CategoriesPage: React.FC = () => {
           )}
 
           <div>
-            <h2 className="mb-3 text-[18px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục mặc định</h2>
+            <AppTitle unstyled level={2} className="mb-3 text-[18px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục mặc định</AppTitle>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {systemCats.map((cat: any) => (
                 <div key={cat.id} className="flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-lg border border-white/80 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900">

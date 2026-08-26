@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -10,7 +11,7 @@ const LoginPage: React.FC = () => {
   const { form, showPassword, setShowPassword, loading, error, change, submit } = useLoginForm();
   return (
     <AuthShell titleId="login-title">
-      <h1 id="login-title" className="auth-title">Chào mừng trở lại!</h1>
+      <AppTitle unstyled level={1} id="login-title" className="auth-title">Chào mừng trở lại!</AppTitle>
       <p className="auth-subtitle">Đăng nhập để tiếp tục hành trình tài chính của bạn</p>
       {error && <div role="alert" className="auth-alert">{error}</div>}
       <form onSubmit={submit} className="auth-form" autoComplete="off">

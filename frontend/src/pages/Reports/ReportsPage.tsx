@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -100,7 +101,7 @@ const ReportsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Báo cáo tài chính</h1>
+          <AppTitle unstyled level={1} className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Báo cáo tài chính</AppTitle>
           <p className="mt-1 max-w-sm text-slate-500 dark:text-slate-400">Phân tích chuyên sâu thu chi và xu hướng tài sản</p>
         </div>
 
@@ -160,9 +161,9 @@ const ReportsPage: React.FC = () => {
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
             {/* Bar/Line Chart */}
             <div className="rounded-2xl bg-white p-6 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 className="font-extrabold text-slate-950 dark:text-slate-100">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><AppTitle unstyled level={2} className="font-extrabold text-slate-950 dark:text-slate-100">
                 {reportType === 'yearly' ? 'Thu chi theo tháng' : 'Thu chi tháng này'}
-              </h2><div className="flex gap-4 font-semibold"><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-emerald-500" />Thu nhập</span><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-red-600" />Chi tiêu</span></div></div>
+              </AppTitle><div className="flex gap-4 font-semibold"><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-emerald-500" />Thu nhập</span><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-red-600" />Chi tiêu</span></div></div>
               <ResponsiveContainer width="100%" height={300}>
                 {reportType === 'yearly' ? (
                   <LineChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -193,7 +194,7 @@ const ReportsPage: React.FC = () => {
             </div>
 
             <div className="rounded-2xl bg-white p-6 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
-              <h2 className="mb-5 font-extrabold text-slate-950 dark:text-slate-100">Cơ cấu chi tiêu</h2>
+              <AppTitle unstyled level={2} className="mb-5 font-extrabold text-slate-950 dark:text-slate-100">Cơ cấu chi tiêu</AppTitle>
               {categoryExpenses.length > 0 ? (
                   <ul className="space-y-5">
                     {categoryExpenses.slice(0, 8).map((cat: any, i: number) => {

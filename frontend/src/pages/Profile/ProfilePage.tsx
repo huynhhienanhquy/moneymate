@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
@@ -110,7 +111,7 @@ const ProfilePage: React.FC = () => {
           {user?.fullName ? user.fullName[0].toUpperCase() : <User size={24} />}
         </div>
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">{profile?.fullName || user?.fullName}</h2>
+          <AppTitle unstyled level={2} className="text-xl font-extrabold text-slate-900 dark:text-slate-100">{profile?.fullName || user?.fullName}</AppTitle>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1"><Mail size={13} /> {profile?.email || user?.email}</span>
             <span className="text-slate-300 dark:text-slate-600">|</span>
@@ -135,7 +136,7 @@ const ProfilePage: React.FC = () => {
             <User size={19} className="text-brand-500" />
           </div>
           <div>
-            <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Thông tin cá nhân</h2>
+            <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Thông tin cá nhân</AppTitle>
             <p className="text-slate-500 dark:text-slate-400">Cập nhật tên hiển thị và ảnh đại diện</p>
           </div>
         </div>
@@ -185,7 +186,7 @@ const ProfilePage: React.FC = () => {
             <Lock size={19} className="text-rose-500" />
           </div>
           <div>
-            <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Đổi mật khẩu</h2>
+            <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Đổi mật khẩu</AppTitle>
             <p className="text-slate-500 dark:text-slate-400">Bảo vệ tài khoản của bạn</p>
           </div>
         </div>

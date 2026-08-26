@@ -1,3 +1,5 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
+import AppCard from '@/components/common/AppCard/AppCard';
 import AppSelect from '@/components/common/AppSelect/AppSelect';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
@@ -31,7 +33,7 @@ const TransferModal: React.FC<{ wallets: any[]; onClose: () => void; onSave: (d:
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
       <div className="app-shell-card w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">Chuyển tiền giữa ví</h2>
+          <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">Chuyển tiền giữa ví</AppTitle>
           <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="space-y-4">
@@ -87,7 +89,7 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
       <div className="app-shell-card w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{wallet ? 'Chỉnh sửa ví' : 'Thêm ví mới'}</h2>
+          <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{wallet ? 'Chỉnh sửa ví' : 'Thêm ví mới'}</AppTitle>
           <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
 
@@ -199,10 +201,10 @@ const WalletsPage: React.FC = () => {
     <div>
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="whitespace-nowrap text-[28px] font-extrabold leading-none tracking-normal text-black dark:text-slate-100">
+          <AppTitle unstyled level={1} className="whitespace-nowrap text-[28px] font-extrabold leading-none tracking-normal text-black dark:text-slate-100">
             <span className="mr-2.5 inline-block">Ví</span>
             <span>tài khoản</span>
-          </h1>
+          </AppTitle>
           <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Tổng tài sản: <span className="font-extrabold text-[#0873c9] dark:text-brand-400">{formatVND(totalBalance)}</span></p>
         </div>
         <div className="flex gap-2">
@@ -220,11 +222,11 @@ const WalletsPage: React.FC = () => {
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2 size={28} className="animate-spin text-brand-500" /></div>
       ) : wallets.length === 0 ? (
-        <div className="app-card flex flex-col items-center justify-center py-24 text-slate-500">
+        <AppCard padding="none" className="flex flex-col items-center justify-center py-24 text-slate-500">
           <Wallet size={48} className="mb-4 opacity-30" />
           <p className="text-base font-medium">Chưa có ví nào</p>
           <p className="text-sm mt-1">Hãy thêm ví đầu tiên để bắt đầu theo dõi tài chính</p>
-        </div>
+        </AppCard>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {wallets.map((wallet: any) => {

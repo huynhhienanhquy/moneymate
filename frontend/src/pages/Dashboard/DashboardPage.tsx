@@ -1,3 +1,5 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
+import AppCard from '@/components/common/AppCard/AppCard';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight, Zap } from 'lucide-react';
@@ -114,9 +116,9 @@ const DashboardPage: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
               <Zap size={14} /> Tổng quan tài chính
             </div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            <AppTitle unstyled level={1} className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
               Xin chào, {user?.fullName?.split(' ').pop() || 'bạn'} 👋
-            </h1>
+            </AppTitle>
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
               Báo cáo thông minh cho tháng <span className="font-bold text-slate-800 dark:text-slate-200">{now.getMonth() + 1}/{now.getFullYear()}</span>
             </p>
@@ -179,10 +181,10 @@ const DashboardPage: React.FC = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Pie Chart - Category Breakdown */}
-        <div className="app-card lg:col-span-2 p-6 flex flex-col justify-between">
+        <AppCard padding="none" className="lg:col-span-2 p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Chi tiêu theo danh mục</h2>
+              <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Chi tiêu theo danh mục</AppTitle>
               <span className="text-xs font-semibold text-slate-400 uppercase">Tháng này</span>
             </div>
             {categoryExpenses.length > 0 ? (
@@ -229,13 +231,13 @@ const DashboardPage: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        </AppCard>
 
         {/* Bar Chart - Income vs Expense */}
-        <div className="app-card lg:col-span-3 p-6 flex flex-col justify-between">
+        <AppCard padding="none" className="lg:col-span-3 p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Thu nhập & Chi tiêu 6 tháng</h2>
+              <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Thu nhập & Chi tiêu 6 tháng</AppTitle>
               <span className="text-xs font-semibold text-brand-500 uppercase">Xu hướng</span>
             </div>
             <ResponsiveContainer width="100%" height={260}>
@@ -253,13 +255,13 @@ const DashboardPage: React.FC = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </AppCard>
       </div>
 
       {/* Recent Transactions */}
-      <div className="app-card p-6">
+      <AppCard padding="none" className="p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Giao dịch gần đây</h2>
+          <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Giao dịch gần đây</AppTitle>
           <Link to="/transactions" className="text-xs font-bold text-brand-500 hover:text-brand-400 transition">
             Xem tất cả →
           </Link>
@@ -296,7 +298,7 @@ const DashboardPage: React.FC = () => {
             <p className="text-sm font-medium">Chưa có giao dịch nào. Hãy thêm giao dịch đầu tiên!</p>
           </div>
         )}
-      </div>
+      </AppCard>
     </div>
   );
 };

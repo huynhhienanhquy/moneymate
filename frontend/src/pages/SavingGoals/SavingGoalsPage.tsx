@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppSelect from '@/components/common/AppSelect/AppSelect';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
@@ -22,7 +23,7 @@ const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) =>
   return (
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{goal ? 'Sửa mục tiêu' : 'Tạo mục tiêu tiết kiệm'}</h2>
+          <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{goal ? 'Sửa mục tiêu' : 'Tạo mục tiêu tiết kiệm'}</AppTitle>
           <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="space-y-4">
@@ -61,9 +62,9 @@ const DepositModal: React.FC<{ goal: any; wallets: any[]; type: 'deposit' | 'wit
   const [form, setForm] = useState({ walletId: '', amount: '' });
   return (
     <AppModal onClose={onClose}>
-        <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-4">
+        <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-4">
           {type === 'deposit' ? 'Nạp tiền' : 'Rút tiền'}
-        </h2>
+        </AppTitle>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Mục tiêu: <span className="font-semibold text-slate-900 dark:text-slate-200">{goal.title}</span></p>
         <div className="space-y-4">
           <AppSelect unstyled value={form.walletId} onChange={(e) => setForm(p => ({ ...p, walletId: e.target.value }))}
@@ -160,7 +161,7 @@ const SavingGoalsPage: React.FC = () => {
                     <AppButton unstyled onClick={() => { if (confirm('Xóa mục tiêu?')) deleteMutation.mutate(g.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 size={13} /></AppButton>
                   </div>
                 </div>
-                <h2 className="mt-4 font-extrabold text-slate-950 dark:text-slate-100">{g.title}</h2>
+                <AppTitle unstyled level={2} className="mt-4 font-extrabold text-slate-950 dark:text-slate-100">{g.title}</AppTitle>
                 {g.status === 'COMPLETED' ? (
                   <>
                     <p className="mt-2 flex items-center gap-2 text-slate-600 dark:text-slate-400"><Calendar size={14} /> Đạt được vào: {new Date(g.targetDate).toLocaleDateString('vi-VN')}</p>
@@ -198,7 +199,7 @@ const SavingGoalsPage: React.FC = () => {
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-[0_5px_18px_rgba(15,23,42,0.10)] transition group-hover:scale-105 dark:bg-slate-800 dark:text-blue-400">
                 <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
               </div>
-              <h2 className="font-extrabold text-slate-900 dark:text-white">Thêm mục tiêu mới</h2>
+              <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-white">Thêm mục tiêu mới</AppTitle>
               <p className="max-w-52 text-center text-slate-500 dark:text-slate-400">Bắt đầu lên kế hoạch cho mục tiêu tiếp theo của bạn</p>
             </AppButton>
           </div>

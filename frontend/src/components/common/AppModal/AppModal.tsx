@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect } from 'react';
 import { X } from 'lucide-react';
 import AppButton from '@/components/common/AppButton/AppButton';
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 
 interface AppModalProps {
   title?: ReactNode;
@@ -41,9 +42,9 @@ const AppModal = ({ title, children, footer, onClose, className = '' }: AppModal
       >
         {title && (
           <header className="mb-5 flex items-center justify-between gap-4">
-            <h2 id="app-modal-title" className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
+            <AppTitle unstyled level={2} id="app-modal-title" className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
               {title}
-            </h2>
+            </AppTitle>
             <AppButton
               aria-label="Đóng hộp thoại"
               variant="icon"

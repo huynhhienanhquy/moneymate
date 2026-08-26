@@ -1,3 +1,6 @@
+import AppLabel from '@/components/common/AppLabel/AppLabel';
+import AppTitle from '@/components/common/AppTitle/AppTitle';
+import AppInput from '@/components/common/AppInput/AppInput';
 import React from 'react';
 import { ScanLine, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ScanResult, useReceiptScanner } from '@/hooks/components/useReceiptScanner';
@@ -16,19 +19,19 @@ const ReceiptScanModal: React.FC<{
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <ScanLine size={20} className="text-brand-400" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Quét hóa đơn AI</h2>
+            <AppTitle unstyled level={2} className="text-lg font-bold text-gray-900 dark:text-slate-100">Quét hóa đơn AI</AppTitle>
           </div>
           <AppButton aria-label="Đóng" variant="icon" size="sm" className="min-h-0 p-2" onClick={onClose}><X size={20} className="text-slate-500" /></AppButton>
         </div>
 
         {!result ? (
           <>
-            <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-brand-500/50 transition">
+            <AppLabel className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-brand-500/50 transition">
               <ScanLine size={36} className="text-slate-400" />
               <span className="text-sm text-slate-500">{file ? file.name : 'Chọn ảnh hoặc PDF hóa đơn'}</span>
-              <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
+              <AppInput unstyled type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
                 onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            </label>
+            </AppLabel>
             <AppButton onClick={scan} disabled={!file} loading={isScanning} fullWidth size="lg" className="mt-4" leadingIcon={<ScanLine size={18} />}>
               {isScanning ? 'Đang quét...' : 'Quét hóa đơn'}
             </AppButton>

@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppSelect from '@/components/common/AppSelect/AppSelect';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
@@ -35,7 +36,7 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
   return (
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{item ? 'Sửa giao dịch định kỳ' : 'Thêm giao dịch định kỳ'}</h2>
+          <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{item ? 'Sửa giao dịch định kỳ' : 'Thêm giao dịch định kỳ'}</AppTitle>
           <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="space-y-4">
@@ -147,7 +148,7 @@ const RecurringPage: React.FC = () => {
 
           <section className="mt-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="font-extrabold text-slate-950 dark:text-white">Danh sách giao dịch</h2>
+              <AppTitle unstyled level={2} className="font-extrabold text-slate-950 dark:text-white">Danh sách giao dịch</AppTitle>
               <div className="flex gap-2">
                 <AppLabel className="relative min-w-0 flex-1 sm:w-72">
                   <span className="sr-only">Tìm kiếm giao dịch định kỳ</span>

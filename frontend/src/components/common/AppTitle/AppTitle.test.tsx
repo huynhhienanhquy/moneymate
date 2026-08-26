@@ -7,3 +7,9 @@ it('renders heading hierarchy and supporting copy', () => {
   expect(screen.getByText('Báo cáo')).toBeInTheDocument();
   expect(screen.getByText('Tổng quan tài chính')).toBeInTheDocument();
 });
+
+it('preserves page-specific heading presentation', () => {
+  render(<AppTitle unstyled level={2} id="section-title" className="custom-title">Chi tiết</AppTitle>);
+  expect(screen.getByRole('heading', { level: 2 })).toHaveAttribute('id', 'section-title');
+  expect(screen.getByRole('heading', { level: 2 })).toHaveClass('custom-title');
+});

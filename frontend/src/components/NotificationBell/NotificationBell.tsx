@@ -1,3 +1,5 @@
+import AppButton from '@/components/common/AppButton/AppButton';
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import React from 'react';
 import { Bell, Check, Trash2, Loader2, X } from 'lucide-react';
 import { useNotifications } from '@/hooks/components/useNotifications';
@@ -7,7 +9,7 @@ const NotificationBell: React.FC = () => {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button
+      <AppButton unstyled
         onClick={() => setOpen(!open)}
         className="relative p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 dark:hover:bg-slate-800 transition"
       >
@@ -17,21 +19,21 @@ const NotificationBell: React.FC = () => {
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
-      </button>
+      </AppButton>
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-2xl z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-800">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-200">Thông báo</h3>
+            <AppTitle unstyled level={3} className="text-sm font-semibold text-gray-900 dark:text-slate-200">Thông báo</AppTitle>
             <div className="flex gap-2">
               {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-xs text-brand-500 hover:text-brand-400">
+                <AppButton unstyled onClick={markAllRead} className="text-xs text-brand-500 hover:text-brand-400">
                   Đọc tất cả
-                </button>
+                </AppButton>
               )}
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300">
+              <AppButton unstyled onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300">
                 <X size={14} />
-              </button>
+              </AppButton>
             </div>
           </div>
 
@@ -53,13 +55,13 @@ const NotificationBell: React.FC = () => {
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
                       {!n.isRead && (
-                        <button onClick={() => markRead(n.id)} className="p-1 text-slate-500 hover:text-emerald-400">
+                        <AppButton unstyled onClick={() => markRead(n.id)} className="p-1 text-slate-500 hover:text-emerald-400">
                           <Check size={12} />
-                        </button>
+                        </AppButton>
                       )}
-                      <button onClick={() => remove(n.id)} className="p-1 text-slate-500 hover:text-rose-400">
+                      <AppButton unstyled onClick={() => remove(n.id)} className="p-1 text-slate-500 hover:text-rose-400">
                         <Trash2 size={12} />
-                      </button>
+                      </AppButton>
                     </div>
                   </div>
                 </li>

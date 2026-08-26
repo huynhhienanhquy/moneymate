@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppSelect from '@/components/common/AppSelect/AppSelect';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
@@ -42,7 +43,7 @@ const BudgetModal: React.FC<{ budget?: any; categories: any[]; month: number; ye
   return (
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{budget ? 'Sửa ngân sách' : 'Thêm ngân sách'}</h2>
+          <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{budget ? 'Sửa ngân sách' : 'Thêm ngân sách'}</AppTitle>
           <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl px-4 py-2.5">
@@ -129,7 +130,7 @@ const BudgetsPage: React.FC = () => {
         <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <p className="flex items-center gap-2 font-bold uppercase tracking-wide text-blue-100"><CircleDollarSign size={16} /> Quản lý ngân sách</p>
-            <h1 className="mt-2 font-extrabold tracking-normal text-white">Ngân sách</h1>
+            <AppTitle unstyled level={1} className="mt-2 font-extrabold tracking-normal text-white">Ngân sách</AppTitle>
           </div>
           <AppButton unstyled onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 font-bold text-[#0769be] shadow-md transition hover:bg-blue-50">
             <Plus size={16} /> Thêm Ngân sách
@@ -180,7 +181,7 @@ const BudgetsPage: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ color: b.category?.color || '#0873c9', background: `${b.category?.color || '#0873c9'}18` }}><PiggyBank size={17} /></span>
-                    <div><h2 className="truncate font-extrabold text-slate-900 dark:text-slate-100">{b.category?.name || 'Tổng chi tiêu'}</h2><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 font-semibold ${isExceeded ? 'bg-rose-100 text-rose-600' : isWarning ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>{isExceeded ? 'Vượt mức' : isWarning ? 'Sắp chạm mức' : 'Tốt'}</span></div>
+                    <div><AppTitle unstyled level={2} className="truncate font-extrabold text-slate-900 dark:text-slate-100">{b.category?.name || 'Tổng chi tiêu'}</AppTitle><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 font-semibold ${isExceeded ? 'bg-rose-100 text-rose-600' : isWarning ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>{isExceeded ? 'Vượt mức' : isWarning ? 'Sắp chạm mức' : 'Tốt'}</span></div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                     <AppButton unstyled onClick={() => setEditBudget(b)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil size={14} /></AppButton>
@@ -205,7 +206,7 @@ const BudgetsPage: React.FC = () => {
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition group-hover:scale-105 dark:bg-blue-500/15 dark:text-blue-400">
                 <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
               </div>
-              <h2 className="font-extrabold">Thêm ngân sách</h2>
+              <AppTitle unstyled level={2} className="font-extrabold">Thêm ngân sách</AppTitle>
               <p className="max-w-48 text-center text-slate-500 dark:text-slate-400">Tạo danh mục ngân sách mới để theo dõi chi tiêu</p>
             </AppButton>
           </div>

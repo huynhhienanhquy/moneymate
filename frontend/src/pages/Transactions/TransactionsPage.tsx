@@ -1,3 +1,4 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppSelect from '@/components/common/AppSelect/AppSelect';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
@@ -65,7 +66,7 @@ const TransactionModal: React.FC<{
   return (
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{tx ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch'}</h2>
+          <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{tx ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch'}</AppTitle>
           <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition"><X size={20} /></AppButton>
         </div>
 
@@ -275,7 +276,7 @@ const TransactionsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-[28px] font-extrabold leading-none tracking-normal text-black dark:text-slate-100">Giao dịch</h1>
+          <AppTitle unstyled level={1} className="text-[28px] font-extrabold leading-none tracking-normal text-black dark:text-slate-100">Giao dịch</AppTitle>
           <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Theo dõi toàn bộ thu chi của bạn</p>
         </div>
         <div className="flex gap-2">

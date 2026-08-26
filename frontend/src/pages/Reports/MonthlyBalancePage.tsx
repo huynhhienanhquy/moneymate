@@ -1,3 +1,5 @@
+import AppTitle from '@/components/common/AppTitle/AppTitle';
+import AppCard from '@/components/common/AppCard/AppCard';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -66,7 +68,7 @@ const MonthlyBalancePage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Tiết kiệm mỗi tháng</h1>
+          <AppTitle unstyled level={1} className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Tiết kiệm mỗi tháng</AppTitle>
           <p className="mt-1 text-slate-500 dark:text-slate-400">
             Tính từ tháng tạo tài khoản đến tháng hiện tại. Các tháng chưa tới sẽ không thống kê.
           </p>
@@ -101,13 +103,13 @@ const MonthlyBalancePage: React.FC = () => {
       ) : (
         <>
           {monthlyData.length === 0 ? (
-            <div className="app-card flex flex-col items-center justify-center py-20 text-center">
+            <AppCard padding="none" className="flex flex-col items-center justify-center py-20 text-center">
               <WalletCards size={42} className="mb-3 text-slate-300 dark:text-slate-600" />
               <p className="text-base font-bold text-slate-900 dark:text-slate-100">Chưa có dữ liệu trong năm {year}</p>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Tài khoản được tạo từ {accountCreatedAt?.toLocaleDateString('vi-VN') || 'ngày đăng ký'}, nên các tháng trước đó không được tính.
               </p>
-            </div>
+            </AppCard>
           ) : (
           <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -148,7 +150,7 @@ const MonthlyBalancePage: React.FC = () => {
           <div className="rounded-2xl bg-white p-6 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
               <div>
-              <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</h2>
+              <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</AppTitle>
               <p className="mt-1 text-slate-500 dark:text-slate-400">Tổng lương tháng được tính bằng tổng tài sản cuối tháng. Tiết kiệm tháng = tổng lương tháng - chi tiêu tháng.</p>
               </div>
             </div>
@@ -172,7 +174,7 @@ const MonthlyBalancePage: React.FC = () => {
 
           <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
             <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-              <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Chi tiết từng tháng</h2>
+              <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Chi tiết từng tháng</AppTitle>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
