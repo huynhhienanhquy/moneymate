@@ -1,3 +1,6 @@
+import AppSelect from '@/components/common/AppSelect/AppSelect';
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -48,26 +51,26 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
           </div>
           <div className="relative">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₫</span>
-            <input type="number" min="0" placeholder="Số tiền" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
+            <AppInput unstyled type="number" min="0" placeholder="Số tiền" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
               className="app-input pl-8" />
           </div>
-          <select value={form.walletId} onChange={(e) => setForm(p => ({ ...p, walletId: e.target.value }))}
+          <AppSelect unstyled value={form.walletId} onChange={(e) => setForm(p => ({ ...p, walletId: e.target.value }))}
             className="app-select">
             <option value="">-- Chọn ví --</option>
             {wallets.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({formatVND(Number(w.initialBalance))})</option>)}
-          </select>
-          <select value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
+          </AppSelect>
+          <AppSelect unstyled value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
             className="app-select">
             <option value="">-- Chọn danh mục --</option>
             {filteredCats.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select value={form.frequency} onChange={(e) => setForm(p => ({ ...p, frequency: e.target.value }))}
+          </AppSelect>
+          <AppSelect unstyled value={form.frequency} onChange={(e) => setForm(p => ({ ...p, frequency: e.target.value }))}
             className="app-select">
             {Object.entries(FREQ_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-          <input type="date" value={form.startDate} onChange={(e) => setForm(p => ({ ...p, startDate: e.target.value }))}
+          </AppSelect>
+          <AppInput unstyled type="date" value={form.startDate} onChange={(e) => setForm(p => ({ ...p, startDate: e.target.value }))}
             className="app-input" />
-          <input type="text" placeholder="Ghi chú (tùy chọn)" value={form.note} onChange={(e) => setForm(p => ({ ...p, note: e.target.value }))}
+          <AppInput unstyled type="text" placeholder="Ghi chú (tùy chọn)" value={form.note} onChange={(e) => setForm(p => ({ ...p, note: e.target.value }))}
             className="app-input" />
         </div>
         <div className="flex gap-3 mt-6">
@@ -146,14 +149,14 @@ const RecurringPage: React.FC = () => {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="font-extrabold text-slate-950 dark:text-white">Danh sách giao dịch</h2>
               <div className="flex gap-2">
-                <label className="relative min-w-0 flex-1 sm:w-72">
+                <AppLabel className="relative min-w-0 flex-1 sm:w-72">
                   <span className="sr-only">Tìm kiếm giao dịch định kỳ</span>
                   <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm kiếm giao dịch..." className="h-10 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 outline-none focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900" />
-                </label>
+                  <AppInput unstyled value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm kiếm giao dịch..." className="h-10 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 outline-none focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900" />
+                </AppLabel>
                 <div className="relative">
                   <Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                  <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 appearance-none rounded-md border border-slate-200 bg-white pl-9 pr-4 font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"><option value="ALL">Lọc</option><option value="ACTIVE">Hoạt động</option><option value="PAUSED">Tạm dừng</option></select>
+                  <AppSelect unstyled value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 appearance-none rounded-md border border-slate-200 bg-white pl-9 pr-4 font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"><option value="ALL">Lọc</option><option value="ACTIVE">Hoạt động</option><option value="PAUSED">Tạm dừng</option></AppSelect>
                 </div>
               </div>
             </div>

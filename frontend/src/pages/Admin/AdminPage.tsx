@@ -1,3 +1,6 @@
+import AppSelect from '@/components/common/AppSelect/AppSelect';
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -58,12 +61,12 @@ const AdminPage: React.FC = () => {
       </header>
 
       <div className="mt-5 flex h-[42px] items-center justify-between gap-4 rounded-md bg-white px-2.5 shadow-[0_4px_18px_rgba(15,23,42,0.07)] dark:bg-slate-900">
-        <label className="relative block w-[210px] sm:w-[310px]">
+        <AppLabel className="relative block w-[210px] sm:w-[310px]">
           <span className="sr-only">Tìm kiếm người dùng</span>
           <Search size={13} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm kiếm theo tên hoặc email người dùng..." className="h-7 w-full rounded border border-slate-300 bg-white pl-7 pr-7 text-[10px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+          <AppInput unstyled type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm kiếm theo tên hoặc email người dùng..." className="h-7 w-full rounded border border-slate-300 bg-white pl-7 pr-7 text-[10px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
           {search && <AppButton unstyled type="button" aria-label="Xóa từ khóa tìm kiếm" onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><X size={15} /></AppButton>}
-        </label>
+        </AppLabel>
         <p className="shrink-0 text-[9px] font-medium text-slate-700 dark:text-slate-400">Hiển thị: <strong className="font-bold text-slate-950 dark:text-slate-100">{filtered.length}</strong> người dùng</p>
       </div>
 
@@ -123,8 +126,8 @@ const EditUserModal: React.FC<{ user: any; onClose: () => void; onSave: (data: a
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
         <div className="mb-6 flex items-center justify-between"><div className="flex items-center gap-2.5"><span className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"><UserCog size={19} /></span><h2 className="text-lg font-bold text-slate-950 dark:text-white">Cập nhật tài khoản</h2></div><AppButton unstyled type="button" aria-label="Đóng" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"><X size={18} /></AppButton></div>
         <div className="space-y-4">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Họ và tên<input value={form.fullName} onChange={(event) => setForm((value) => ({ ...value, fullName: event.target.value }))} className="app-input mt-1.5" /></label>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Phân quyền<span className="relative mt-1.5 block"><select value={form.role} onChange={(event) => setForm((value) => ({ ...value, role: event.target.value }))} className="app-select appearance-none pr-10"><option value="USER">Người dùng hệ thống (User)</option><option value="ADMIN">Quản trị viên (Admin)</option></select><ChevronDown size={16} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" /></span></label>
+          <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Họ và tên<AppInput unstyled value={form.fullName} onChange={(event) => setForm((value) => ({ ...value, fullName: event.target.value }))} className="app-input mt-1.5" /></AppLabel>
+          <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Phân quyền<span className="relative mt-1.5 block"><AppSelect unstyled value={form.role} onChange={(event) => setForm((value) => ({ ...value, role: event.target.value }))} className="app-select appearance-none pr-10"><option value="USER">Người dùng hệ thống (User)</option><option value="ADMIN">Quản trị viên (Admin)</option></AppSelect><ChevronDown size={16} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" /></span></AppLabel>
           <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-950/60 dark:text-slate-400"><p>{user.email}</p><p className="mt-1">Ngày gia nhập: {new Date(user.createdAt).toLocaleDateString('vi-VN')}</p></div>
         </div>
         <div className="mt-6 flex items-center gap-3"><AppButton unstyled type="button" onClick={onDelete} disabled={loading} aria-label="Xóa người dùng" className="flex h-10 w-10 items-center justify-center rounded-lg border border-rose-200 text-rose-500 transition hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:hover:bg-rose-500/10"><Trash2 size={17} /></AppButton><AppButton unstyled type="button" onClick={onClose} className="h-10 flex-1 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">Hủy</AppButton><AppButton unstyled type="button" onClick={() => onSave(form)} disabled={loading || !form.fullName.trim()} className="flex h-10 flex-1 items-center justify-center rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50">{loading ? <Loader2 size={16} className="animate-spin" /> : 'Lưu thay đổi'}</AppButton></div>

@@ -1,3 +1,5 @@
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -21,8 +23,8 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tên danh mục</label>
-            <input
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tên danh mục</AppLabel>
+            <AppInput unstyled
               id="category-name"
               type="text"
               value={form.name}
@@ -34,7 +36,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
 
           {!cat && (
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Loại</label>
+              <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Loại</AppLabel>
               <div className="flex gap-2">
                 {(['INCOME', 'EXPENSE'] as const).map((t) => (
                   <AppButton unstyled
@@ -54,7 +56,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Màu sắc</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Màu sắc</AppLabel>
             <div className="flex flex-wrap gap-2">
               {COLORS.map((c) => (
                 <AppButton unstyled
@@ -69,7 +71,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Icon</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Icon</AppLabel>
             <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto scrollbar-thin">
               {ICONS.map((icon) => (
                 <AppButton unstyled

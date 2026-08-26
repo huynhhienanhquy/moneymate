@@ -1,3 +1,6 @@
+import AppSelect from '@/components/common/AppSelect/AppSelect';
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,18 +27,18 @@ const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) =>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tên mục tiêu</label>
-            <input value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} placeholder="VD: Mua laptop mới"
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tên mục tiêu</AppLabel>
+            <AppInput unstyled value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} placeholder="VD: Mua laptop mới"
               className="app-input" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số tiền mục tiêu</label>
-            <input type="number" min="0" value={form.targetAmount} onChange={(e) => setForm(p => ({ ...p, targetAmount: e.target.value }))}
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số tiền mục tiêu</AppLabel>
+            <AppInput unstyled type="number" min="0" value={form.targetAmount} onChange={(e) => setForm(p => ({ ...p, targetAmount: e.target.value }))}
               className="app-input" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ngày đạt mục tiêu</label>
-            <input type="date" value={form.targetDate} onChange={(e) => setForm(p => ({ ...p, targetDate: e.target.value }))}
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ngày đạt mục tiêu</AppLabel>
+            <AppInput unstyled type="date" value={form.targetDate} onChange={(e) => setForm(p => ({ ...p, targetDate: e.target.value }))}
               className="app-input" />
           </div>
         </div>
@@ -63,12 +66,12 @@ const DepositModal: React.FC<{ goal: any; wallets: any[]; type: 'deposit' | 'wit
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Mục tiêu: <span className="font-semibold text-slate-900 dark:text-slate-200">{goal.title}</span></p>
         <div className="space-y-4">
-          <select value={form.walletId} onChange={(e) => setForm(p => ({ ...p, walletId: e.target.value }))}
+          <AppSelect unstyled value={form.walletId} onChange={(e) => setForm(p => ({ ...p, walletId: e.target.value }))}
             className="app-select">
             <option value="">-- Chọn ví --</option>
             {wallets.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({formatVND(Number(w.initialBalance))})</option>)}
-          </select>
-          <input type="number" min="0" placeholder="Số tiền" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
+          </AppSelect>
+          <AppInput unstyled type="number" min="0" placeholder="Số tiền" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
             className="app-input" />
         </div>
         <div className="flex gap-3 mt-6">

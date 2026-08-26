@@ -1,3 +1,5 @@
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -147,8 +149,8 @@ const ProfilePage: React.FC = () => {
 
         <form onSubmit={handleProfileSubmit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Họ và tên</label>
-            <input
+            <AppLabel className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Họ và tên</AppLabel>
+            <AppInput unstyled
               type="text"
               value={profileForm.fullName}
               onChange={(e) => setProfileForm(p => ({ ...p, fullName: e.target.value }))}
@@ -156,8 +158,8 @@ const ProfilePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">URL Avatar <span className="font-normal text-slate-400 dark:text-slate-500">(tùy chọn)</span></label>
-            <input
+            <AppLabel className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">URL Avatar <span className="font-normal text-slate-400 dark:text-slate-500">(tùy chọn)</span></AppLabel>
+            <AppInput unstyled
               type="url"
               value={profileForm.avatarUrl}
               onChange={(e) => setProfileForm(p => ({ ...p, avatarUrl: e.target.value }))}
@@ -202,8 +204,8 @@ const ProfilePage: React.FC = () => {
 
         <form onSubmit={handlePasswordSubmit} className="space-y-4">
           <div>
-            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Mật khẩu hiện tại</label>
-            <input
+            <AppLabel className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Mật khẩu hiện tại</AppLabel>
+            <AppInput unstyled
               type="password"
               value={passwordForm.currentPassword}
               onChange={(e) => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
@@ -211,8 +213,8 @@ const ProfilePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Mật khẩu mới</label>
-            <input
+            <AppLabel className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Mật khẩu mới</AppLabel>
+            <AppInput unstyled
               type="password"
               value={passwordForm.newPassword}
               onChange={(e) => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
@@ -220,8 +222,8 @@ const ProfilePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Xác nhận mật khẩu mới</label>
-            <input
+            <AppLabel className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Xác nhận mật khẩu mới</AppLabel>
+            <AppInput unstyled
               type="password"
               value={passwordForm.confirmPassword}
               onChange={(e) => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}

@@ -1,3 +1,6 @@
+import AppSelect from '@/components/common/AppSelect/AppSelect';
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -47,16 +50,16 @@ const BudgetModal: React.FC<{ budget?: any; categories: any[]; month: number; ye
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Danh mục</label>
-            <select value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Danh mục</AppLabel>
+            <AppSelect unstyled value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
               className="app-select">
               <option value="">Tổng chi tiêu (Global)</option>
               {expenseCats.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            </AppSelect>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Hạn mức (VND)</label>
-            <input type="number" min="0" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Hạn mức (VND)</AppLabel>
+            <AppInput unstyled type="number" min="0" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
               className="app-input" />
           </div>
         </div>

@@ -1,3 +1,6 @@
+import AppSelect from '@/components/common/AppSelect/AppSelect';
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -33,35 +36,35 @@ const TransferModal: React.FC<{ wallets: any[]; onClose: () => void; onSave: (d:
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Từ ví</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Từ ví</AppLabel>
             <div className="relative">
-              <select value={form.sourceWalletId} onChange={(e) => setForm(p => ({ ...p, sourceWalletId: e.target.value }))}
+              <AppSelect unstyled value={form.sourceWalletId} onChange={(e) => setForm(p => ({ ...p, sourceWalletId: e.target.value }))}
                 className="app-select appearance-none pr-9">
                 <option value="">-- Chọn ví nguồn --</option>
                 {wallets.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({formatVND(Number(w.initialBalance))})</option>)}
-              </select>
+              </AppSelect>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Đến ví</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Đến ví</AppLabel>
             <div className="relative">
-              <select value={form.destinationWalletId} onChange={(e) => setForm(p => ({ ...p, destinationWalletId: e.target.value }))}
+              <AppSelect unstyled value={form.destinationWalletId} onChange={(e) => setForm(p => ({ ...p, destinationWalletId: e.target.value }))}
                 className="app-select appearance-none pr-9">
                 <option value="">-- Chọn ví đích --</option>
                 {wallets.filter((w: any) => w.id !== form.sourceWalletId).map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
-              </select>
+              </AppSelect>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số tiền</label>
-            <input type="number" min="0" step="1000" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số tiền</AppLabel>
+            <AppInput unstyled type="number" min="0" step="1000" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))}
               className="app-input" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ngày chuyển</label>
-            <input type="date" value={form.transferDate} onChange={(e) => setForm(p => ({ ...p, transferDate: e.target.value }))}
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ngày chuyển</AppLabel>
+            <AppInput unstyled type="date" value={form.transferDate} onChange={(e) => setForm(p => ({ ...p, transferDate: e.target.value }))}
               className="app-input" />
           </div>
         </div>
@@ -90,8 +93,8 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tên ví</label>
-            <input
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tên ví</AppLabel>
+            <AppInput unstyled
               id="wallet-name"
               type="text"
               value={form.name}
@@ -102,7 +105,7 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Loại ví</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Loại ví</AppLabel>
             <div className="grid grid-cols-3 gap-2">
               {WALLET_TYPES.map((wt) => {
                 const Icon = wt.icon;
@@ -124,10 +127,10 @@ const WalletModal: React.FC<{ wallet?: any; onClose: () => void; onSave: (data: 
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số dư ban đầu</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số dư ban đầu</AppLabel>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">₫</span>
-              <input
+              <AppInput unstyled
                 id="wallet-balance"
                 type="number"
                 min="0"

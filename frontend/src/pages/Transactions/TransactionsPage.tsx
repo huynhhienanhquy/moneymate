@@ -1,3 +1,6 @@
+import AppSelect from '@/components/common/AppSelect/AppSelect';
+import AppInput from '@/components/common/AppInput/AppInput';
+import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -86,10 +89,10 @@ const TransactionModal: React.FC<{
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số tiền</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số tiền</AppLabel>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₫</span>
-              <input
+              <AppInput unstyled
                 id="tx-amount"
                 type="number"
                 min="0"
@@ -104,9 +107,9 @@ const TransactionModal: React.FC<{
 
           {/* Wallet */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ví</label>
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ví</AppLabel>
             <div className="relative">
-              <select
+              <AppSelect unstyled
                 id="tx-wallet"
                 value={form.walletId}
                 onChange={(e) => setForm(p => ({ ...p, walletId: e.target.value }))}
@@ -114,25 +117,25 @@ const TransactionModal: React.FC<{
               >
                 <option value="">-- Chọn ví --</option>
                 {wallets.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({formatVND(Number(w.initialBalance))})</option>)}
-              </select>
+              </AppSelect>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             </div>
           </div>
 
           {/* Category */}
           <div>
-  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Danh mục</label>
-  <select value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
+  <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Danh mục</AppLabel>
+  <AppSelect unstyled value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
             className="app-select">
             <option value="">-- Chọn danh mục --</option>
             {filteredCats.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          </AppSelect>
 </div>
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ngày</label>
-            <input
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ngày</AppLabel>
+            <AppInput unstyled
               id="tx-date"
               type="date"
               value={form.transactionDate}
@@ -143,8 +146,8 @@ const TransactionModal: React.FC<{
 
           {/* Note */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ghi chú <span className="text-slate-400 dark:text-slate-600">(tùy chọn)</span></label>
-            <input
+            <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ghi chú <span className="text-slate-400 dark:text-slate-600">(tùy chọn)</span></AppLabel>
+            <AppInput unstyled
               id="tx-note"
               type="text"
               value={form.note}
@@ -156,15 +159,15 @@ const TransactionModal: React.FC<{
 
           {!tx && (
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Hóa đơn <span className="text-slate-400 dark:text-slate-600">(JPEG, PNG, PDF - max 5MB)</span>
-              </label>
-              <label className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 border-dashed rounded-xl cursor-pointer hover:border-brand-500/50 transition">
+              </AppLabel>
+              <AppLabel className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 border-dashed rounded-xl cursor-pointer hover:border-brand-500/50 transition">
                 <Paperclip size={16} className="text-slate-500" />
                 <span className="text-sm text-slate-400 truncate">{receiptFile ? receiptFile.name : 'Chọn file...'}</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
+                <AppInput unstyled type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
                   onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
-              </label>
+              </AppLabel>
             </div>
           )}
         </div>
@@ -289,7 +292,7 @@ const TransactionsPage: React.FC = () => {
       <div className="mt-4 flex gap-2">
         <div className="relative flex-1 min-w-48">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
+          <AppInput unstyled
             id="tx-search"
             type="text"
             value={search}
@@ -300,7 +303,7 @@ const TransactionsPage: React.FC = () => {
         </div>
         <div className="relative">
           <Filter size={12} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <select
+          <AppSelect unstyled
             id="tx-type-filter"
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
@@ -309,7 +312,7 @@ const TransactionsPage: React.FC = () => {
             <option value="">Tất cả</option>
             <option value="INCOME">Thu nhập</option>
             <option value="EXPENSE">Chi tiêu</option>
-          </select>
+          </AppSelect>
           <ChevronDown size={11} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
         </div>
       </div>

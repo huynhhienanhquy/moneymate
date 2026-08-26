@@ -9,13 +9,16 @@ interface AppInputProps extends InputHTMLAttributes<HTMLInputElement> {
   hint?: ReactNode;
   variant?: 'default' | 'auth';
   wrapperClassName?: string;
+  unstyled?: boolean;
 }
 
 const AppInput = forwardRef<HTMLInputElement, AppInputProps>(({
   id, label, labelAction, leading, trailing, error, hint, variant = 'default',
-  className = '', wrapperClassName = '', ...props
+  className = '', wrapperClassName = '', unstyled = false, ...props
 }, ref) => {
-  const input = <input ref={ref} id={id} aria-invalid={!!error || undefined} aria-describedby={error || hint ? `${id}-help` : undefined} className={variant === 'auth' ? className : `app-input ${className}`} {...props} />;
+  const input = <input ref={ref} id={id} aria-invalid={!!error || undefined} aria-describedby={error || hint ? `${id}-help` : undefined} className={variant === 'auth' || unstyled ? className : `app-input ${className}`} {...props} />;
+
+  if (unstyled) return input;
 
   if (variant === 'auth') return (
     <label className={`auth-field ${wrapperClassName}`} htmlFor={id}>

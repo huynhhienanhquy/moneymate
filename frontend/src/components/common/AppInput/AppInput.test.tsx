@@ -12,3 +12,9 @@ it('supports the auth presentation and adornments', () => {
   expect(screen.getByRole('textbox')).toBeInTheDocument();
   expect(screen.getByText('@')).toBeInTheDocument();
 });
+
+it('supports direct field rendering for page-specific layouts', () => {
+  render(<AppInput unstyled aria-label="Tìm kiếm" className="search-field" />);
+  expect(screen.getByRole('textbox')).toHaveClass('search-field');
+  expect(screen.getByRole('textbox')).not.toHaveClass('app-input');
+});
