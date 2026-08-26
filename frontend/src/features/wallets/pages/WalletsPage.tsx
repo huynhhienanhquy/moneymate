@@ -4,7 +4,7 @@ import { Plus, Wallet, CreditCard, Smartphone, PiggyBank, Banknote, Pencil, Tras
 import api from '@/shared/api/client';
 
 const formatVND = (n: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(n)} đ`;
 
 const WALLET_TYPES = [
   { value: 'CASH', label: 'Tiền mặt', icon: Banknote, color: 'text-amber-400', bg: 'bg-amber-500/10' },
@@ -194,20 +194,23 @@ const WalletsPage: React.FC = () => {
   const getWalletMeta = (type: string) => WALLET_TYPES.find(wt => wt.value === type) || WALLET_TYPES[0];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div>
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Ví tài khoản</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Tổng tài sản: <span className="text-brand-600 dark:text-brand-400 font-bold">{formatVND(totalBalance)}</span></p>
+          <h1 className="whitespace-nowrap text-[28px] font-extrabold leading-none tracking-normal text-black dark:text-slate-100">
+            <span className="mr-2.5 inline-block">Ví</span>
+            <span>tài khoản</span>
+          </h1>
+          <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Tổng tài sản: <span className="font-extrabold text-[#0873c9] dark:text-brand-400">{formatVND(totalBalance)}</span></p>
         </div>
         <div className="flex gap-2">
           {wallets.length >= 2 && (
-            <button onClick={() => setShowTransfer(true)} className="app-secondary-button">
-              <ArrowLeftRight size={16} /><span>Chuyển tiền</span>
+            <button onClick={() => setShowTransfer(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-[#0873c9] bg-white px-3 text-[9px] font-bold text-[#0873c9] shadow-sm transition hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800">
+              <ArrowLeftRight size={12} /><span>Chuyển tiền</span>
             </button>
           )}
-          <button id="add-wallet-btn" onClick={() => setShowModal(true)} className="app-primary-button">
-            <Plus size={16} /><span>Thêm ví</span>
+          <button id="add-wallet-btn" onClick={() => setShowModal(true)} className="inline-flex h-8 items-center gap-2 rounded-md bg-[#00699b] px-3.5 text-[9px] font-bold text-white shadow-[0_3px_8px_rgba(0,105,155,0.25)] transition hover:bg-[#005b87]">
+            <Plus size={12} /><span>Thêm ví</span>
           </button>
         </div>
       </div>
@@ -221,37 +224,41 @@ const WalletsPage: React.FC = () => {
           <p className="text-sm mt-1">Hãy thêm ví đầu tiên để bắt đầu theo dõi tài chính</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {wallets.map((wallet: any) => {
             const meta = getWalletMeta(wallet.type);
             const Icon = meta.icon;
             return (
-              <div key={wallet.id} className="app-card app-card-hover p-5 group">
-                <div className="flex items-start justify-between">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${meta.bg}`}>
-                    <Icon size={20} className={meta.color} />
+              <div key={wallet.id} className="group relative flex min-h-[102px] flex-col rounded-[10px] border border-white/80 bg-white px-3 py-3 shadow-[0_7px_18px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-slate-900 sm:min-h-[102px]">
+                <div className="flex items-start gap-2.5">
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${meta.bg}`}>
+                    <Icon size={14} className={meta.color} />
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                  <div className="min-w-0">
+                    <p className="text-[7px] font-semibold uppercase leading-[1.4] tracking-wide text-slate-500 dark:text-slate-400">{meta.label}</p>
+                    <p className="mt-0.5 truncate py-0.5 text-[12px] font-extrabold leading-[1.35] text-slate-950 dark:text-slate-100">{wallet.name}</p>
+                  </div>
+                  <div className="absolute right-2 top-2 flex gap-0.5 rounded-md bg-white/90 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900/90">
                     <button
                       id={`edit-wallet-${wallet.id}`}
                       onClick={() => setEditWallet(wallet)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"
+                      aria-label={`Chỉnh sửa ví ${wallet.name}`}
+                      className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={11} />
                     </button>
                     <button
                       id={`delete-wallet-${wallet.id}`}
                       onClick={() => { if (confirm(`Xóa ví "${wallet.name}"?`)) { setDeletingId(wallet.id); deleteMutation.mutate(wallet.id); } }}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                      aria-label={`Xóa ví ${wallet.name}`}
+                      className="rounded p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"
                     >
-                      {deletingId === wallet.id && deleteMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      {deletingId === wallet.id && deleteMutation.isPending ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
                     </button>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{meta.label}</p>
-                  <p className="text-lg font-bold text-slate-950 dark:text-slate-100 mt-0.5">{wallet.name}</p>
-                  <p className={`text-2xl font-extrabold mt-3 ${Number(wallet.initialBalance) < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                <div className="mt-auto pt-4">
+                  <p className={`text-[18px] font-extrabold leading-none ${Number(wallet.initialBalance) < 0 ? 'text-rose-500' : 'text-[#00b879]'}`}>
                     {formatVND(Number(wallet.initialBalance))}
                   </p>
                 </div>

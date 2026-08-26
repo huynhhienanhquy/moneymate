@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, RefreshCw, Pencil, Trash2, Loader2, X, Pause, Play, Calendar, Repeat } from 'lucide-react';
+import { Plus, RefreshCw, Pencil, Trash2, Loader2, X, Pause, Play, Repeat, Search, Filter, MoreVertical, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import api from '@/shared/api/client';
 import AppModal from '@/shared/components/AppModal';
 import LoadingState from '@/shared/components/LoadingState';
 
 const formatVND = (n: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(n)} đ`;
 
 const FREQ_LABELS: Record<string, string> = {
   DAILY: 'Hàng ngày', WEEKLY: 'Hàng tuần', MONTHLY: 'Hàng tháng', YEARLY: 'Hàng năm',
@@ -84,6 +84,9 @@ const RecurringPage: React.FC = () => {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['recurring'],
@@ -113,6 +116,15 @@ const RecurringPage: React.FC = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
   });
 
+  const incomeTotal = items.filter((item: any) => item.type === 'INCOME').reduce((sum: number, item: any) => sum + Number(item.amount), 0);
+  const expenseTotal = items.filter((item: any) => item.type === 'EXPENSE').reduce((sum: number, item: any) => sum + Number(item.amount), 0);
+  const visibleItems = items.filter((item: any) => {
+    const keyword = search.trim().toLowerCase();
+    const matchesSearch = !keyword || item.note?.toLowerCase().includes(keyword) || item.category?.name?.toLowerCase().includes(keyword) || item.wallet?.name?.toLowerCase().includes(keyword);
+    const matchesStatus = statusFilter === 'ALL' || (statusFilter === 'ACTIVE' ? item.isActive : !item.isActive);
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="space-y-6">
       <div className="app-page-header">
@@ -128,100 +140,48 @@ const RecurringPage: React.FC = () => {
 
       {isLoading ? (
         <LoadingState />
-      ) : items.length === 0 ? (
-        <div className="app-card flex flex-col items-center py-24 text-slate-500 dark:text-slate-400">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
-            <RefreshCw size={32} className="opacity-40" />
-          </div>
-          <p className="text-base font-semibold">Chưa có giao dịch định kỳ</p>
-          <p className="text-sm mt-1">Tự động hóa các khoản thu chi lặp lại hàng tháng</p>
-          <button onClick={() => setShowModal(true)} className="app-primary-button mt-4">
-            <Plus size={16} /> Thêm định kỳ
-          </button>
-        </div>
       ) : (
         <>
           {/* Summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-stagger">
-            <div className="app-stat-card app-stat-card-asset">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10">
-                  <Repeat size={18} className="text-brand-500" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng số</p>
-              </div>
-              <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{items.length}</p>
-            </div>
-            <div className="app-stat-card app-stat-card-income">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                  <RefreshCw size={18} className="text-emerald-500" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Thu nhập định kỳ</p>
-              </div>
-              <p className="text-2xl font-extrabold text-emerald-500">
-                {items.filter((i: any) => i.type === 'INCOME').length}
-              </p>
-            </div>
-            <div className="app-stat-card app-stat-card-expense">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10">
-                  <RefreshCw size={18} className="text-rose-500" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Chi tiêu định kỳ</p>
-              </div>
-              <p className="text-2xl font-extrabold text-rose-500">
-                {items.filter((i: any) => i.type === 'EXPENSE').length}
-              </p>
-            </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <RecurringSummary icon={<Repeat size={18} />} label="Tổng giao dịch" value={String(items.length)} tone="blue" />
+            <RecurringSummary icon={<ArrowDownRight size={18} />} label="Thu nhập định kỳ" value={formatVND(incomeTotal)} tone="green" />
+            <RecurringSummary icon={<ArrowUpRight size={18} />} label="Chi tiêu định kỳ" value={formatVND(expenseTotal)} tone="red" />
           </div>
 
-          <div className="space-y-3">
-            {items.map((item: any) => (
-              <div key={item.id} className={`app-card p-4 flex items-center gap-4 transition-all ${!item.isActive ? 'opacity-50' : ''}`}>
-                <div className={`flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0 ${item.type === 'INCOME' ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                  <RefreshCw size={20} className={item.type === 'INCOME' ? 'text-emerald-500' : 'text-rose-500'} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-200">{item.note || item.category?.name}</p>
-                    <span className={`app-badge ${item.isActive ? 'app-badge-success' : 'app-badge-neutral'}`}>
-                      {item.isActive ? 'Hoạt động' : 'Tạm dừng'}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{item.category?.name}</span>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">·</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{item.wallet?.name}</span>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">·</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{FREQ_LABELS[item.frequency]}</span>
-                  </div>
-                  <div className="flex items-center gap-1 mt-1 text-xs text-slate-400 dark:text-slate-500">
-                    <Calendar size={11} />
-                    Lần tới: {new Date(item.nextExecutionDate).toLocaleDateString('vi-VN')}
-                  </div>
-                </div>
-                <span className={`text-base font-extrabold flex-shrink-0 ${item.type === 'INCOME' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {item.type === 'INCOME' ? '+' : '-'}{formatVND(Number(item.amount))}
-                </span>
-                <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => toggleMutation.mutate(item.id)}
-                    className="p-2 rounded-lg text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                    title={item.isActive ? 'Tạm dừng' : 'Kích hoạt'}>
-                    {item.isActive ? <Pause size={14} /> : <Play size={14} />}
-                  </button>
-                  <button onClick={() => setEditItem(item)}
-                    className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition">
-                    <Pencil size={14} />
-                  </button>
-                  <button onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); }}
-                    className="p-2 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition">
-                    <Trash2 size={14} />
-                  </button>
+          <section className="mt-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="font-extrabold text-slate-950 dark:text-white">Danh sách giao dịch</h2>
+              <div className="flex gap-2">
+                <label className="relative min-w-0 flex-1 sm:w-72">
+                  <span className="sr-only">Tìm kiếm giao dịch định kỳ</span>
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm kiếm giao dịch..." className="h-10 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 outline-none focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900" />
+                </label>
+                <div className="relative">
+                  <Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 appearance-none rounded-md border border-slate-200 bg-white pl-9 pr-4 font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"><option value="ALL">Lọc</option><option value="ACTIVE">Hoạt động</option><option value="PAUSED">Tạm dừng</option></select>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+
+            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              {visibleItems.length === 0 ? (
+                <div className="flex flex-col items-center py-16 text-slate-500"><RefreshCw size={30} className="mb-3 opacity-40" /><p className="font-semibold">Không tìm thấy giao dịch định kỳ</p><button onClick={() => setShowModal(true)} className="app-primary-button mt-4"><Plus size={16} /> Thêm định kỳ</button></div>
+              ) : <div className="overflow-x-auto"><table className="w-full min-w-[760px] table-fixed text-left">
+                <thead className="border-b border-slate-100 dark:border-slate-800"><tr className="uppercase tracking-wide text-slate-500 dark:text-slate-400"><th className="w-[32%] px-4 py-3">Giao dịch</th><th className="w-[25%] px-3 py-3">Tần suất &amp; ví</th><th className="w-[20%] px-3 py-3">Ngày tiếp theo</th><th className="w-[17%] px-3 py-3 text-right">Số tiền</th><th className="w-[6%] px-2 py-3 text-center">Thao tác</th></tr></thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {visibleItems.map((item: any) => <tr key={item.id} className={`transition hover:bg-slate-50 dark:hover:bg-slate-800/40 ${!item.isActive ? 'opacity-55' : ''}`}>
+                    <td className="px-4 py-3"><div className="flex items-center gap-3"><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.type === 'INCOME' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-rose-100 text-rose-500 dark:bg-rose-500/15'}`}><RefreshCw size={16} /></span><div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-bold text-slate-950 dark:text-white">{item.note || item.category?.name}</p><span className={`shrink-0 rounded-full px-2 py-0.5 font-bold uppercase ${item.isActive ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>{item.isActive ? 'Hoạt động' : 'Tạm dừng'}</span></div><p className="mt-0.5 text-slate-500 dark:text-slate-400">{item.category?.name}</p></div></div></td>
+                    <td className="px-3 py-3"><p className="font-semibold text-slate-700 dark:text-slate-300">{FREQ_LABELS[item.frequency]}</p><p className="mt-1 text-slate-500 dark:text-slate-400">Ví: {item.wallet?.name}</p></td>
+                    <td className="px-3 py-3"><p className="font-bold text-slate-900 dark:text-white">{new Date(item.nextExecutionDate).toLocaleDateString('vi-VN')}</p><span className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 font-semibold text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">Còn lịch</span></td>
+                    <td className={`whitespace-nowrap px-3 py-3 text-right font-extrabold ${item.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-500'}`}>{item.type === 'INCOME' ? '+' : '-'}{formatVND(Number(item.amount))}</td>
+                    <td className="relative px-2 py-3 text-center"><button aria-label="Mở thao tác" onClick={() => setActionMenuId((id) => id === item.id ? null : item.id)} className="rounded-md p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical size={17} /></button>{actionMenuId === item.id && <div className="absolute right-3 top-11 z-20 w-40 rounded-lg border border-slate-200 bg-white p-1 text-left shadow-xl dark:border-slate-700 dark:bg-slate-900"><button onClick={() => { toggleMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">{item.isActive ? <Pause size={15} /> : <Play size={15} />}{item.isActive ? 'Tạm dừng' : 'Kích hoạt'}</button><button onClick={() => { setEditItem(item); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"><Pencil size={15} />Chỉnh sửa</button><button onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 size={15} />Xóa</button></div>}</td>
+                  </tr>)}
+                </tbody>
+              </table></div>}
+            </div>
+          </section>
         </>
       )}
 
@@ -229,6 +189,12 @@ const RecurringPage: React.FC = () => {
       {editItem && <RecurringModal item={editItem} wallets={wallets} categories={categories} onClose={() => setEditItem(null)} onSave={(d) => updateMutation.mutate({ id: editItem.id, data: d })} loading={updateMutation.isPending} />}
     </div>
   );
+};
+
+const RecurringSummary = ({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: 'blue' | 'green' | 'red' }) => {
+  const iconStyle = tone === 'green' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : tone === 'red' ? 'bg-rose-100 text-rose-500 dark:bg-rose-500/15' : 'bg-blue-100 text-blue-600 dark:bg-blue-500/15';
+  const valueStyle = tone === 'green' ? 'text-emerald-600' : tone === 'red' ? 'text-rose-500' : 'text-slate-950 dark:text-white';
+  return <div className="rounded-xl bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.06)] dark:bg-slate-900"><div className="flex items-center gap-3"><span className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconStyle}`}>{icon}</span><p className="font-bold text-slate-500 dark:text-slate-400">{label}</p></div><p className={`mt-4 font-extrabold ${valueStyle}`}>{value}</p></div>;
 };
 
 export default RecurringPage;

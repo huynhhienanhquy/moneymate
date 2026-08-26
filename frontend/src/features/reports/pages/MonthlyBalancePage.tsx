@@ -16,7 +16,13 @@ import api from '@/shared/api/client';
 const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 
 const formatVND = (n: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(n)} đ`;
+
+const formatChartValue = (value: number) => {
+  if (Math.abs(value) >= 1_000_000) return `${Number((value / 1_000_000).toFixed(1))}tr`;
+  if (Math.abs(value) >= 1_000) return `${Number((value / 1_000).toFixed(1))}k`;
+  return `${value}đ`;
+};
 
 const MonthlyBalancePage: React.FC = () => {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -64,29 +70,31 @@ const MonthlyBalancePage: React.FC = () => {
   const bestMonth = monthlyData.reduce((best: any, item: any) => (!best || item.remaining > best.remaining ? item : best), null);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Tiết kiệm mỗi tháng</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-slate-500 dark:text-slate-400">
             Tính từ tháng tạo tài khoản đến tháng hiện tại. Các tháng chưa tới sẽ không thống kê.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
+            aria-label="Năm trước"
             onClick={() => setYear((y) => y - 1)}
-            className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
           >
             <ChevronLeft size={18} />
           </button>
-          <div className="app-card flex items-center gap-2 px-4 py-2 font-semibold text-slate-900 dark:text-slate-200">
-            <Calendar size={18} className="text-brand-500" />
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <Calendar size={17} className="text-blue-600" />
             Năm {year}
           </div>
           <button
+            aria-label="Năm sau"
             onClick={() => setYear((y) => y + 1)}
-            className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
           >
             <ChevronRight size={18} />
           </button>
@@ -110,32 +118,32 @@ const MonthlyBalancePage: React.FC = () => {
           ) : (
           <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="app-card app-card-hover p-5">
+            <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
               <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/10">
                   <TrendingUp size={18} className="text-emerald-500" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng lương</p>
+                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng lương</p>
               </div>
               <p className="text-2xl font-extrabold text-emerald-500">{formatVND(totalSalary)}</p>
             </div>
 
-            <div className="app-card app-card-hover p-5">
+            <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
               <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500/10">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-500/10">
                   <TrendingDown size={18} className="text-rose-500" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng chi tiêu</p>
+                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng chi tiêu</p>
               </div>
               <p className="text-2xl font-extrabold text-rose-500">{formatVND(totalExpense)}</p>
             </div>
 
-            <div className="app-card app-card-hover p-5">
+            <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
               <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-500/10">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-brand-500/10">
                   <WalletCards size={18} className="text-brand-500" />
                 </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiết kiệm trung bình</p>
+                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiết kiệm trung bình</p>
               </div>
               <p className={`text-2xl font-extrabold ${averageSavings >= 0 ? 'text-brand-500' : 'text-rose-500'}`}>
                 {formatVND(averageSavings)}
@@ -144,18 +152,18 @@ const MonthlyBalancePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="app-card p-6">
+          <div className="rounded-2xl bg-white p-6 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
               <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Tổng lương tháng được tính bằng tổng tài sản cuối tháng. Tiết kiệm tháng = tổng lương tháng - chi tiêu tháng.</p>
+              <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</h2>
+              <p className="mt-1 text-slate-500 dark:text-slate-400">Tổng lương tháng được tính bằng tổng tài sản cuối tháng. Tiết kiệm tháng = tổng lương tháng - chi tiêu tháng.</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <CartesianGrid vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(Number(v) / 1_000_000).toFixed(0)}M`} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={formatChartValue} />
                 <Tooltip
                   formatter={(value: any) => formatVND(Number(value))}
                   contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9', fontSize: '12px' }}
@@ -169,9 +177,9 @@ const MonthlyBalancePage: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="app-card overflow-hidden">
-            <div className="border-b border-slate-200 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-950/30">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Chi tiết từng tháng</h2>
+          <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+            <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+              <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Chi tiết từng tháng</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">

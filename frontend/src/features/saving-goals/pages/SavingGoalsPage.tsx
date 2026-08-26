@@ -6,7 +6,7 @@ import AppModal from '@/shared/components/AppModal';
 import LoadingState from '@/shared/components/LoadingState';
 
 const formatVND = (n: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(n)} đ`;
 
 const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({ goal, onClose, onSave, loading }) => {
   const [form, setForm] = useState({
@@ -120,81 +120,40 @@ const SavingGoalsPage: React.FC = () => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['saving-goals'] }); qc.invalidateQueries({ queryKey: ['wallets'] }); setAction(null); },
   });
 
+  const totalSaved = goals.reduce((sum: number, goal: any) => sum + Number(goal.currentAmount), 0);
+  const completedGoals = goals.filter((goal: any) => goal.status === 'COMPLETED').length;
+  const getDaysLeft = (date: string) => Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000));
+
   return (
-    <div className="space-y-6">
+    <div>
       <div className="app-page-header">
-        <p className="text-sm font-semibold text-brand-600 dark:text-brand-400">Mục tiêu</p>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Mục tiêu tiết kiệm</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Theo dõi tiến độ tiết kiệm của bạn</p>
+        <p className="font-semibold text-brand-600 dark:text-brand-400">Mục tiêu</p>
+        <h1 className="mt-1 font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Mục tiêu tiết kiệm</h1>
+        <p className="mt-1 text-slate-500 dark:text-slate-400">Theo dõi tiến độ tiết kiệm của bạn</p>
       </div>
 
-      {isLoading ? (
-        <LoadingState />
-      ) : goals.length === 0 ? (
-        <div className="app-card flex flex-col items-center py-24 text-slate-500 dark:text-slate-400">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
-            <Target size={32} className="opacity-40" />
-          </div>
-          <p className="text-base font-semibold">Chưa có mục tiêu tiết kiệm nào</p>
-          <p className="text-sm mt-1">Hãy tạo mục tiêu đầu tiên để bắt đầu!</p>
-          <button onClick={() => setShowModal(true)} className="app-primary-button mt-4">
-            <Plus size={16} /> Tạo mục tiêu
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Summary row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-stagger">
-            <div className="app-stat-card app-stat-card-asset">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10">
-                  <Target size={18} className="text-brand-500" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng mục tiêu</p>
-              </div>
-              <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{goals.length}</p>
-            </div>
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <GoalSummary icon={<Target size={18} />} label="Tổng mục tiêu" value={String(goals.length)} tone="blue" />
+        <GoalSummary icon={<TrendingUp size={18} />} label="Đã tiết kiệm" value={formatVND(totalSaved)} tone="cyan" />
+        <GoalSummary icon={<Trophy size={18} />} label="Hoàn thành" value={`${completedGoals}/${goals.length}`} tone="violet" />
+      </div>
 
-            <div className="app-stat-card app-stat-card-income">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                  <TrendingUp size={18} className="text-emerald-500" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Đã tiết kiệm</p>
-              </div>
-              <p className="text-2xl font-extrabold text-emerald-500">{formatVND(goals.reduce((s: number, g: any) => s + Number(g.currentAmount), 0))}</p>
-            </div>
-
-            <div className="app-stat-card app-stat-card-savings">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-                  <Trophy size={18} className="text-amber-500" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Hoàn thành</p>
-              </div>
-              <p className="text-2xl font-extrabold text-amber-500">{goals.filter((g: any) => g.status === 'COMPLETED').length}/{goals.length}</p>
-            </div>
-          </div>
-
-          {/* Goals grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {isLoading ? <div className="mt-5"><LoadingState /></div> : (
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {goals.map((g: any) => (
-              <div key={g.id} className="app-card app-card-hover p-5 group">
-                <div className="flex items-start justify-between mb-3">
+              <div key={g.id} className={`group relative flex min-h-[320px] flex-col rounded-xl border bg-white p-5 shadow-[0_7px_20px_rgba(15,23,42,0.06)] dark:bg-slate-900 ${g.status === 'COMPLETED' ? 'border-violet-200 dark:border-violet-500/25' : 'border-white/80 dark:border-slate-800'}`}>
+                <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {g.status === 'COMPLETED' ? (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-                        <Trophy size={16} className="text-amber-400" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-500/15">
+                        <Trophy size={18} className="text-violet-600 dark:text-violet-400" />
                       </div>
                     ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/10">
-                        <Target size={16} className="text-brand-400" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
+                        <Target size={18} />
                       </div>
                     )}
-                    <span className={`app-badge ${
-                      g.status === 'COMPLETED' ? 'app-badge-success' :
-                      g.status === 'EXPIRED' ? 'app-badge-danger' : 'app-badge-info'
-                    }`}>
+                    <span className={`rounded-full px-2.5 py-1 font-bold uppercase tracking-wide ${g.status === 'COMPLETED' ? 'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300' : g.status === 'EXPIRED' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/15' : 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300'}`}>
                       {g.status === 'COMPLETED' ? 'Hoàn thành' : g.status === 'EXPIRED' ? 'Hết hạn' : 'Đang tiến hành'}
                     </span>
                   </div>
@@ -203,48 +162,48 @@ const SavingGoalsPage: React.FC = () => {
                     <button onClick={() => { if (confirm('Xóa mục tiêu?')) deleteMutation.mutate(g.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 size={13} /></button>
                   </div>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{g.title}</h3>
-                <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  <Calendar size={12} />
-                  Hạn: {new Date(g.targetDate).toLocaleDateString('vi-VN')}
-                </div>
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-emerald-400 font-bold">{formatVND(g.currentAmount)}</span>
-                    <span className="text-slate-500">{formatVND(g.targetAmount)}</span>
+                <h2 className="mt-4 font-extrabold text-slate-950 dark:text-slate-100">{g.title}</h2>
+                {g.status === 'COMPLETED' ? (
+                  <>
+                    <p className="mt-2 flex items-center gap-2 text-slate-600 dark:text-slate-400"><Calendar size={14} /> Đạt được vào: {new Date(g.targetDate).toLocaleDateString('vi-VN')}</p>
+                    <div className="mt-auto pt-8"><p className="text-slate-500 dark:text-slate-400">Tổng cộng</p><p className="mt-1 font-extrabold text-violet-600 dark:text-violet-400">{formatVND(g.currentAmount)}</p><div className="mt-3 h-2.5 overflow-hidden rounded-full bg-violet-100 dark:bg-violet-500/15"><div className="h-full w-full rounded-full bg-violet-600" /></div></div>
+                  </>
+                ) : (
+                  <>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40"><p className="text-slate-500 dark:text-slate-400">Mục tiêu tháng</p><p className="mt-1 font-extrabold text-slate-900 dark:text-white">{formatVND(g.targetAmount)}</p></div>
+                    <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40"><p className="text-slate-500 dark:text-slate-400">Còn lại</p><p className="mt-1 font-extrabold text-slate-900 dark:text-white">{getDaysLeft(g.targetDate)} ngày</p></div>
                   </div>
-                  <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${g.progress >= 100 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-brand-500 to-cyan-400'}`}
-                      style={{ width: `${Math.min(100, g.progress)}%` }}
-                    />
+                  <div className="mt-5">
+                    <div className="mb-2 flex justify-between"><span className="text-slate-500 dark:text-slate-400">Đã góp</span><span className="text-slate-500 dark:text-slate-400">Đích đến</span></div>
+                    <div className="flex justify-between"><span className="font-extrabold text-blue-600 dark:text-blue-400">{formatVND(g.currentAmount)}</span><span className="font-bold text-slate-900 dark:text-white">{formatVND(g.targetAmount)}</span></div>
+                    <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${Math.min(100, g.progress)}%` }} /></div>
+                    <div className="mt-2 flex items-center justify-between text-slate-500 dark:text-slate-400"><span className="flex items-center gap-1.5"><Calendar size={14} />{new Date(g.targetDate).toLocaleDateString('vi-VN')}</span><span className="font-bold text-blue-600 dark:text-blue-400">{g.progress}%</span></div>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 text-right font-medium">{g.progress}% hoàn thành</p>
-                </div>
-                {g.status === 'ACTIVE' && (
-                  <div className="flex gap-2 mt-4">
+                  <div className="mt-auto flex gap-2 pt-4">
                     <button onClick={() => setAction({ goal: g, type: 'deposit' })}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20 hover:bg-emerald-500/20 transition">
+                      className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0873c9] font-semibold text-white transition hover:bg-[#0666b4]">
                       <ArrowDownToLine size={13} /> Nạp
                     </button>
                     <button onClick={() => setAction({ goal: g, type: 'withdraw' })}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 text-xs font-semibold border border-rose-500/20 hover:bg-rose-500/20 transition">
+                      className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-100 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">
                       <ArrowUpFromLine size={13} /> Rút
                     </button>
                   </div>
+                  </>
                 )}
               </div>
             ))}
             {/* Add new goal card */}
             <button onClick={() => setShowModal(true)}
-              className="app-card border-dashed border-2 border-slate-300 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 flex flex-col items-center justify-center p-5 gap-2 text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 transition-all group">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 group-hover:bg-brand-500/10 transition">
+              className="group flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/35 p-5 text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-[0_5px_18px_rgba(15,23,42,0.10)] transition group-hover:scale-105 dark:bg-slate-800 dark:text-blue-400">
                 <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
               </div>
-              <p className="text-sm font-semibold">Thêm mục tiêu</p>
+              <h2 className="font-extrabold text-slate-900 dark:text-white">Thêm mục tiêu mới</h2>
+              <p className="max-w-52 text-center text-slate-500 dark:text-slate-400">Bắt đầu lên kế hoạch cho mục tiêu tiếp theo của bạn</p>
             </button>
           </div>
-        </>
       )}
 
       {showModal && <GoalModal onClose={() => setShowModal(false)} onSave={(d) => createMutation.mutate(d)} loading={createMutation.isPending} />}
@@ -256,6 +215,12 @@ const SavingGoalsPage: React.FC = () => {
       )}
     </div>
   );
+};
+
+const GoalSummary = ({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: 'blue' | 'cyan' | 'violet' }) => {
+  const iconStyle = tone === 'violet' ? 'bg-violet-100 text-violet-600 dark:bg-violet-500/15' : tone === 'cyan' ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15' : 'bg-blue-100 text-blue-600 dark:bg-blue-500/15';
+  const valueStyle = tone === 'violet' ? 'text-violet-600 dark:text-violet-400' : tone === 'cyan' ? 'text-cyan-700 dark:text-cyan-400' : 'text-slate-950 dark:text-white';
+  return <div className="rounded-xl bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.06)] dark:bg-slate-900"><div className="flex items-center gap-3"><span className={`flex h-9 w-9 items-center justify-center rounded-full ${iconStyle}`}>{icon}</span><p className="font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p></div><p className={`mt-3 font-extrabold ${valueStyle}`}>{value}</p></div>;
 };
 
 export default SavingGoalsPage;

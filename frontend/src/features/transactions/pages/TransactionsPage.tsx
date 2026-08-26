@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, ArrowUpRight, ArrowDownLeft, Pencil, Trash2, Loader2, X, Filter, ChevronDown, Paperclip, ScanLine } from 'lucide-react';
+import { Plus, Search, ArrowDownLeft, Pencil, Trash2, Loader2, X, Filter, ChevronDown, Paperclip, ScanLine, CarFront, Utensils, Banknote } from 'lucide-react';
 import api from '@/shared/api/client';
 import AppModal from '@/shared/components/AppModal';
 import ReceiptScanModal, { ScanResult } from '@/shared/components/ReceiptScanModal';
 import LoadingState from '@/shared/components/LoadingState';
 
 const formatVND = (n: number) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(n)} đ`;
 
 const TransactionModal: React.FC<{
   tx?: any; prefill?: any; wallets: any[]; categories: any[];
@@ -259,55 +259,63 @@ const TransactionsPage: React.FC = () => {
   const total: number = data?.pagination?.total || 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const getTransactionIcon = (tx: any) => {
+    if (tx.type === 'INCOME') return Banknote;
+    const category = String(tx.category?.name || '').toLowerCase();
+    if (category.includes('ăn') || category.includes('ẩm thực')) return Utensils;
+    if (category.includes('di chuyển') || category.includes('xe')) return CarFront;
+    return ArrowDownLeft;
+  };
+
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Giao dịch</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Theo dõi toàn bộ thu chi của bạn</p>
+          <h1 className="text-[28px] font-extrabold leading-none tracking-normal text-black dark:text-slate-100">Giao dịch</h1>
+          <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Theo dõi toàn bộ thu chi của bạn</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowScan(true)} className="app-secondary-button">
-            <ScanLine size={16} /><span>Quét hóa đơn</span>
+          <button onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-[9px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <ScanLine size={12} /><span>Quét hóa đơn</span>
           </button>
-          <button id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="app-primary-button">
-            <Plus size={16} /><span>Thêm giao dịch</span>
+          <button id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-[#08b8eb] px-3.5 text-[9px] font-bold text-slate-900 shadow-[0_3px_8px_rgba(8,184,235,0.25)] transition hover:bg-[#00a8d8]">
+            <Plus size={12} /><span>Thêm giao dịch</span>
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="mt-4 flex gap-2">
         <div className="relative flex-1 min-w-48">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             id="tx-search"
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             placeholder="Tìm kiếm ghi chú..."
-            className="app-input pl-9"
+            className="h-8 w-full rounded-md border-0 bg-white pl-8 pr-3 text-[10px] font-medium text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 dark:bg-slate-900 dark:text-slate-200 dark:focus:ring-blue-500/20"
           />
         </div>
         <div className="relative">
-          <Filter size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          <Filter size={12} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <select
             id="tx-type-filter"
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
-            className="app-select pl-9 pr-8 appearance-none"
+            className="h-8 appearance-none rounded-md border-0 bg-white pl-8 pr-8 text-[9px] font-semibold text-slate-600 shadow-sm outline-none dark:bg-slate-900 dark:text-slate-300"
           >
             <option value="">Tất cả</option>
             <option value="INCOME">Thu nhập</option>
             <option value="EXPENSE">Chi tiêu</option>
           </select>
-          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          <ChevronDown size={11} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
         </div>
       </div>
 
       {/* Table */}
-      <div className="app-card overflow-hidden">
+      <div className="mt-3 overflow-hidden rounded-[10px] border border-white/80 bg-white shadow-[0_7px_20px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900">
         {isLoading ? (
           <LoadingState className="items-center" />
         ) : transactions.length === 0 ? (
@@ -318,51 +326,49 @@ const TransactionsPage: React.FC = () => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[500px] table-fixed">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/30">
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500 px-5 py-3.5">Giao dịch</th>
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500 px-4 py-3.5 hidden sm:table-cell">Ví</th>
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500 px-4 py-3.5 hidden md:table-cell">Ngày</th>
-                    <th className="text-right text-xs font-semibold uppercase tracking-wider text-slate-500 px-5 py-3.5">Số tiền</th>
-                    <th className="px-4 py-3.5 w-20"></th>
+                  <tr className="border-b border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900">
+                    <th className="w-[42%] px-3 py-2.5 text-left text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Giao dịch</th>
+                    <th className="w-[24%] px-2 py-2.5 text-left text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ví</th>
+                    <th className="w-[16%] px-2 py-2.5 text-left text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ngày</th>
+                    <th className="w-[18%] px-3 py-2.5 text-right text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Số tiền</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {transactions.map((tx: any) => {
                     const isIncome = tx.type === 'INCOME';
+                    const TransactionIcon = getTransactionIcon(tx);
                     return (
                       <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                              {isIncome ? <ArrowUpRight size={15} className="text-emerald-400" /> : <ArrowDownLeft size={15} className="text-rose-400" />}
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-100 dark:bg-rose-500/10'}`}>
+                              <TransactionIcon size={11} className={isIncome ? 'text-emerald-600' : 'text-rose-500'} />
                             </div>
-                            <div>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 leading-tight">{tx.note || tx.category?.name}</p>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: tx.category?.color || '#64748b' }}></span>
-                                <p className="text-xs text-slate-500">{tx.category?.name}</p>
+                            <div className="min-w-0">
+                              <button type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</button>
+                              <div className="mt-0.5 flex items-center gap-1">
+                                <span className="inline-block h-1 w-1 rounded-full" style={{ background: tx.category?.color || '#64748b' }}></span>
+                                <p className="truncate text-[7px] leading-[1.4] text-slate-500">{tx.category?.name}</p>
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 hidden sm:table-cell">
-                          <span className="text-sm text-slate-600 dark:text-slate-400">{tx.wallet?.name}</span>
+                        <td className="px-2 py-2.5">
+                          <span className="inline-flex max-w-full truncate rounded bg-slate-100 px-2 py-1 text-[7px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{tx.wallet?.name}</span>
                         </td>
-                        <td className="px-4 py-3.5 hidden md:table-cell">
-                          <span className="text-sm text-slate-500">{new Date(tx.transactionDate).toLocaleDateString('vi-VN')}</span>
+                        <td className="px-2 py-2.5">
+                          <span className="whitespace-nowrap text-[8px] text-slate-600 dark:text-slate-400">{new Date(tx.transactionDate).toLocaleDateString('vi-VN')}</span>
                         </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <span className={`text-sm font-bold ${isIncome ? 'text-emerald-400' : 'text-rose-400'}`}>
-                            {isIncome ? '+' : '-'}{formatVND(Number(tx.amount))}
+                        <td className="relative px-3 py-2.5 text-right">
+                          <span className={`whitespace-nowrap text-[9px] font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-500'}`}>
+                            {isIncome ? '↑ +' : '↓ -'}{formatVND(Number(tx.amount))}
                           </span>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition justify-end">
-                            <button id={`edit-tx-${tx.id}`} onClick={() => setEditTx(tx)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil size={13} /></button>
-                            <button id={`del-tx-${tx.id}`} onClick={() => { if (confirm('Xóa giao dịch này?')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition">
-                              {deletingId === tx.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                          <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 bg-white pl-2 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">
+                            <button id={`edit-tx-${tx.id}`} aria-label="Chỉnh sửa giao dịch" onClick={() => setEditTx(tx)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={11} /></button>
+                            <button id={`del-tx-${tx.id}`} aria-label="Xóa giao dịch" onClick={() => { if (confirm('Xóa giao dịch này?')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10">
+                              {deletingId === tx.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
                             </button>
                           </div>
                         </td>

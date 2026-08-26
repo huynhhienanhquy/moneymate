@@ -13,7 +13,6 @@ import {
   LogOut,
   Menu,
   X,
-  TrendingUp,
   User as UserIcon,
   BarChart3,
   WalletCards,
@@ -60,18 +59,18 @@ export const Layout: React.FC = () => {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const currentPage = menuItems.find((item) => isActive(item.path))?.name || 'MoneyMate';
 
   return (
     <div className="flex min-h-screen text-slate-900 dark:text-slate-100 font-sans">
+      <a href="#main-content" className="app-skip-link">Đi tới nội dung chính</a>
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-72 p-4">
+      <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 hidden h-dvh w-[206px] flex-col px-2.5 py-3 md:flex">
         {/* Logo */}
-        <div className="app-shell-card flex items-center gap-3.5 px-4 py-4 mb-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-cyan-400 text-white font-extrabold text-lg shadow-lg shadow-brand-500/30">
-            <TrendingUp size={22} />
-          </div>
+        <div className="flex items-center gap-2 px-2 py-1 mb-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0764b8] text-xs font-black text-white">MM</div>
           <div>
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-brand-500 via-cyan-500 to-violet-500 bg-clip-text text-transparent">
+            <span className="font-extrabold text-xl tracking-tight text-[#0764b8]">
               MoneyMate
             </span>
             <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-400 tracking-wide uppercase">Smart Finance</p>
@@ -79,7 +78,7 @@ export const Layout: React.FC = () => {
         </div>
 
         {/* Navigation links */}
-        <nav className="app-shell-card flex-1 space-y-1.5 p-3 overflow-y-auto">
+        <nav aria-label="Điều hướng chính" className="flex-1 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -87,13 +86,14 @@ export const Layout: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 ${
+                aria-current={active ? 'page' : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-[9px] text-xs font-medium transition-all duration-200 ${
                   active
-                    ? 'bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-500 text-white shadow-lg shadow-brand-500/25 scale-[1.02]'
-                    : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 hover:translate-x-1'
+                    ? 'bg-[#09b9ed] text-slate-800'
+                    : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100'
                 }`}
               >
-                <Icon size={19} className={active ? 'text-white' : 'text-slate-400 dark:text-slate-500'} />
+                <Icon size={17} />
                 <span>{item.name}</span>
               </Link>
             );
@@ -101,7 +101,7 @@ export const Layout: React.FC = () => {
         </nav>
 
         {/* User Card */}
-        <div className="app-shell-card mt-4 flex flex-col gap-3 p-3">
+        <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 p-2 pt-3">
           <button
             onClick={toggleTheme}
             className="flex items-center justify-between w-full px-4 py-2.5 rounded-2xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-all"
@@ -114,7 +114,7 @@ export const Layout: React.FC = () => {
               {theme === 'dark' ? 'DARK' : 'LIGHT'}
             </span>
           </button>
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+          <div className="hidden">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 via-brand-600 to-cyan-400 text-white font-extrabold shadow-md shadow-brand-500/20">
               {user?.fullName ? user.fullName[0].toUpperCase() : <UserIcon size={16} />}
             </div>
@@ -143,9 +143,7 @@ export const Layout: React.FC = () => {
           <aside className="w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col h-full animate-slide-in shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-400 text-white font-bold shadow-md shadow-brand-500/30">
-                  <TrendingUp size={18} />
-                </div>
+                <img src="/logo.png" alt="" className="h-9 w-9 rounded-xl object-cover shadow-md shadow-brand-500/30" />
                 <span className="font-extrabold text-lg text-slate-900 dark:text-slate-100">MoneyMate</span>
               </div>
               <button
@@ -200,7 +198,7 @@ export const Layout: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="relative flex min-w-0 flex-1 flex-col md:ml-[206px]">
         {/* Decorative background blobs */}
         <div className="fixed pointer-events-none overflow-hidden inset-0 z-0">
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/10 dark:bg-brand-600/10 rounded-full blur-3xl"></div>
@@ -209,18 +207,26 @@ export const Layout: React.FC = () => {
         </div>
 
         {/* Header - Mobile & Desktop Profile Bar */}
-        <header className="sticky top-0 z-40 mx-4 mt-4 flex h-16 items-center justify-between md:justify-end rounded-3xl border border-white/80 bg-white/75 px-5 shadow-lg shadow-brand-500/5 backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-900/75 dark:shadow-black/20">
+        <header className="dashboard-topbar sticky top-0 z-40 flex min-h-16 items-center justify-between border-b border-slate-200/70 bg-white/80 px-4 md:px-5 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
           <button
             onClick={() => setMobileMenuOpen(true)}
+            aria-label="Mở menu"
             className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 focus:outline-none"
           >
             <Menu size={24} />
           </button>
+          <div className="min-w-0 md:pl-1">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-brand-500">MoneyMate</p>
+            <p className="truncate text-sm font-extrabold text-slate-800 dark:text-slate-100" style={{ wordSpacing: '0.22em' }}>
+              {currentPage}
+            </p>
+          </div>
           
           <div className="flex items-center gap-3">
             <NotificationBell />
             <button
               onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
               className="hidden md:flex p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             >
               {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-brand-500" />}
@@ -232,6 +238,7 @@ export const Layout: React.FC = () => {
             {/* Profile Avatar Badge */}
             <Link
               to="/profile"
+              aria-label="Mở hồ sơ"
               className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-cyan-400 text-white font-extrabold text-sm shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 hover:scale-105 transition-all"
             >
               {user?.fullName ? user.fullName[0].toUpperCase() : <UserIcon size={15} />}
@@ -240,7 +247,7 @@ export const Layout: React.FC = () => {
         </header>
 
         {/* Content Outlet */}
-        <main className="relative z-10 flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main id="main-content" tabIndex={-1} className="relative z-10 flex-1 p-4 md:p-6 overflow-y-auto max-w-[1180px] w-full mx-auto focus:outline-none">
           <div className="animate-fade-in">
             <Outlet />
           </div>

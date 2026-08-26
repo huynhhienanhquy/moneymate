@@ -97,7 +97,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl animate-fade-in">
+    <div className="max-w-5xl space-y-6 animate-fade-in">
       <div className="app-page-header">
         <p className="text-sm font-semibold text-brand-600 dark:text-brand-400">Hồ sơ</p>
         <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Hồ sơ cá nhân</h1>
@@ -105,13 +105,13 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* User info card */}
-      <div className="app-card p-6 flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-cyan-500 text-white text-2xl font-bold shadow-lg shadow-brand-500/20">
+      <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-sky-500 text-2xl font-bold text-slate-950 shadow-lg shadow-cyan-500/20">
           {user?.fullName ? user.fullName[0].toUpperCase() : <User size={24} />}
         </div>
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">{profile?.fullName || user?.fullName}</h2>
-          <div className="flex items-center gap-3 mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <div className="mt-1 flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1"><Mail size={13} /> {profile?.email || user?.email}</span>
             <span className="text-slate-300 dark:text-slate-600">|</span>
             <span className="flex items-center gap-1">
@@ -127,15 +127,16 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Profile Info */}
-      <div className="app-card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10">
-            <User size={20} className="text-brand-500" />
+      <div className="rounded-2xl bg-white p-6 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-brand-500/10">
+            <User size={19} className="text-brand-500" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Thông tin cá nhân</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Cập nhật tên hiển thị và ảnh đại diện</p>
+            <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Thông tin cá nhân</h2>
+            <p className="text-slate-500 dark:text-slate-400">Cập nhật tên hiển thị và ảnh đại diện</p>
           </div>
         </div>
 
@@ -148,7 +149,7 @@ const ProfilePage: React.FC = () => {
 
         <form onSubmit={handleProfileSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Họ và tên</label>
+            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Họ và tên</label>
             <input
               type="text"
               value={profileForm.fullName}
@@ -157,7 +158,7 @@ const ProfilePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">URL Avatar <span className="text-slate-400 dark:text-slate-500">(tùy chọn)</span></label>
+            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">URL Avatar <span className="font-normal text-slate-400 dark:text-slate-500">(tùy chọn)</span></label>
             <input
               type="url"
               value={profileForm.avatarUrl}
@@ -178,14 +179,14 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Change Password */}
-      <div className="app-card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10">
-            <Lock size={20} className="text-rose-500" />
+      <div className="rounded-2xl bg-white p-6 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-500/10">
+            <Lock size={19} className="text-rose-500" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Đổi mật khẩu</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Bảo vệ tài khoản của bạn</p>
+            <h2 className="font-extrabold text-slate-900 dark:text-slate-100">Đổi mật khẩu</h2>
+            <p className="text-slate-500 dark:text-slate-400">Bảo vệ tài khoản của bạn</p>
           </div>
         </div>
 
@@ -203,7 +204,7 @@ const ProfilePage: React.FC = () => {
 
         <form onSubmit={handlePasswordSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Mật khẩu hiện tại</label>
+            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Mật khẩu hiện tại</label>
             <input
               type="password"
               value={passwordForm.currentPassword}
@@ -212,7 +213,7 @@ const ProfilePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Mật khẩu mới</label>
+            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Mật khẩu mới</label>
             <input
               type="password"
               value={passwordForm.newPassword}
@@ -221,7 +222,7 @@ const ProfilePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Xác nhận mật khẩu mới</label>
+            <label className="mb-1.5 block font-semibold text-slate-700 dark:text-slate-300">Xác nhận mật khẩu mới</label>
             <input
               type="password"
               value={passwordForm.confirmPassword}
@@ -238,6 +239,7 @@ const ProfilePage: React.FC = () => {
             Đổi mật khẩu
           </button>
         </form>
+      </div>
       </div>
     </div>
   );
