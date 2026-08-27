@@ -45,9 +45,14 @@ moneymate/
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                # App root và router
-│   │   ├── features/           # màn hình nhóm theo nghiệp vụ
-│   │   └── shared/             # API client, component và store dùng chung
+│   │   ├── components/         # UI component dùng chung
+│   │   ├── config/route/       # router và route guard
+│   │   ├── hooks/              # React hooks dùng lại
+│   │   ├── layouts/            # page shell và navigation
+│   │   ├── pages/              # màn hình theo route
+│   │   ├── services/           # API client và tích hợp ngoài
+│   │   ├── stores/             # client state dùng chung
+│   │   └── utils/              # tiện ích dùng chung
 │   ├── nginx.conf
 │   └── Dockerfile
 ├── apps/

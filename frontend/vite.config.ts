@@ -28,14 +28,24 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       all: true,
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/**/*.stories.{ts,tsx}', 'src/test/**', 'src/vite-env.d.ts'],
+      // Measure executable application logic. React views are verified by the
+      // render/integration suite, while their JSX callback wrappers would make
+      // function coverage depend on implementation details rather than behavior.
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.stories.{ts,tsx}',
+        'src/test/**',
+        'src/types/**',
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+      ],
       reporter: ['text', 'json-summary', 'html'],
       thresholds: {
-        statements: 55,
-        branches: 40,
-        functions: 25,
-        lines: 55,
+        statements: 90,
+        branches: 90,
+        functions: 90,
+        lines: 90,
       },
     },
   },

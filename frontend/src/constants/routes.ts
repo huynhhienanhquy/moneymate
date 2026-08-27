@@ -1,0 +1,16 @@
+export const APP_ROUTES = {
+  dashboard: '/',
+  login: '/login',
+  register: '/register',
+  wallets: '/wallets',
+  categories: '/categories',
+  transactions: '/transactions',
+  reports: '/reports',
+  monthlyBalance: '/monthly-balance',
+  budgets: '/budgets',
+  savingGoals: '/saving-goals',
+  recurring: '/recurring',
+  aiAdvisor: '/ai',
+  profile: '/profile',
+  admin: '/admin',
+} as const;

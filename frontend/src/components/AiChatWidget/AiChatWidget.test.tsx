@@ -13,7 +13,7 @@ let hookState = {
   isSending: false,
 };
 
-vi.mock('@/hooks/components/useAiChat', () => ({
+vi.mock('@/hooks/useAiChat', () => ({
   useAiChat: () => ({ ...hookState, setOpen, setInput, send, bottomRef: { current: null } }),
 }));
 

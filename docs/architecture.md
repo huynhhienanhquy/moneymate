@@ -6,16 +6,21 @@ configuration; the root package only provides repository-wide commands.
 
 ## Frontend
 
-`frontend/src` follows a feature-first structure:
+`frontend/src` follows the responsibility-based structure defined by the
+frontend agent-kit rule:
 
-- `app/`: application bootstrap, providers, and routing.
-- `features/<feature>/pages/`: route-level UI, grouped by business capability.
-- `shared/api/`: HTTP client and transport concerns.
-- `shared/components/`: reusable UI composed across features.
-- `shared/stores/`: cross-feature client state.
+- `components/`: reusable UI; application-wide primitives live in `common/`.
+- `config/route/`: route configuration and access guards.
+- `hooks/`: reusable React logic.
+- `layouts/`: page shells and application navigation.
+- `pages/<PageName>/`: route-level screens and their adjacent tests.
+- `services/`: HTTP clients and external integrations.
+- `stores/`: cross-page client state.
+- `styles/`, `types/`, and `utils/`: global styles, shared declarations, and
+  domain-neutral utilities.
 
-Imports from outside a feature use the `@/` alias. Route-level pages are loaded
-lazily so a user only downloads the feature they open.
+`App.tsx`, `main.tsx`, and framework declarations remain at the `src` root.
+Cross-folder imports use the `@/` alias, and route-level pages are loaded lazily.
 
 ## Backend
 

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { STORAGE_KEYS } from '@/constants/storage';
 
 type Theme = 'dark' | 'light';
 
@@ -21,14 +22,14 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: 'dark',
 
   initTheme: () => {
-    const saved = (localStorage.getItem('mm_theme') as Theme) || 'dark';
+    const saved = (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'dark';
     applyTheme(saved);
     set({ theme: saved });
   },
 
   toggleTheme: () => {
     const next: Theme = get().theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('mm_theme', next);
+    localStorage.setItem(STORAGE_KEYS.theme, next);
     applyTheme(next);
     set({ theme: next });
   },

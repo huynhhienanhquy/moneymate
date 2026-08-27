@@ -1,19 +1,9 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppRoutes from '@/config/route/AppRoutes';
 import { useAuthStore } from '@/stores/auth.store';
 import { useThemeStore } from '@/stores/theme.store';
 import api from '@/services/api/client';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import AppProviders from '@/contexts/AppProviders';
 
 const AppInit: React.FC = () => {
   const { isAuthenticated, setToken, logout, setInitializing } = useAuthStore();
@@ -45,11 +35,9 @@ const AppInit: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppInit />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AppProviders>
+      <AppInit />
+    </AppProviders>
   );
 };
 

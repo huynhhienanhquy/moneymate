@@ -2,7 +2,7 @@ import AppInput from '@/components/common/AppInput/AppInput';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React from 'react';
 import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
-import { useAiChat } from '@/hooks/components/useAiChat';
+import { useAiChat } from '@/hooks/useAiChat';
 
 const AiChatWidget: React.FC = () => {
   const { open, setOpen, input, setInput, messages, suggestions, bottomRef, send, isSending } = useAiChat();

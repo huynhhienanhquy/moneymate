@@ -1,0 +1,18 @@
+import { useState } from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Badge, Button, ChoiceChips, EmptyState, Field, Screen, SectionTitle, Sheet, StateMessage, ui } from '@/components/ui';
+import { ActionLink, EntityCard, IconTile } from '@/components/finance';
+import { apiRequest } from '@/lib/api';
+import type { Category } from '@/types/api';
+import { theme } from '@/theme';
+
+export default function CategoriesPage() {
+  const client = useQueryClient(); const [open, setOpen] = useState(false); const [editing, setEditing] = useState<Category | null>(null); const [name, setName] = useState(''); const [type, setType] = useState('EXPENSE'); const [color, setColor] = useState('#2A95FF');
+  const categories = useQuery({ queryKey: ['categories'], queryFn: () => apiRequest<Category[]>('/categories') });
+  const save = useMutation({ mutationFn: () => apiRequest(editing ? `/categories/${editing.id}` : '/categories', { method: editing ? 'PUT' : 'POST', body: JSON.stringify(editing ? { name, color } : { name, type, color, icon: type === 'INCOME' ? 'cash-plus' : 'cart-outline' }) }), onSuccess: () => { client.invalidateQueries({ queryKey: ['categories'] }); setOpen(false); } });
+  const remove = useMutation({ mutationFn: (id: string) => apiRequest(`/categories/${id}`, { method: 'DELETE' }), onSuccess: () => client.invalidateQueries({ queryKey: ['categories'] }) });
+  const start = (item?: Category) => { setEditing(item || null); setName(item?.name || ''); setType(item?.type || 'EXPENSE'); setColor(item?.color || '#2A95FF'); setOpen(true); };
+  return <Screen title="Danh mục" action={<Pressable onPress={() => start()}><MaterialCommunityIcons name="plus-circle" size={30} color={theme.colors.primary} /></Pressable>}><SectionTitle title="Phân loại thu chi" caption="Màu sắc và icon đồng bộ với báo cáo" />{categories.isLoading && <StateMessage loading message="Đang tải danh mục…" />}{!categories.isLoading && !categories.data?.length && <EmptyState icon="shape-plus-outline" title="Chưa có danh mục" message="Tạo danh mục thu hoặc chi để phân loại giao dịch." />}{categories.data?.map((item) => <EntityCard key={item.id} icon={<IconTile name={item.type === 'INCOME' ? 'cash-plus' : 'cart-outline'} color={item.color} background={`${item.color}18`} />} title={item.name} subtitle={item.type === 'INCOME' ? 'Khoản thu' : 'Khoản chi'} badge={<Badge label={item.type === 'INCOME' ? 'Thu' : 'Chi'} tone={item.type === 'INCOME' ? 'success' : 'danger'} />}><View style={ui.row}><View style={{ flex: 1 }}><ActionLink label="Sửa" icon="pencil-outline" onPress={() => start(item)} /></View><View style={{ flex: 1 }}><ActionLink danger label="Xóa" icon="trash-can-outline" onPress={() => Alert.alert('Xóa danh mục?', undefined, [{ text: 'Hủy' }, { text: 'Xóa', style: 'destructive', onPress: () => remove.mutate(item.id) }])} /></View></View></EntityCard>)}<Sheet visible={open} title={editing ? 'Sửa danh mục' : 'Danh mục mới'} onClose={() => setOpen(false)}><Field label="Tên danh mục" value={name} onChangeText={setName} />{!editing && <><Text style={ui.muted}>Loại danh mục</Text><ChoiceChips value={type} options={[{ label: 'Khoản chi', value: 'EXPENSE' }, { label: 'Khoản thu', value: 'INCOME' }]} onChange={setType} /></>}<Field label="Màu HEX" value={color} onChangeText={setColor} autoCapitalize="characters" /><Button label="Lưu danh mục" disabled={!name.trim() || !/^#[0-9a-f]{6}$/i.test(color)} loading={save.isPending} onPress={() => save.mutate()} /></Sheet></Screen>;
+}

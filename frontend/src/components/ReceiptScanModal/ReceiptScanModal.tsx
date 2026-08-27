@@ -3,9 +3,10 @@ import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppInput from '@/components/common/AppInput/AppInput';
 import React from 'react';
 import { ScanLine, X, CheckCircle2, AlertCircle } from 'lucide-react';
-import { ScanResult, useReceiptScanner } from '@/hooks/components/useReceiptScanner';
+import { useReceiptScanner } from '@/hooks/useReceiptScanner';
+import type { ScanResult } from '@/types/receipt';
 import AppButton from '@/components/common/AppButton/AppButton';
-export type { ScanResult } from '@/hooks/components/useReceiptScanner';
+export type { ScanResult } from '@/types/receipt';
 
 const ReceiptScanModal: React.FC<{
   onClose: () => void;

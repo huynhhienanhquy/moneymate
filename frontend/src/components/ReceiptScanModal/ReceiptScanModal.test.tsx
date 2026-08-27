@@ -11,7 +11,7 @@ let hookState: {
   isScanning: boolean;
 } = { file: null, result: null, isScanning: false };
 
-vi.mock('@/hooks/components/useReceiptScanner', () => ({
+vi.mock('@/hooks/useReceiptScanner', () => ({
   useReceiptScanner: () => ({ ...hookState, setFile, scan, reset }),
 }));
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { UserDto } from '@moneymate/contracts';
+import { STORAGE_KEYS } from '@/constants/storage';
 
 interface AuthState {
   user: UserDto | null;
@@ -17,7 +18,7 @@ export const useAuthStore = create<AuthState>((set) => {
   // Try to load cached user info on startup
   let initialUser: UserDto | null = null;
   try {
-    const cachedUser = localStorage.getItem('mm_user');
+    const cachedUser = localStorage.getItem(STORAGE_KEYS.user);
     if (cachedUser) initialUser = JSON.parse(cachedUser);
   } catch {}
 
@@ -28,12 +29,12 @@ export const useAuthStore = create<AuthState>((set) => {
     isInitializing: true,
 
     login: (user, accessToken) => {
-      localStorage.setItem('mm_user', JSON.stringify(user));
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
       set({ user, accessToken, isAuthenticated: true, isInitializing: false });
     },
 
     logout: () => {
-      localStorage.removeItem('mm_user');
+      localStorage.removeItem(STORAGE_KEYS.user);
       set({ user: null, accessToken: null, isAuthenticated: false, isInitializing: false });
     },
 
@@ -42,7 +43,7 @@ export const useAuthStore = create<AuthState>((set) => {
     },
 
     setUser: (user) => {
-      localStorage.setItem('mm_user', JSON.stringify(user));
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
       set({ user });
     },
 

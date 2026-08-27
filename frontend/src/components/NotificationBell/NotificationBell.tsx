@@ -2,7 +2,7 @@ import AppButton from '@/components/common/AppButton/AppButton';
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import React from 'react';
 import { Bell, Check, Trash2, Loader2, X } from 'lucide-react';
-import { useNotifications } from '@/hooks/components/useNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
 
 const NotificationBell: React.FC = () => {
   const { open, setOpen, containerRef, notifications, unreadCount, isLoading, markRead, markAllRead, remove } = useNotifications();

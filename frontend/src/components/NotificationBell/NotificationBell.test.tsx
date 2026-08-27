@@ -13,7 +13,7 @@ let hookState = {
   isLoading: false,
 };
 
-vi.mock('@/hooks/components/useNotifications', () => ({
+vi.mock('@/hooks/useNotifications', () => ({
   useNotifications: () => ({ ...hookState, setOpen, markRead, markAllRead, remove, containerRef: { current: null } }),
 }));
 
