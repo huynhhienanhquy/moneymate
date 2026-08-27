@@ -88,9 +88,6 @@
       "expo-font",
       "expo-web-browser"
     ],
-    "extra": {
-      "apiUrl": "http://localhost:5000/api"
-    },
     "experiments": {
       "autolinkingModuleResolution": true,
       "typedRoutes": true,

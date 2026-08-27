@@ -9,7 +9,10 @@ copy .env.example .env
 npm run start
 ```
 
-Set `EXPO_PUBLIC_API_URL` to an API address reachable by the device. Set `EXPO_PUBLIC_EAS_PROJECT_ID` before registering push notifications.
+During local Expo development, leave `EXPO_PUBLIC_API_URL` empty so the app can
+derive the backend host from Metro. Set it to a device-reachable HTTPS URL for
+preview and production builds. Set `EXPO_PUBLIC_EAS_PROJECT_ID` before
+registering push notifications.
 
 ## Checks
 
