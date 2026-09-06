@@ -9,6 +9,8 @@ describe('TransactionsPage', () => {
     renderPage(TransactionsPage);
     expect(screen.getAllByText('Ăn trưa').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Ăn uống').length).toBeGreaterThan(0);
+    expect(document.getElementById('edit-tx-tx-transfer')).not.toBeInTheDocument();
+    expect(document.getElementById('del-tx-tx-transfer')).not.toBeInTheDocument();
   });
 
   it('opens the create form and renders empty results', () => {
@@ -18,5 +20,11 @@ describe('TransactionsPage', () => {
     cleanup();
     renderPage(TransactionsPage, 'empty');
     expect(screen.getByText('Không tìm thấy giao dịch nào')).toBeInTheDocument();
+  });
+
+  it('distinguishes an API error from an empty transaction list', () => {
+    renderPage(TransactionsPage, 'error');
+    expect(screen.getByRole('alert')).toHaveTextContent('Không thể tải danh sách giao dịch');
+    expect(screen.queryByText('Không tìm thấy giao dịch nào')).not.toBeInTheDocument();
   });
 });

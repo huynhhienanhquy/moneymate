@@ -8,6 +8,10 @@ export class AttachmentService {
   private transactionRepository = new TransactionRepository();
   private storage = createObjectStorage();
 
+  private toClientAttachment<T extends { id: string }>(attachment: T) {
+    return { ...attachment, url: `/api/attachments/${attachment.id}/content` };
+  }
+
   async uploadAttachment(
     userId: string,
     transactionId: string,
@@ -18,13 +22,14 @@ export class AttachmentService {
 
     const stored = await this.storage.put(`users/${userId}/transactions/${transactionId}`, file);
     try {
-      return await this.attachmentRepository.create({
+      const attachment = await this.attachmentRepository.create({
         transactionId,
         url: stored.url,
         filename: file.originalname,
         fileType: file.mimetype,
         fileSize: file.size,
       });
+      return this.toClientAttachment(attachment);
     } catch (error) {
       await this.storage.remove(stored.url).catch(() => undefined);
       throw error;
@@ -34,7 +39,17 @@ export class AttachmentService {
   async getAttachments(userId: string, transactionId: string) {
     const tx = await this.transactionRepository.findById(transactionId);
     if (!tx || tx.userId !== userId) throw new AppError('Transaction not found', 404);
-    return this.attachmentRepository.findByTransactionId(transactionId);
+    const attachments = await this.attachmentRepository.findByTransactionId(transactionId);
+    return attachments.map((attachment) => this.toClientAttachment(attachment));
+  }
+
+  async downloadAttachment(userId: string, id: string) {
+    const attachment = await this.attachmentRepository.findById(id);
+    if (!attachment?.transactionId) throw new AppError('Attachment not found', 404);
+    const tx = await this.transactionRepository.findById(attachment.transactionId);
+    if (!tx || tx.userId !== userId) throw new AppError('Attachment not found', 404);
+    const data = await this.storage.read(attachment.url);
+    return { attachment, data };
   }
 
   async deleteAttachment(userId: string, id: string) {

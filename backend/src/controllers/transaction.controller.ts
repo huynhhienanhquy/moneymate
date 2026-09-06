@@ -29,7 +29,6 @@ export class TransactionController {
         throw new AppError('Unauthorized', 401);
       }
 
-      // Parse filters from query params
       const {
         walletId,
         categoryId,
@@ -41,19 +40,31 @@ export class TransactionController {
         order,
         skip,
         take
-      } = req.query;
+      } = req.query as unknown as {
+        walletId?: string;
+        categoryId?: string;
+        type?: TransactionType;
+        startDate?: Date;
+        endDate?: Date;
+        search?: string;
+        sortBy: 'transactionDate' | 'amount' | 'createdAt' | 'updatedAt' | 'type';
+        order: 'asc' | 'desc';
+        skip: number;
+        take: number;
+      };
 
-      const filters: any = {};
-      if (walletId) filters.walletId = String(walletId);
-      if (categoryId) filters.categoryId = String(categoryId);
-      if (type) filters.type = type as TransactionType;
-      if (startDate) filters.startDate = new Date(String(startDate));
-      if (endDate) filters.endDate = new Date(String(endDate));
-      if (search) filters.search = String(search);
-      if (sortBy) filters.sortBy = String(sortBy);
-      if (order) filters.order = order === 'asc' ? 'asc' : 'desc';
-      if (skip) filters.skip = safeParseInt(skip);
-      if (take) filters.take = safeParseInt(take);
+      const filters = {
+        walletId,
+        categoryId,
+        type,
+        startDate,
+        endDate,
+        search,
+        sortBy,
+        order,
+        skip,
+        take,
+      };
 
       const result = await this.transactionService.getTransactions(userId, filters);
       return sendSuccess(res, result, 'Transactions retrieved successfully');
@@ -138,8 +149,9 @@ export class TransactionController {
         throw new AppError('Unauthorized', 401);
       }
       
-      const month = safeParseInt(req.query.month) || new Date().getMonth() + 1;
-      const year = safeParseInt(req.query.year) || new Date().getFullYear();
+      const query = req.query as unknown as { month?: number; year?: number };
+      const month = query.month ?? new Date().getMonth() + 1;
+      const year = query.year ?? new Date().getFullYear();
 
       const report = await this.transactionService.getMonthlyReport(userId, month, year);
       return sendSuccess(res, report, 'Monthly report details loaded');
@@ -155,7 +167,7 @@ export class TransactionController {
         throw new AppError('Unauthorized', 401);
       }
 
-      const months = safeParseInt(req.query.months) || 6;
+      const months = (req.query as unknown as { months: number }).months;
       const trend = await this.transactionService.getMonthlyTrend(userId, months);
       return sendSuccess(res, trend, 'Monthly trend loaded');
     } catch (error) {
@@ -170,7 +182,7 @@ export class TransactionController {
         throw new AppError('Unauthorized', 401);
       }
 
-      const year = safeParseInt(req.query.year) || new Date().getFullYear();
+      const year = (req.query as unknown as { year?: number }).year ?? new Date().getFullYear();
       const report = await this.transactionService.getYearlyReport(userId, year);
       return sendSuccess(res, report, 'Yearly report loaded');
     } catch (error) {
@@ -182,7 +194,7 @@ export class TransactionController {
     try {
       const userId = req.user?.id;
       if (!userId) throw new AppError('Unauthorized', 401);
-      const cursor = req.query.cursor ? new Date(String(req.query.cursor)) : undefined;
+      const cursor = req.query.cursor ? String(req.query.cursor) : undefined;
       const take = safeParseInt(req.query.take) || 100;
       return sendSuccess(res, await this.transactionService.syncTransactions(userId, cursor, take), 'Transaction sync delta retrieved');
     } catch (error) { next(error); }

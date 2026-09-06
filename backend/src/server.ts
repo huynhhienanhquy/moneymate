@@ -1,11 +1,14 @@
 import dotenv from 'dotenv';
 dotenv.config();
+process.env.COPILOTKIT_TELEMETRY_DISABLED ??= 'true';
 
 import app from './app';
 import prisma from './config/db';
 import { RecurringService } from './services/recurring.service';
+import { validateRuntimeEnvironment } from './config/env';
 
 const PORT = process.env.PORT || 5000;
+validateRuntimeEnvironment();
 const recurringService = new RecurringService();
 
 const server = app.listen(PORT, () => {

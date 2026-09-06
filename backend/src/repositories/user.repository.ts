@@ -33,6 +33,16 @@ export class UserRepository {
     });
   }
 
+  async updatePasswordAndRevokeSessions(id: string, passwordHash: string) {
+    return prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id }, data: { passwordHash } });
+      await tx.refreshToken.updateMany({
+        where: { userId: id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    });
+  }
+
   async deleteById(id: string) {
     return prisma.user.delete({ where: { id } });
   }

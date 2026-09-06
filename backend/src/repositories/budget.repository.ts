@@ -13,6 +13,7 @@ export class BudgetRepository {
       data: {
         userId: data.userId,
         categoryId: data.categoryId ?? null,
+        categoryScope: data.categoryId ?? 'GLOBAL',
         amount: new Prisma.Decimal(data.amount),
         month: data.month,
         year: data.year,
@@ -49,11 +50,15 @@ export class BudgetRepository {
   }
 
   async update(id: string, data: { amount?: number; categoryId?: string | null }) {
+    const resetAlerts = data.amount !== undefined || data.categoryId !== undefined;
     return prisma.budget.update({
       where: { id },
       data: {
         amount: data.amount !== undefined ? new Prisma.Decimal(data.amount) : undefined,
         categoryId: data.categoryId,
+        categoryScope: data.categoryId !== undefined ? data.categoryId ?? 'GLOBAL' : undefined,
+        warningNotified: resetAlerts ? false : undefined,
+        exceededNotified: resetAlerts ? false : undefined,
       },
       include: { category: { select: { name: true, color: true, type: true } } },
     });
@@ -61,6 +66,20 @@ export class BudgetRepository {
 
   async delete(id: string) {
     return prisma.budget.delete({ where: { id } });
+  }
+
+  async claimAlert(id: string, level: 'WARNING' | 'EXCEEDED') {
+    const field = level === 'WARNING' ? 'warningNotified' : 'exceededNotified';
+    const result = await prisma.budget.updateMany({
+      where: { id, [field]: false },
+      data: { [field]: true },
+    });
+    return result.count === 1;
+  }
+
+  async releaseAlert(id: string, level: 'WARNING' | 'EXCEEDED') {
+    const field = level === 'WARNING' ? 'warningNotified' : 'exceededNotified';
+    await prisma.budget.update({ where: { id }, data: { [field]: false } });
   }
 
   async getSpentAmount(userId: string, categoryId: string | null, month: number, year: number): Promise<number> {

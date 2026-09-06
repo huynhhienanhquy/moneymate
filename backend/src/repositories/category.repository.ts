@@ -1,5 +1,5 @@
 import prisma from '../config/db';
-import { CategoryType } from '@prisma/client';
+import { CategoryType, Prisma } from '@prisma/client';
 
 export class CategoryRepository {
   async create(data: { userId: string; name: string; type: CategoryType; color?: string; icon?: string }) {
@@ -14,7 +14,7 @@ export class CategoryRepository {
     });
   }
 
-  async findFirst(where: { type?: CategoryType }, orderBy?: any) {
+  async findFirst(where: Prisma.CategoryWhereInput, orderBy?: Prisma.CategoryOrderByWithRelationInput) {
     return prisma.category.findFirst({ where, orderBy });
   }
 

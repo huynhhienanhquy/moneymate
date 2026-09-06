@@ -1,6 +1,62 @@
 import '../helpers/prisma-mock';
 import prisma from '../../config/db';
 import { TransactionRepository } from '../../repositories/transaction.repository';
+import { CategoryType, Frequency } from '@prisma/client';
+
+describe('TransactionRepository atomic transfer guards', () => {
+  it('does not transfer after another request consumes the source balance', async () => {
+    const tx = {
+      wallet: {
+        findUnique: jest.fn()
+          .mockResolvedValueOnce({ id: 'source', userId: 'user-1', initialBalance: '100' })
+          .mockResolvedValueOnce({ id: 'destination', userId: 'user-1', initialBalance: '0' }),
+        updateMany: jest.fn().mockResolvedValueOnce({ count: 0 }),
+      },
+      transaction: { create: jest.fn().mockResolvedValue({}) },
+      walletTransfer: { create: jest.fn().mockResolvedValue({ id: 'transfer-1' }) },
+    };
+    (prisma.$transaction as jest.Mock).mockImplementation((callback) => callback(tx));
+    const repository = new TransactionRepository();
+
+    await expect(repository.transferFunds({
+      userId: 'user-1',
+      sourceWalletId: 'source',
+      destinationWalletId: 'destination',
+      amount: 80,
+      transferDate: new Date(),
+      categoryId: 'category-1',
+    })).rejects.toMatchObject({ statusCode: 400 });
+    expect(tx.transaction.create).not.toHaveBeenCalled();
+    expect(tx.walletTransfer.create).not.toHaveBeenCalled();
+  });
+
+  it('records one transfer after both guarded wallet updates succeed', async () => {
+    const tx = {
+      wallet: {
+        findUnique: jest.fn()
+          .mockResolvedValueOnce({ id: 'source', userId: 'user-1', initialBalance: '100' })
+          .mockResolvedValueOnce({ id: 'destination', userId: 'user-1', initialBalance: '0' }),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      transaction: { create: jest.fn().mockResolvedValue({}) },
+      walletTransfer: { create: jest.fn().mockResolvedValue({ id: 'transfer-1' }) },
+    };
+    (prisma.$transaction as jest.Mock).mockImplementation((callback) => callback(tx));
+    const repository = new TransactionRepository();
+
+    await expect(repository.transferFunds({
+      userId: 'user-1',
+      sourceWalletId: 'source',
+      destinationWalletId: 'destination',
+      amount: 80,
+      transferDate: new Date(),
+      categoryId: 'category-1',
+    })).resolves.toEqual({ id: 'transfer-1' });
+    expect(tx.wallet.updateMany).toHaveBeenCalledTimes(2);
+    expect(tx.transaction.create).toHaveBeenCalledTimes(2);
+    expect(tx.walletTransfer.create).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('TransactionRepository monthly assets', () => {
   afterEach(() => {
@@ -92,7 +148,7 @@ describe('TransactionRepository monthly assets', () => {
 });
 
 describe('TransactionRepository yearly savings snapshots', () => {
-it('recalculates legacy snapshots using historical month-end assets minus expense', async () => {
+  it('recalculates legacy snapshots using historical month-end assets minus expense', async () => {
     const repository = new TransactionRepository();
     const mockPrisma = prisma as any;
     mockPrisma.monthlySavingsSnapshot.findUnique.mockResolvedValue({ formulaVersion: 7, walletBalance: '5000000' });
@@ -135,7 +191,7 @@ it('recalculates legacy snapshots using historical month-end assets minus expens
     expect(result.netSavings).toBe(result.monthlyData.reduce((sum, item) => sum + item.savings, 0));
   });
 
-it('matches dashboard trend for every month and refreshes history after backdated changes', async () => {
+  it('matches dashboard trend for every month and refreshes history after backdated changes', async () => {
     jest.useFakeTimers().setSystemTime(new Date(2026, 8, 5));
     try {
       const repository = new TransactionRepository();
@@ -174,5 +230,56 @@ it('matches dashboard trend for every month and refreshes history after backdate
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('uses both timestamp and id at a sync page boundary', async () => {
+    const repository = new TransactionRepository();
+    const mockPrisma = prisma as any;
+    const updatedAt = new Date('2026-09-03T10:00:00.000Z');
+    mockPrisma.transaction.findMany.mockResolvedValue([]);
+
+    await repository.findSyncDelta('user-1', { updatedAt, id: 'tx-b' }, 100);
+
+    expect(mockPrisma.transaction.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        userId: 'user-1',
+        OR: [
+          { updatedAt: { gt: updatedAt } },
+          { updatedAt, id: { gt: 'tx-b' } },
+        ],
+      },
+    }));
+  });
+});
+
+describe('TransactionRepository recurring projections', () => {
+  it('matches generated occurrences by recurring ID and does not project closed dates', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-09-04T08:00:00.000Z'));
+    const mockPrisma = prisma as any;
+    mockPrisma.recurringTransaction.findMany.mockResolvedValue([{
+      id: 'recurring-1', userId: 'user-1', walletId: 'wallet-1', categoryId: 'category-1',
+      amount: 100, type: CategoryType.EXPENSE, frequency: Frequency.DAILY,
+      startDate: new Date('2026-09-03T08:00:00.000Z'), isActive: true,
+      category: { name: 'Ăn uống', color: '#f00' },
+    }]);
+    mockPrisma.transaction.findMany.mockResolvedValue([
+      { transactionDate: new Date('2026-09-05T08:00:00.000Z') },
+    ]);
+    const repository = new TransactionRepository();
+
+    const result = await (repository as any).getProjectedRecurringAmount(
+      'user-1',
+      new Date('2026-09-01T00:00:00.000Z'),
+      new Date('2026-09-05T23:59:59.999Z'),
+      CategoryType.EXPENSE,
+    );
+
+    expect(result.total).toBe(100);
+    expect(mockPrisma.transaction.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({
+        OR: expect.arrayContaining([{ recurringTransactionId: 'recurring-1' }]),
+      }),
+    }));
+    jest.useRealTimers();
   });
 });

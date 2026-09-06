@@ -19,6 +19,7 @@ jobs:
           --health-interval=10s --health-timeout=5s --health-retries=10
     env:
       DATABASE_URL: mysql://root:password@127.0.0.1:3306/moneymate_test
+      REQUIRE_DATABASE_INTEGRATION: "true"
       JWT_ACCESS_SECRET: ci-access-secret-not-for-production
       JWT_REFRESH_SECRET: ci-refresh-secret-not-for-production
       NODE_ENV: test
@@ -31,5 +32,37 @@ jobs:
       - run: npm ci
       - run: npm run prisma:generate --workspace=moneymate-backend
       - run: npm exec --workspace=moneymate-backend -- prisma migrate deploy
+      - run: npm run lint
       - run: npm run build
+      - run: npm run build:web --workspace=moneymate-mobile
+      - run: npm run test:dev-startup --workspace=moneymate-backend
       - run: npm test
+      - run: npm run test:integration
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Disposable CI database only; never use these values in a deployment.
+      MYSQL_ROOT_PASSWORD: ci-only-mysql-password
+      JWT_ACCESS_SECRET: ci-only-docker-access-secret-32-characters
+      JWT_REFRESH_SECRET: ci-only-docker-refresh-secret-32-characters
+      FRONTEND_URL: http://localhost
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start isolated Compose stack
+        run: docker compose -p moneymate-ci up --build -d
+      - name: Verify backend and frontend image runtime
+        shell: bash
+        run: |
+          curl --fail --retry 30 --retry-connrefused --retry-delay 2 --max-time 5 http://localhost:5000/health
+          curl --fail --retry 15 --retry-connrefused --retry-delay 2 --max-time 5 http://localhost/ -o /tmp/moneymate-index.html
+          grep -q '<div id="root"' /tmp/moneymate-index.html
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost/api/auth/sessions)
+          test "$status" = 401
+      - name: Show failed stack logs
+        if: failure()
+        run: docker compose -p moneymate-ci logs --no-color --tail=100
+      - name: Remove disposable CI stack
+        if: always()
+        run: docker compose -p moneymate-ci down --volumes

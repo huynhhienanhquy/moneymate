@@ -1,4 +1,4 @@
-import { PrismaClient, CategoryType, WalletType, Role } from '@prisma/client';
+import { PrismaClient, CategoryType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -52,98 +52,7 @@ async function main() {
   }
 
   console.log('Seeding standard categories completed.');
-
-  // Create admin user
-  console.log('Checking for admin user...');
-  const adminEmail = 'admin@moneymate.com';
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail }
-  });
-
-  if (!existingAdmin) {
-    console.log('Creating admin user...');
-    await prisma.user.create({
-      data: {
-        email: adminEmail,
-        passwordHash: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-        fullName: 'Admin',
-        avatarUrl: null,
-        role: Role.ADMIN
-      }
-    });
-    console.log('Admin user created (admin@moneymate.com / password)');
-  } else {
-    console.log('Admin user already exists.');
-  }
-
-  // Create a default demo user for testing/mocking
-  console.log('Checking for demo user...');
-  const demoEmail = 'demo@moneymate.com';
-  const existingDemoUser = await prisma.user.findUnique({
-    where: { email: demoEmail }
-  });
-
-  if (!existingDemoUser) {
-    console.log('Creating demo user...');
-    const demoUser = await prisma.user.create({
-      data: {
-        email: demoEmail,
-        passwordHash: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-        fullName: 'Demo User',
-        avatarUrl: null
-      }
-    });
-
-    console.log(`Demo user created. ID: ${demoUser.id}`);
-
-    // Create default wallets for demo user
-    console.log('Creating default wallets for demo user...');
-    const cashWallet = await prisma.wallet.create({
-      data: {
-        userId: demoUser.id,
-        name: 'Tiền mặt',
-        type: WalletType.CASH,
-        currency: 'VND',
-        initialBalance: 2000000.00
-      }
-    });
-
-    const bankWallet = await prisma.wallet.create({
-      data: {
-        userId: demoUser.id,
-        name: 'Techcombank',
-        type: WalletType.BANK,
-        currency: 'VND',
-        initialBalance: 15000000.00
-      }
-    });
-
-    console.log(`Created wallets: ${cashWallet.name}, ${bankWallet.name}`);
-
-    // Create a demo transaction for this user
-    const foodCategory = await prisma.category.findFirst({
-      where: { name: 'Ăn uống', type: CategoryType.EXPENSE }
-    });
-
-    if (foodCategory) {
-      await prisma.transaction.create({
-        data: {
-          userId: demoUser.id,
-          walletId: cashWallet.id,
-          categoryId: foodCategory.id,
-          amount: 150000.00,
-          type: 'EXPENSE',
-          note: 'Ăn tối cuối tuần',
-          transactionDate: new Date()
-        }
-      });
-      console.log('Created sample transaction.');
-    }
-  } else {
-    console.log('Demo user already exists.');
-  }
-
-  console.log('Database Seeding finished successfully!');
+  console.log('Account seeding is disabled; use registration or a separate secure admin bootstrap.');
 }
 
 main()

@@ -121,6 +121,11 @@ describe('AuthService', () => {
       expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashedPassword123');
       expect(result.user).toMatchObject({ id: 'uuid-123', email: 'test@example.com' });
       expect(result.accessToken).toBe('mock-access-token');
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { userId: 'uuid-123', email: 'test@example.com', role: Role.USER },
+        process.env.JWT_ACCESS_SECRET,
+        { algorithm: 'HS256', expiresIn: '15m' },
+      );
       expect(mockTokenRepo.create).toHaveBeenCalledWith(expect.objectContaining({
         userId: 'uuid-123',
         platform: 'web',
@@ -158,14 +163,14 @@ describe('AuthService', () => {
   // ─── REFRESH ──────────────────────────────────────────────────────────────────
   describe('refresh()', () => {
     it('should throw AppError for expired/invalid refresh token', async () => {
-      mockTokenRepo.consume.mockResolvedValue(null);
+      mockTokenRepo.findByHash.mockResolvedValue(null);
 
       await expect(authService.refresh('expired-token'))
         .rejects.toThrow('Refresh token is invalid or expired');
     });
 
     it('should throw AppError when token not found in database', async () => {
-      mockTokenRepo.consume.mockResolvedValue(null);
+      mockTokenRepo.findByHash.mockResolvedValue(null);
 
       await expect(authService.refresh('non-existent-token'))
         .rejects.toThrow('Refresh token is invalid or expired');
@@ -187,7 +192,8 @@ describe('AuthService', () => {
         revokedAt: null,
         createdAt: new Date()
       };
-      mockTokenRepo.consume.mockResolvedValue(tokenRecord);
+      mockTokenRepo.findByHash.mockResolvedValue(tokenRecord);
+      mockTokenRepo.rotate.mockResolvedValue(true);
       mockUserRepo.findById.mockResolvedValue({
         id: 'uuid-123',
         email: 'test@example.com',
@@ -199,16 +205,53 @@ describe('AuthService', () => {
         updatedAt: new Date()
       });
       (jwt.sign as jest.Mock).mockReturnValue('new-access-token');
-      mockTokenRepo.create.mockResolvedValue(tokenRecord);
 
       const result = await authService.refresh('raw-refresh-token');
 
       expect(result.accessToken).toBe('new-access-token');
-      expect(mockTokenRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockTokenRepo.rotate).toHaveBeenCalledWith(
+        expect.stringMatching(/^[a-f0-9]{64}$/),
+        expect.any(Date),
+        expect.objectContaining({
         tokenFamily: 'family-id',
         platform: 'android',
         deviceId: 'device-id'
-      }));
+        }),
+      );
+    });
+
+    it('revokes the whole family when an already-rotated token is replayed', async () => {
+      mockTokenRepo.findByHash.mockResolvedValue({
+        id: 'old-token', userId: 'uuid-123', tokenHash: 'stored-hash', tokenFamily: 'family-id',
+        deviceId: null, deviceName: null, platform: 'web', appVersion: null, timezone: null,
+        expiresAt: new Date(Date.now() + 60_000), lastSeenAt: new Date(),
+        revokedAt: new Date(), createdAt: new Date(),
+      });
+      mockTokenRepo.revokeFamily.mockResolvedValue({ count: 1 });
+
+      await expect(authService.refresh('replayed-token')).rejects.toMatchObject({
+        statusCode: 401,
+        code: 'REFRESH_TOKEN_REUSED',
+      });
+      expect(mockTokenRepo.revokeFamily).toHaveBeenCalledWith('family-id');
+      expect(mockTokenRepo.rotate).not.toHaveBeenCalled();
+    });
+
+    it('revokes the family when concurrent rotation wins the atomic claim', async () => {
+      mockTokenRepo.findByHash.mockResolvedValue({
+        id: 'token-id', userId: 'uuid-123', tokenHash: 'stored-hash', tokenFamily: 'family-id',
+        deviceId: null, deviceName: null, platform: 'web', appVersion: null, timezone: null,
+        expiresAt: new Date(Date.now() + 60_000), lastSeenAt: new Date(), revokedAt: null, createdAt: new Date(),
+      });
+      mockUserRepo.findById.mockResolvedValue({
+        id: 'uuid-123', email: 'test@example.com', fullName: 'Test User', passwordHash: 'hash',
+        avatarUrl: null, role: Role.USER, createdAt: new Date(), updatedAt: new Date(),
+      });
+      mockTokenRepo.rotate.mockResolvedValue(false);
+      mockTokenRepo.revokeFamily.mockResolvedValue({ count: 1 });
+
+      await expect(authService.refresh('raced-token')).rejects.toMatchObject({ code: 'REFRESH_TOKEN_REUSED' });
+      expect(mockTokenRepo.revokeFamily).toHaveBeenCalledWith('family-id');
     });
   });
 });

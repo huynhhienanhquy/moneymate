@@ -8,15 +8,32 @@ const formatVND = (n: number) =>
 export class ExportService {
   private transactionService = new TransactionService();
 
-  async generateMonthlyExcel(userId: string, month: number, year: number): Promise<Buffer> {
-    const report = await this.transactionService.getMonthlyReport(userId, month, year);
-    const { transactions } = await this.transactionService.getTransactions(userId, {
+  private async getMonthlyTransactions(userId: string, month: number, year: number) {
+    const pageSize = 500;
+    const transactions: any[] = [];
+    const dateRange = {
       startDate: new Date(year, month - 1, 1),
       endDate: new Date(year, month, 0, 23, 59, 59, 999),
-      sortBy: 'transactionDate',
-      order: 'desc',
-      take: 1000,
-    });
+    };
+
+    while (true) {
+      const page = await this.transactionService.getTransactions(userId, {
+        ...dateRange,
+        sortBy: 'transactionDate',
+        order: 'desc',
+        skip: transactions.length,
+        take: pageSize,
+      });
+      transactions.push(...page.transactions);
+      if (page.transactions.length === 0 || transactions.length >= page.pagination.total) break;
+    }
+
+    return transactions;
+  }
+
+  async generateMonthlyExcel(userId: string, month: number, year: number): Promise<Buffer> {
+    const report = await this.transactionService.getMonthlyReport(userId, month, year);
+    const transactions = await this.getMonthlyTransactions(userId, month, year);
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet(`Báo cáo T${month}-${year}`);

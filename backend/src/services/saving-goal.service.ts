@@ -64,7 +64,23 @@ export class SavingGoalService {
   async deleteGoal(userId: string, id: string) {
     const goal = await this.savingGoalRepository.findById(id);
     if (!goal || goal.userId !== userId) throw new AppError('Saving goal not found', 404);
-    await this.savingGoalRepository.delete(id);
+    if (Number(goal.currentAmount) !== 0 || goal.goalTransactions.length > 0) {
+      throw new AppError(
+        'Withdraw all funds before deleting; goals with funding history must be retained',
+        409,
+        [],
+        'SAVING_GOAL_NOT_EMPTY',
+      );
+    }
+    const deleted = await this.savingGoalRepository.deleteIfUnused(id, userId);
+    if (!deleted) {
+      throw new AppError(
+        'Saving goal changed while it was being deleted',
+        409,
+        [],
+        'SAVING_GOAL_NOT_EMPTY',
+      );
+    }
     return true;
   }
 
@@ -80,6 +96,7 @@ export class SavingGoalService {
     }
 
     await this.savingGoalRepository.addGoalTransaction({
+      userId,
       savingGoalId: goalId,
       walletId: data.walletId,
       amount: data.amount,
@@ -90,11 +107,19 @@ export class SavingGoalService {
     const enriched = this.enrichGoal(updated);
 
     if (enriched.status === 'COMPLETED') {
-      await this.notificationService.create(userId, {
-        title: 'Chúc mừng! Mục tiêu hoàn thành',
-        message: `Bạn đã đạt mục tiêu tiết kiệm "${goal.title}".`,
-        type: NotificationType.GOAL_COMPLETED,
-      });
+      try {
+        await this.notificationService.create(userId, {
+          title: 'Chúc mừng! Mục tiêu hoàn thành',
+          message: `Bạn đã đạt mục tiêu tiết kiệm "${goal.title}".`,
+          type: NotificationType.GOAL_COMPLETED,
+        });
+      } catch (error) {
+        console.error('Saving goal completion notification failed after deposit commit', {
+          userId,
+          goalId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
     }
 
     return enriched;
@@ -112,6 +137,7 @@ export class SavingGoalService {
     if (!wallet || wallet.userId !== userId) throw new AppError('Wallet not found', 404);
 
     await this.savingGoalRepository.addGoalTransaction({
+      userId,
       savingGoalId: goalId,
       walletId: data.walletId,
       amount: data.amount,

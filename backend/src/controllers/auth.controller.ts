@@ -53,8 +53,10 @@ export class AuthController {
 
   public refresh = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bodyRefreshToken = req.body.refreshToken;
-      const refreshToken = req.cookies.refreshToken || bodyRefreshToken;
+      const cookieRefreshToken = req.cookies?.refreshToken;
+      const bodyRefreshToken = req.body?.refreshToken;
+      const refreshToken = cookieRefreshToken || bodyRefreshToken;
+      const usesBodyTransport = !cookieRefreshToken && Boolean(bodyRefreshToken);
       const result = await this.authService.refresh(refreshToken);
       
       // Rotate refresh token cookie
@@ -64,7 +66,7 @@ export class AuthController {
         res,
         {
           accessToken: result.accessToken,
-          ...(bodyRefreshToken ? { refreshToken: result.refreshToken } : {})
+          ...(usesBodyTransport ? { refreshToken: result.refreshToken } : {})
         },
         'Access token refreshed successfully'
       );

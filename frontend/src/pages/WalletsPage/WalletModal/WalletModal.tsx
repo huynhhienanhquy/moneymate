@@ -45,17 +45,17 @@ const WalletModal = ({ wallet, onClose, onSave, loading }: WalletModalProps) => 
               })}
             </div>
           </div>
-          <div>
+          {!wallet && <div>
             <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Số dư ban đầu</AppLabel>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">₫</span>
               <AppInput unstyled id="wallet-balance" type="number" min="0" value={form.initialBalance} onChange={(e) => setForm(p => ({ ...p, initialBalance: parseFloat(e.target.value) || 0 }))} className="app-input pl-8" />
             </div>
-          </div>
+          </div>}
         </div>
         <div className="flex gap-3 mt-6">
           <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
-          <AppButton unstyled id="wallet-save" onClick={() => onSave(form)} disabled={loading || !form.name} className="app-primary-button flex-1">
+          <AppButton unstyled id="wallet-save" onClick={() => onSave(wallet ? { name: form.name, type: form.type } : form)} disabled={loading || !form.name} className="app-primary-button flex-1">
             {loading && <Loader2 size={16} className="animate-spin" />}
             {wallet ? 'Lưu thay đổi' : 'Tạo ví'}
           </AppButton>

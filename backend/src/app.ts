@@ -4,7 +4,6 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 import { errorHandler } from './middlewares/error';
-import path from 'path';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import walletRoutes from './routes/wallet.routes';
@@ -18,39 +17,28 @@ import attachmentRoutes from './routes/attachment.routes';
 import aiRoutes from './routes/ai.routes';
 import adminRoutes from './routes/admin.routes';
 import { requestId } from './middlewares/request-id';
+import { getCopilotKitConfig } from './config/copilotkit';
+import { getConfiguredFrontendOrigins, isAllowedCorsOrigin } from './config/cors';
+import { createCopilotKitRouter } from './copilotkit/runtime';
+import { COPILOT_REQUEST_BODY_LIMIT, copilotBodyParserErrorHandler } from './copilotkit/security';
 
 const app = express();
+if (process.env.NODE_ENV === 'production') app.set('trust proxy', 1);
+const copilotKitConfig = getCopilotKitConfig();
 
-const configuredOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
-  .split(',')
-  .map((origin) => origin.trim().replace(/\/$/, ''))
-  .filter(Boolean);
-
-const isAllowedOrigin = (origin?: string) => {
-  if (!origin) return true;
-  const normalized = origin.replace(/\/$/, '');
-  if (configuredOrigins.includes(normalized)) return true;
-  if (process.env.NODE_ENV === 'production') return false;
-  try {
-    const url = new URL(normalized);
-    return url.protocol === 'http:' && ['localhost', '127.0.0.1', '10.10.10.183'].includes(url.hostname);
-  } catch {
-    return false;
-  }
-};
+const configuredOrigins = getConfiguredFrontendOrigins();
 
 // Middlewares
 app.use(requestId);
 app.use(cors({
-  origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
+  origin: (origin, callback) => callback(null, isAllowedCorsOrigin(origin, configuredOrigins)),
   credentials: true
 }));
+app.use('/api/copilotkit', express.json({ limit: COPILOT_REQUEST_BODY_LIMIT }));
+app.use('/api/copilotkit', copilotBodyParserErrorHandler);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// Static file serving for uploads
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Health Check API
 app.get('/health', (req, res) => {
@@ -75,6 +63,10 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
+
+if (copilotKitConfig.enabled) {
+  app.use(createCopilotKitRouter(copilotKitConfig));
+}
 
 // Global Error Handler Middleware
 app.use(errorHandler);

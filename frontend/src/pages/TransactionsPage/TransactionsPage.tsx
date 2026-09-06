@@ -12,6 +12,7 @@ import ReceiptScanModal, { ScanResult } from '@/components/ReceiptScanModal/Rece
 import LoadingState from '@/components/common/LoadingState/LoadingState';
 import { formatVND } from '@/utils/formatCurrency';
 import { useCategories, useWallets } from '@/hooks/useReferenceData';
+import { toLocalDateInputValue } from '@/utils/dateInput';
 
 const TransactionModal: React.FC<{
   tx?: any; prefill?: any; wallets: any[]; categories: any[];
@@ -27,7 +28,7 @@ const TransactionModal: React.FC<{
       categoryId: prefill.categoryId || '',
       amount: prefill.amount ? String(prefill.amount) : '',
       type: prefill.type || 'EXPENSE', note: prefill.note || '',
-      transactionDate: prefill.transactionDate || new Date().toISOString().slice(0, 10),
+      transactionDate: prefill.transactionDate || toLocalDateInputValue(),
     };
     return {
       walletId: wallets[0]?.id || '',
@@ -35,7 +36,7 @@ const TransactionModal: React.FC<{
       amount: '',
       type: 'EXPENSE',
       note: '',
-      transactionDate: new Date().toISOString().slice(0, 10),
+      transactionDate: toLocalDateInputValue(),
     };
   };
   const [form, setForm] = useState(getInitialForm);
@@ -210,7 +211,7 @@ const TransactionsPage: React.FC = () => {
   if (search) params.search = search;
   if (typeFilter) params.type = typeFilter;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['transactions', params],
     queryFn: () => api.get('/transactions', { params }).then(r => r.data.data),
     staleTime: 30_000,
@@ -251,7 +252,7 @@ const TransactionsPage: React.FC = () => {
       amount: scan.amount,
       categoryId: scan.suggestedCategoryId || '',
       note: scan.note || scan.merchant || '',
-      transactionDate: scan.transactionDate || new Date().toISOString().slice(0, 10),
+      transactionDate: scan.transactionDate || toLocalDateInputValue(),
       type: 'EXPENSE',
       walletId: wallets[0]?.id || '',
     });
@@ -322,6 +323,12 @@ const TransactionsPage: React.FC = () => {
       <div className="mt-3 overflow-hidden rounded-[10px] border border-white/80 bg-white shadow-[0_7px_20px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900">
         {isLoading ? (
           <LoadingState className="items-center" />
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-20 text-center" role="alert">
+            <p className="font-bold text-rose-600 dark:text-rose-400">Không thể tải danh sách giao dịch</p>
+            <p className="text-sm text-slate-500">Dữ liệu giao dịch chưa được tải. Vui lòng thử lại.</p>
+            <AppButton onClick={() => void refetch()}>Thử lại</AppButton>
+          </div>
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-600">
             <Search size={36} className="mb-3 opacity-30" />
@@ -351,7 +358,11 @@ const TransactionsPage: React.FC = () => {
                               <TransactionIcon size={11} className={isIncome ? 'text-emerald-600' : 'text-rose-500'} />
                             </div>
                             <div className="min-w-0">
-                              <AppButton unstyled type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</AppButton>
+                              {tx.type === 'TRANSFER' ? (
+                                <p className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 dark:text-slate-100">{tx.note || 'Chuyển tiền'}</p>
+                              ) : (
+                                <AppButton unstyled type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</AppButton>
+                              )}
                               <div className="mt-0.5 flex items-center gap-1">
                                 <span className="inline-block h-1 w-1 rounded-full" style={{ background: tx.category?.color || '#64748b' }}></span>
                                 <p className="truncate text-[7px] leading-[1.4] text-slate-500">{tx.category?.name}</p>
@@ -369,12 +380,12 @@ const TransactionsPage: React.FC = () => {
                           <span className={`whitespace-nowrap text-[9px] font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-500'}`}>
                             {isIncome ? '↑ +' : '↓ -'}{formatVND(Number(tx.amount))}
                           </span>
-                          <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 bg-white pl-2 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">
+                          {tx.type !== 'TRANSFER' && <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 bg-white pl-2 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">
                             <AppButton unstyled id={`edit-tx-${tx.id}`} aria-label="Chỉnh sửa giao dịch" onClick={() => setEditTx(tx)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={11} /></AppButton>
                             <AppButton unstyled id={`del-tx-${tx.id}`} aria-label="Xóa giao dịch" onClick={() => { if (confirm('Xóa giao dịch này?')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10">
                               {deletingId === tx.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
                             </AppButton>
-                          </div>
+                          </div>}
                         </td>
                       </tr>
                     );

@@ -4,10 +4,8 @@ services:
     container_name: moneymate-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD to a strong value}
       MYSQL_DATABASE: moneymate
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -18,8 +16,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: moneymate-backend
     restart: unless-stopped
     depends_on:
@@ -27,20 +25,35 @@ services:
         condition: service_healthy
     environment:
       PORT: 5000
-      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD:-password}@mysql:3306/moneymate
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-super_secret_access_token_key_money_mate_2026}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-super_secret_refresh_token_key_money_mate_2026}
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD to a strong value}@mysql:3306/moneymate
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET to a random value of at least 32 characters}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET to a random value of at least 32 characters}
       NODE_ENV: production
-      FRONTEND_URL: http://localhost
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      COPILOTKIT_ENABLED: ${COPILOTKIT_ENABLED:-false}
+      COPILOT_MODEL: ${COPILOT_MODEL:-openai/gpt-4o-mini}
+      COPILOT_MAX_STEPS: ${COPILOT_MAX_STEPS:-3}
+      COPILOT_MAX_OUTPUT_TOKENS: ${COPILOT_MAX_OUTPUT_TOKENS:-1500}
+      COPILOT_MAX_MESSAGE_CHARS: ${COPILOT_MAX_MESSAGE_CHARS:-4000}
+      COPILOT_MODEL_TIMEOUT_MS: ${COPILOT_MODEL_TIMEOUT_MS:-45000}
+      COPILOT_RATE_LIMIT_MAX_REQUESTS: ${COPILOT_RATE_LIMIT_MAX_REQUESTS:-60}
+      COPILOT_RATE_LIMIT_WINDOW_MS: ${COPILOT_RATE_LIMIT_WINDOW_MS:-60000}
+      COPILOTKIT_TELEMETRY_DISABLED: ${COPILOTKIT_TELEMETRY_DISABLED:-true}
+      AUTH_LOGIN_RATE_LIMIT_MAX: ${AUTH_LOGIN_RATE_LIMIT_MAX:-10}
+      AUTH_LOGIN_RATE_LIMIT_WINDOW_MS: ${AUTH_LOGIN_RATE_LIMIT_WINDOW_MS:-900000}
+      AUTH_REGISTER_RATE_LIMIT_MAX: ${AUTH_REGISTER_RATE_LIMIT_MAX:-5}
+      AUTH_REGISTER_RATE_LIMIT_WINDOW_MS: ${AUTH_REGISTER_RATE_LIMIT_WINDOW_MS:-3600000}
     ports:
       - "5000:5000"
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
-        VITE_API_URL: http://localhost:5000/api
+        VITE_API_URL: /api
+        VITE_COPILOTKIT_ENABLED: ${VITE_COPILOTKIT_ENABLED:-false}
     container_name: moneymate-frontend
     restart: unless-stopped
     depends_on:

@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 import { useThemeStore } from '@/stores/theme.store';
 import api from '@/services/api/client';
 import AiChatWidget from '@/components/AiChatWidget/AiChatWidget';
+import { COPILOTKIT_FRONTEND_ENABLED } from '@/config/copilotkit';
 import { APP_ROUTES } from '@/constants/routes';
 import { getCurrentPageName } from '@/helpers/navigation';
 import Sidebar from '@/components/common/Sidebar/Sidebar';
 import Topbar from '@/components/common/Topbar/Topbar';
 
-export const Layout = () => {
+const MoneyMateCopilotFeature = lazy(() => import('@/components/MoneyMateCopilot/MoneyMateCopilotFeature'));
+
+export const PageLayoutContent = ({ assistant = null }: { assistant?: ReactNode }) => {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,9 +47,21 @@ export const Layout = () => {
         <main id="main-content" tabIndex={-1} className="relative z-10 flex-1 p-4 md:p-6 overflow-y-auto max-w-[1180px] w-full mx-auto focus:outline-none">
           <div className="animate-fade-in"><Outlet /></div>
         </main>
-        <AiChatWidget />
+        {assistant}
       </div>
     </div>
+  );
+};
+
+export const Layout = () => {
+  if (!COPILOTKIT_FRONTEND_ENABLED) {
+    return <PageLayoutContent assistant={<AiChatWidget />} />;
+  }
+
+  return (
+    <Suspense fallback={<PageLayoutContent />}>
+      <MoneyMateCopilotFeature />
+    </Suspense>
   );
 };
 

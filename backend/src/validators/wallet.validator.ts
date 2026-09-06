@@ -14,6 +14,6 @@ export const updateWalletSchema = z.object({
   body: z.object({
     name: z.string().min(1, 'Wallet name is required').optional(),
     type: z.nativeEnum(WalletType).optional(),
-    initialBalance: z.number().nonnegative('Initial balance must be zero or positive').optional()
+    initialBalance: z.never({ invalid_type_error: 'Wallet balance must be changed through a transaction' }).optional()
   })
 });

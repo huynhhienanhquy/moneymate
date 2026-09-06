@@ -27,6 +27,7 @@ describe('WalletService', () => {
     MockWalletRepository.mockClear();
     walletService = new WalletService();
     mockWalletRepo = MockWalletRepository.mock.instances[0] as jest.Mocked<WalletRepository>;
+    mockWalletRepo.countReferences.mockResolvedValue(0);
   });
 
   // ─── CREATE ───────────────────────────────────────────────────────────────────
@@ -82,6 +83,14 @@ describe('WalletService', () => {
       expect(mockWalletRepo.update).toHaveBeenCalledWith('wallet-uuid-1', { name: 'Updated Name' });
       expect(result.name).toBe('Updated Name');
     });
+
+    it('rejects direct balance changes so adjustments remain auditable', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
+      await expect(walletService.updateWallet('user-uuid-1', 'wallet-uuid-1', {
+        initialBalance: 9_000_000,
+      })).rejects.toThrow('Wallet balance must be changed through a transaction');
+      expect(mockWalletRepo.update).not.toHaveBeenCalled();
+    });
   });
 
   // ─── DELETE ───────────────────────────────────────────────────────────────────
@@ -99,6 +108,23 @@ describe('WalletService', () => {
 
       await expect(walletService.deleteWallet('user-uuid-1', 'wallet-uuid-1'))
         .rejects.toThrow(AppError);
+    });
+
+    it('returns a stable conflict when the wallet is used by financial records', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
+      mockWalletRepo.countReferences.mockResolvedValue(1);
+
+      await expect(walletService.deleteWallet('user-uuid-1', 'wallet-uuid-1'))
+        .rejects.toMatchObject({ statusCode: 409, code: 'WALLET_IN_USE' });
+      expect(mockWalletRepo.delete).not.toHaveBeenCalled();
+    });
+
+    it('maps a foreign-key race during delete to the same domain conflict', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
+      mockWalletRepo.delete.mockRejectedValue({ code: 'P2003' });
+
+      await expect(walletService.deleteWallet('user-uuid-1', 'wallet-uuid-1'))
+        .rejects.toMatchObject({ statusCode: 409, code: 'WALLET_IN_USE' });
     });
   });
 

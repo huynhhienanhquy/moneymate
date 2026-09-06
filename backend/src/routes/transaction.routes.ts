@@ -5,9 +5,13 @@ import { validateRequest } from '../middlewares/validate';
 import {
   createTransactionSchema,
   deleteTransactionSchema,
+  monthlyReportQuerySchema,
+  monthlyTrendQuerySchema,
+  transactionListSchema,
   transactionSyncSchema,
   updateTransactionSchema,
-  walletTransferSchema
+  walletTransferSchema,
+  yearlyReportQuerySchema,
 } from '../validators/transaction.validator';
 import { idempotency } from '../middlewares/idempotency';
 
@@ -19,14 +23,14 @@ router.use(authenticate);
 // Static paths first
 router.post('/transfer', validateRequest(walletTransferSchema), idempotency, controller.transferFunds);
 router.get('/dashboard', controller.getDashboard);
-router.get('/trend', controller.getMonthlyTrend);
-router.get('/report/yearly', controller.getYearlyReport);
-router.get('/report', controller.getMonthlyReport);
+router.get('/trend', validateRequest(monthlyTrendQuerySchema), controller.getMonthlyTrend);
+router.get('/report/yearly', validateRequest(yearlyReportQuerySchema), controller.getYearlyReport);
+router.get('/report', validateRequest(monthlyReportQuerySchema), controller.getMonthlyReport);
 router.get('/sync', validateRequest(transactionSyncSchema), controller.syncTransactions);
 
 // General paths
 router.post('/', validateRequest(createTransactionSchema), idempotency, controller.createTransaction);
-router.get('/', controller.getTransactions);
+router.get('/', validateRequest(transactionListSchema), controller.getTransactions);
 
 // Parameterized paths last
 router.get('/:id', controller.getTransaction);

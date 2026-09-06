@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const topInsight = insight.data?.insights?.[0];
   const categories = report.data?.categoryExpenses || [];
   const barData = (trend.data || []).map((item) => ({ label: item.label || (item.month ? months[item.month - 1] : ''), income: item.income, expense: item.expense }));
-  const savings = data ? data.netWorth - data.monthlyExpense : 0;
+  const savings = data?.monthlySavings ?? 0;
 
   return <Screen title="Tổng quan" refreshing={dashboard.isRefetching} onRefresh={refresh}>
     {dashboard.isLoading && <StateMessage loading message="Đang tải tổng quan tài chính…" />}

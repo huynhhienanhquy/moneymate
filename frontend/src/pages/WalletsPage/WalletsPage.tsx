@@ -17,7 +17,7 @@ const WalletsPage: React.FC = () => {
   const [editWallet, setEditWallet] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: wallets = [], isLoading } = useQuery({
+  const { data: wallets = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['wallets'],
     queryFn: () => api.get('/wallets').then(r => r.data.data),
   });
@@ -70,6 +70,12 @@ const WalletsPage: React.FC = () => {
 
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2 size={28} className="animate-spin text-brand-500" /></div>
+      ) : isError ? (
+        <AppCard padding="none" className="flex flex-col items-center justify-center gap-3 py-20 text-center" role="alert">
+          <p className="font-bold text-rose-600 dark:text-rose-400">Không thể tải danh sách ví</p>
+          <p className="text-sm text-slate-500">Dữ liệu ví chưa được tải. Vui lòng thử lại.</p>
+          <AppButton onClick={() => void refetch()}>Thử lại</AppButton>
+        </AppCard>
       ) : wallets.length === 0 ? (
         <AppCard padding="none" className="flex flex-col items-center justify-center py-24 text-slate-500">
           <Wallet size={48} className="mb-4 opacity-30" />

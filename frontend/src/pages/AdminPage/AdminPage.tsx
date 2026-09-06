@@ -7,11 +7,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRightLeft, Bell, Calendar, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Loader2, LogOut, Mail, Search, ShieldCheck, Trash2, UserCog, Wallet, X } from 'lucide-react';
 import api from '@/services/api/client';
+import { useAuthStore } from '@/stores/auth.store';
+import { useNavigate } from 'react-router-dom';
 
 const PAGE_SIZE = 4;
 
 const AdminPage: React.FC = () => {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [editUser, setEditUser] = useState<any>(null);
@@ -37,8 +41,15 @@ const AdminPage: React.FC = () => {
   const lastResult = Math.min(currentPage * PAGE_SIZE, filtered.length);
   useEffect(() => setPage(1), [search]);
 
-  const handleLogout = () => {
-    if (confirm('Bạn có chắc chắn muốn đăng xuất không?')) window.location.href = '/login';
+  const handleLogout = async () => {
+    if (!confirm('Bạn có chắc chắn muốn đăng xuất không?')) return;
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      logout();
+      qc.clear();
+      navigate('/login', { replace: true });
+    }
   };
 
   return (

@@ -2,7 +2,10 @@ import userEvent from '@testing-library/user-event';
 import { render, screen } from '@/test/render';
 import Layout from './PageLayout';
 
-const mocks = vi.hoisted(() => ({ logout: vi.fn(), navigate: vi.fn(), toggleTheme: vi.fn(), post: vi.fn().mockResolvedValue({}) }));
+const mocks = vi.hoisted(() => ({ enabled: false, logout: vi.fn(), navigate: vi.fn(), toggleTheme: vi.fn(), post: vi.fn().mockResolvedValue({}) }));
+
+vi.mock('@/config/copilotkit', () => ({ get COPILOTKIT_FRONTEND_ENABLED() { return mocks.enabled; } }));
+vi.mock('@/components/MoneyMateCopilot/MoneyMateCopilotFeature', () => ({ default: () => <span>lazy copilot feature</span> }));
 
 vi.mock('react-router-dom', () => ({
   Link: ({ children, to, ...props }: { children: React.ReactNode; to: string }) => <a href={to} {...props}>{children}</a>,
@@ -14,16 +17,25 @@ vi.mock('@/stores/auth.store', () => ({ useAuthStore: () => ({ user: { fullName:
 vi.mock('@/stores/theme.store', () => ({ useThemeStore: () => ({ theme: 'light', toggleTheme: mocks.toggleTheme }) }));
 vi.mock('@/services/api/client', () => ({ default: { post: mocks.post } }));
 vi.mock('@/components/NotificationBell/NotificationBell', () => ({ default: () => <span>notifications</span> }));
-vi.mock('@/components/AiChatWidget/AiChatWidget', () => ({ default: () => <span>ai chat</span> }));
+vi.mock('@/components/AiChatWidget/AiChatWidget', () => ({ default: () => <span>money mate assistant</span> }));
 
 describe('PageLayout', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); mocks.enabled = false; });
 
   it('renders navigation, admin link and content outlet', () => {
     render(<Layout />);
     expect(screen.getByRole('navigation', { name: 'Điều hướng chính' })).toBeInTheDocument();
     expect(screen.getAllByText('Quản trị').length).toBeGreaterThan(0);
     expect(screen.getByText('page outlet')).toBeInTheDocument();
+    expect(screen.getByText('money mate assistant')).toBeInTheDocument();
+    expect(screen.queryByText('lazy copilot feature')).not.toBeInTheDocument();
+  });
+
+  it('loads the Copilot feature only when enabled', async () => {
+    mocks.enabled = true;
+    render(<Layout />);
+    expect(await screen.findByText('lazy copilot feature')).toBeInTheDocument();
+    expect(screen.queryByText('money mate assistant')).not.toBeInTheDocument();
   });
 
   it('toggles theme and logs out', async () => {

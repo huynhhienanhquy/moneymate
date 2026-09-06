@@ -1,0 +1,15 @@
+.git
+.github
+.codex
+.agents
+codex-agent-kit
+**/node_modules
+**/dist
+**/coverage
+**/.expo
+**/.storybook-static
+**/.tmp-*
+backend/uploads
+.env
+.env.*
+CODE_REVIEW.md

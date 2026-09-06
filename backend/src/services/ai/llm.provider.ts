@@ -1,4 +1,5 @@
 import { aiConfig } from '../../config/ai';
+import OpenAI from 'openai';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -16,7 +17,6 @@ export class LlmProvider {
     }
 
     try {
-      const { default: OpenAI } = await import('openai');
       const client = new OpenAI({ apiKey: aiConfig.openaiApiKey });
 
       const response = await client.chat.completions.create({
@@ -40,7 +40,6 @@ export class LlmProvider {
     if (!this.isAvailable()) return '';
 
     try {
-      const { default: OpenAI } = await import('openai');
       const client = new OpenAI({ apiKey: aiConfig.openaiApiKey });
 
       const response = await client.chat.completions.create({

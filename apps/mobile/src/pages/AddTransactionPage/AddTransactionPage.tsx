@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,34 +9,48 @@ import { ApiError, apiRequest } from '@/lib/api';
 import { enqueueMutation } from '@/storage/database';
 import type { Category, Transaction, Wallet } from '@/types/api';
 import { theme } from '@/theme';
+import { useAuthStore } from '@/stores/auth.store';
 
 export default function AddTransactionPage() {
-  const router = useRouter();
   const { id, type: requestedType } = useLocalSearchParams<{ id?: string; type?: 'EXPENSE' | 'INCOME' }>();
+  const existing = useQuery({ queryKey: ['transaction', id], queryFn: () => apiRequest<Transaction>(`/transactions/${id}`), enabled: !!id });
+
+  if (id && existing.isLoading) {
+    return <Screen title="Sửa giao dịch"><StateMessage loading message="Đang tải giao dịch…" /></Screen>;
+  }
+
+  if (id && existing.isError) {
+    return <Screen title="Sửa giao dịch"><StateMessage message="Không thể tải giao dịch." /><Button label="Thử lại" onPress={() => { void existing.refetch(); }} /></Screen>;
+  }
+
+  return <TransactionEditor key={id || requestedType || 'EXPENSE'} id={id} requestedType={requestedType} existing={existing.data} />;
+}
+
+function TransactionEditor({ id, requestedType, existing }: { id?: string; requestedType?: 'EXPENSE' | 'INCOME'; existing?: Transaction }) {
+  const router = useRouter();
   const db = useSQLiteContext();
+  const userId = useAuthStore((state) => state.user?.id);
   const queryClient = useQueryClient();
   const wallets = useQuery({ queryKey: ['wallets'], queryFn: () => apiRequest<Wallet[]>('/wallets') });
   const categories = useQuery({ queryKey: ['categories'], queryFn: () => apiRequest<Category[]>('/categories') });
-  const existing = useQuery({ queryKey: ['transaction', id], queryFn: () => apiRequest<Transaction>(`/transactions/${id}`), enabled: !!id });
-  const [type, setType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
-  const [walletId, setWalletId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
+  const [type, setType] = useState<'EXPENSE' | 'INCOME'>(() => existing ? (existing.type === 'INCOME' ? 'INCOME' : 'EXPENSE') : requestedType || 'EXPENSE');
+  const [walletId, setWalletId] = useState(() => existing?.walletId || existing?.wallet?.id || '');
+  const [categoryId, setCategoryId] = useState(() => existing?.categoryId || existing?.category?.id || '');
+  const [amount, setAmount] = useState(() => existing ? String(existing.amount) : '');
+  const [note, setNote] = useState(() => existing?.note || '');
   const [queued, setQueued] = useState(false);
-  useEffect(() => { if (!id && (requestedType === 'INCOME' || requestedType === 'EXPENSE')) setType(requestedType); }, [id, requestedType]);
-  useEffect(() => { if (existing.data) { const item = existing.data; setType(item.type === 'INCOME' ? 'INCOME' : 'EXPENSE'); setWalletId(item.walletId || item.wallet?.id || ''); setCategoryId(item.categoryId || item.category?.id || ''); setAmount(String(item.amount)); setNote(item.note || ''); } }, [existing.data]);
 
   const save = useMutation({
     mutationFn: async () => {
       const idempotencyKey = Crypto.randomUUID();
-      const body = JSON.stringify({ walletId, categoryId, amount: Number(amount), type, note: note || undefined, transactionDate: existing.data?.transactionDate || new Date().toISOString(), ...(id ? { version: existing.data?.version } : {}) });
+      const body = JSON.stringify({ walletId, categoryId, amount: Number(amount), type, note: note || undefined, transactionDate: existing?.transactionDate || new Date().toISOString(), ...(id ? { version: existing?.version } : {}) });
       const method = id ? 'PUT' : 'POST'; const path = id ? `/transactions/${id}` : '/transactions';
       try {
         return await apiRequest(path, { method, headers: { 'Idempotency-Key': idempotencyKey }, body });
       } catch (error) {
         if (error instanceof ApiError && error.status < 500) throw error;
-        await enqueueMutation(db, { id: idempotencyKey, method, path, body });
+        if (!userId) throw error;
+        await enqueueMutation(db, userId, { id: idempotencyKey, method, path, body });
         setQueued(true);
         return null;
       }
@@ -56,7 +70,7 @@ export default function AddTransactionPage() {
     <Field label="Ghi chú" value={note} onChangeText={setNote} placeholder="Không bắt buộc" />
     {queued && <Card><Text accessibilityLiveRegion="polite" style={ui.positive}>Đã lưu vào hàng đợi. MoneyMate sẽ đồng bộ khi có mạng.</Text></Card>}
     {save.isError && <Text accessibilityLiveRegion="polite" style={ui.negative}>{save.error.message}</Text>}
-    <Button label={id ? 'Lưu thay đổi' : 'Lưu giao dịch'} onPress={() => save.mutate()} loading={save.isPending} disabled={!walletId || !categoryId || !Number(amount) || (!!id && !existing.data)} />
+    <Button label={id ? 'Lưu thay đổi' : 'Lưu giao dịch'} onPress={() => save.mutate()} loading={save.isPending} disabled={!walletId || !categoryId || !Number(amount) || (!!id && !existing)} />
   </Screen>;
 }
 

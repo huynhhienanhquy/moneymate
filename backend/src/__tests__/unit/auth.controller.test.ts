@@ -85,4 +85,22 @@ describe('AuthController platform token transport', () => {
       data: { accessToken: 'new-access', refreshToken: 'new-refresh' }
     }));
   });
+
+  it('never exposes a rotated token when a cookie token wins over a body token', async () => {
+    const controller = new AuthController();
+    const service = MockAuthService.mock.instances[0] as jest.Mocked<AuthService>;
+    service.refresh.mockResolvedValue({ accessToken: 'new-access', refreshToken: 'new-refresh' });
+    const response = createResponse();
+
+    await controller.refresh(
+      { cookies: { refreshToken: 'cookie-token' }, body: { refreshToken: 'attacker-controlled-body' } } as never,
+      response as never,
+      jest.fn()
+    );
+
+    expect(service.refresh).toHaveBeenCalledWith('cookie-token');
+    const payload = response.json.mock.calls[0][0];
+    expect(payload.data).toEqual({ accessToken: 'new-access' });
+    expect(payload.data.refreshToken).toBeUndefined();
+  });
 });

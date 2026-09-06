@@ -4,14 +4,17 @@ import { createHash, randomBytes, randomUUID } from 'crypto';
 import { UserRepository } from '../repositories/user.repository';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { AppError } from '../common/app-error';
+import { getJwtAccessSecret } from '../config/env';
 
 export class AuthService {
   private userRepository = new UserRepository();
   private tokenRepository = new RefreshTokenRepository();
 
   private generateAccessToken(userId: string, email: string, role: string): string {
-    const secret = process.env.JWT_ACCESS_SECRET || 'super_secret_access_token_key_money_mate_2026';
-    return jwt.sign({ userId, email, role }, secret, { expiresIn: '15m' });
+    return jwt.sign({ userId, email, role }, getJwtAccessSecret(), {
+      algorithm: 'HS256',
+      expiresIn: '15m',
+    });
   }
 
   private generateRefreshToken(): string {
@@ -102,10 +105,17 @@ export class AuthService {
     }
 
     const now = new Date();
-    const tokenRecord = await this.tokenRepository.consume(this.hashRefreshToken(token), now);
-    if (!tokenRecord) throw new AppError('Refresh token is invalid or expired', 401);
+    const tokenHash = this.hashRefreshToken(token);
+    const existingRecord = await this.tokenRepository.findByHash(tokenHash);
+    if (!existingRecord || existingRecord.expiresAt < now) {
+      throw new AppError('Refresh token is invalid or expired', 401);
+    }
+    if (existingRecord.revokedAt) {
+      await this.tokenRepository.revokeFamily(existingRecord.tokenFamily);
+      throw new AppError('Refresh token reuse detected; session family revoked', 401, [], 'REFRESH_TOKEN_REUSED');
+    }
 
-    const user = await this.userRepository.findById(tokenRecord.userId);
+    const user = await this.userRepository.findById(existingRecord.userId);
     if (!user) {
       throw new AppError('User not found', 401);
     }
@@ -115,17 +125,23 @@ export class AuthService {
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
-    await this.tokenRepository.create({
+    const rotated = await this.tokenRepository.rotate(tokenHash, now, {
       userId: user.id,
       tokenHash: this.hashRefreshToken(newRefreshToken),
-      tokenFamily: tokenRecord.tokenFamily,
+      tokenFamily: existingRecord.tokenFamily,
       expiresAt,
-      platform: tokenRecord.platform as 'web' | 'ios' | 'android',
-      deviceId: tokenRecord.deviceId || undefined,
-      deviceName: tokenRecord.deviceName || undefined,
-      appVersion: tokenRecord.appVersion || undefined,
-      timezone: tokenRecord.timezone || undefined
+      platform: existingRecord.platform as 'web' | 'ios' | 'android',
+      deviceId: existingRecord.deviceId || undefined,
+      deviceName: existingRecord.deviceName || undefined,
+      appVersion: existingRecord.appVersion || undefined,
+      timezone: existingRecord.timezone || undefined
     });
+    if (!rotated) {
+      // The one-time token was consumed concurrently. Since rotation and child
+      // creation are atomic, revoking now also catches the newly issued child.
+      await this.tokenRepository.revokeFamily(existingRecord.tokenFamily);
+      throw new AppError('Refresh token reuse detected; session family revoked', 401, [], 'REFRESH_TOKEN_REUSED');
+    }
 
     return {
       accessToken,

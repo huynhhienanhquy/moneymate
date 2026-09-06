@@ -1,4 +1,7 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import path from 'path';
+
+const applicationRoot = process.cwd();
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -33,7 +36,12 @@ const options: swaggerJsdoc.Options = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: [__dirname + '/../routes/*.{ts,js}', __dirname + '/../controllers/*.{ts,js}'],
+  apis: [
+    path.join(applicationRoot, 'src/routes/*.{ts,js}'),
+    path.join(applicationRoot, 'src/controllers/*.{ts,js}'),
+    path.join(applicationRoot, 'dist/routes/*.js'),
+    path.join(applicationRoot, 'dist/controllers/*.js'),
+  ],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

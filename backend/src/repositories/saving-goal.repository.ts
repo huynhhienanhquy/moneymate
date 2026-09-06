@@ -1,5 +1,6 @@
 import prisma from '../config/db';
 import { GoalTransactionType, Prisma } from '@prisma/client';
+import { AppError } from '../common/app-error';
 
 export class SavingGoalRepository {
   async create(data: {
@@ -53,11 +54,20 @@ export class SavingGoalRepository {
     });
   }
 
-  async delete(id: string) {
-    return prisma.savingGoal.delete({ where: { id } });
+  async deleteIfUnused(id: string, userId: string) {
+    const result = await prisma.savingGoal.deleteMany({
+      where: {
+        id,
+        userId,
+        currentAmount: { equals: new Prisma.Decimal(0) },
+        goalTransactions: { none: {} },
+      },
+    });
+    return result.count === 1;
   }
 
   async addGoalTransaction(data: {
+    userId: string;
     savingGoalId: string;
     walletId: string;
     amount: number;
@@ -65,6 +75,48 @@ export class SavingGoalRepository {
   }) {
     const amountDec = new Prisma.Decimal(data.amount);
     return prisma.$transaction(async (tx) => {
+      if (data.type === GoalTransactionType.DEPOSIT) {
+        const walletDebit = await tx.wallet.updateMany({
+          where: {
+            id: data.walletId,
+            userId: data.userId,
+            initialBalance: { gte: amountDec },
+          },
+          data: { initialBalance: { decrement: amountDec } },
+        });
+        if (walletDebit.count !== 1) {
+          throw new AppError('Insufficient wallet balance', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
+        }
+
+        const goalCredit = await tx.savingGoal.updateMany({
+          where: { id: data.savingGoalId, userId: data.userId },
+          data: { currentAmount: { increment: amountDec } },
+        });
+        if (goalCredit.count !== 1) {
+          throw new AppError('Saving goal not found', 404);
+        }
+      } else {
+        const goalDebit = await tx.savingGoal.updateMany({
+          where: {
+            id: data.savingGoalId,
+            userId: data.userId,
+            currentAmount: { gte: amountDec },
+          },
+          data: { currentAmount: { decrement: amountDec } },
+        });
+        if (goalDebit.count !== 1) {
+          throw new AppError('Insufficient goal balance', 400, [], 'INSUFFICIENT_GOAL_BALANCE');
+        }
+
+        const walletCredit = await tx.wallet.updateMany({
+          where: { id: data.walletId, userId: data.userId },
+          data: { initialBalance: { increment: amountDec } },
+        });
+        if (walletCredit.count !== 1) {
+          throw new AppError('Wallet not found', 404);
+        }
+      }
+
       const goalTx = await tx.goalTransaction.create({
         data: {
           savingGoalId: data.savingGoalId,
@@ -73,26 +125,6 @@ export class SavingGoalRepository {
           type: data.type,
         },
       });
-
-      if (data.type === GoalTransactionType.DEPOSIT) {
-        await tx.savingGoal.update({
-          where: { id: data.savingGoalId },
-          data: { currentAmount: { increment: amountDec } },
-        });
-        await tx.wallet.update({
-          where: { id: data.walletId },
-          data: { initialBalance: { decrement: amountDec } },
-        });
-      } else {
-        await tx.savingGoal.update({
-          where: { id: data.savingGoalId },
-          data: { currentAmount: { decrement: amountDec } },
-        });
-        await tx.wallet.update({
-          where: { id: data.walletId },
-          data: { initialBalance: { increment: amountDec } },
-        });
-      }
 
       return goalTx;
     });

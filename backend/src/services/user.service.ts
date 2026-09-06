@@ -50,7 +50,7 @@ export class UserService {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    await this.userRepository.updatePassword(userId, passwordHash);
+    await this.userRepository.updatePasswordAndRevokeSessions(userId, passwordHash);
     return true;
   }
 

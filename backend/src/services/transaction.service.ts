@@ -1,8 +1,7 @@
-import { TransactionRepository, TransactionFilter } from '../repositories/transaction.repository';
+import { TransactionRepository, TransactionFilter, TransactionSyncCursor } from '../repositories/transaction.repository';
 import { WalletRepository } from '../repositories/wallet.repository';
 import { CategoryRepository } from '../repositories/category.repository';
 import { BudgetService } from './budget.service';
-import { RecurringService } from './recurring.service';
 import { AppError } from '../common/app-error';
 import { TransactionType, CategoryType, Prisma } from '@prisma/client';
 import prisma from '../config/db';
@@ -12,7 +11,41 @@ export class TransactionService {
   private walletRepository = new WalletRepository();
   private categoryRepository = new CategoryRepository();
   private budgetService = new BudgetService();
-  private recurringService = new RecurringService();
+
+  private async checkBudgetAlertsAfterCommit(
+    userId: string,
+    categoryId: string,
+    transactionDate: Date,
+    transactionId: string,
+  ) {
+    try {
+      await this.budgetService.checkBudgetAlerts(userId, categoryId, transactionDate);
+    } catch (error) {
+      console.error('Budget alert processing failed after transaction commit', {
+        userId,
+        transactionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  private async invalidateClosedSnapshots(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    dates: Date[],
+  ) {
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setHours(0, 0, 0, 0);
+    const periods = Array.from(new Map(dates
+      .filter((date) => date < currentMonth)
+      .map((date) => [`${date.getFullYear()}-${date.getMonth() + 1}`, {
+        year: date.getFullYear(), month: date.getMonth() + 1,
+      }])).values());
+    if (periods.length > 0) {
+      await tx.monthlySavingsSnapshot.deleteMany({ where: { userId, OR: periods } });
+    }
+  }
 
   async createTransaction(userId: string, data: {
     walletId: string;
@@ -22,6 +55,13 @@ export class TransactionService {
     note?: string;
     transactionDate: Date;
   }) {
+    if (data.type === TransactionType.TRANSFER) {
+      throw new AppError('Transfers must be created through the transfer endpoint', 400);
+    }
+    if (data.transactionDate.getTime() > Date.now()) {
+      throw new AppError('Transaction date cannot be in the future', 400);
+    }
+
     // 1. Verify wallet ownership
     const wallet = await this.walletRepository.findById(data.walletId);
     if (!wallet || wallet.userId !== userId) {
@@ -44,7 +84,7 @@ export class TransactionService {
 
     // 4. Run database transaction to record transaction and update wallet balance
     const amountDec = new Prisma.Decimal(data.amount);
-    return prisma.$transaction(async (tx) => {
+    const transaction = await prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.create({
         data: {
           userId,
@@ -74,13 +114,20 @@ export class TransactionService {
         });
       }
 
-      return transaction;
-    }).then(async (transaction) => {
-      if (data.type === TransactionType.EXPENSE) {
-        await this.budgetService.checkBudgetAlerts(userId, data.categoryId, data.transactionDate);
-      }
+      await this.invalidateClosedSnapshots(tx, userId, [data.transactionDate]);
+
       return transaction;
     });
+
+    if (data.type === TransactionType.EXPENSE) {
+      await this.checkBudgetAlertsAfterCommit(
+        userId,
+        data.categoryId,
+        data.transactionDate,
+        transaction.id,
+      );
+    }
+    return transaction;
   }
 
   async getTransactions(userId: string, query: Omit<TransactionFilter, 'userId'>) {
@@ -98,13 +145,39 @@ export class TransactionService {
     };
   }
 
-  async syncTransactions(userId: string, cursor?: Date, take = 100) {
-    const items = await this.transactionRepository.findSyncDelta(userId, cursor, Math.min(take, 200));
+  private decodeSyncCursor(cursor?: string): TransactionSyncCursor | undefined {
+    if (!cursor) return undefined;
+    try {
+      const value = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+      const updatedAt = new Date(value.updatedAt);
+      if (!value.id || Number.isNaN(updatedAt.getTime())) throw new Error('Invalid cursor');
+      return { updatedAt, id: String(value.id) };
+    } catch {
+      // Accept the previous timestamp-only cursor once so installed clients can upgrade safely.
+      const legacyDate = new Date(cursor);
+      if (!Number.isNaN(legacyDate.getTime())) return { updatedAt: legacyDate, id: '' };
+      throw new AppError('Invalid transaction sync cursor', 400);
+    }
+  }
+
+  private encodeSyncCursor(cursor: TransactionSyncCursor) {
+    return Buffer.from(JSON.stringify({
+      updatedAt: cursor.updatedAt.toISOString(),
+      id: cursor.id,
+    })).toString('base64url');
+  }
+
+  async syncTransactions(userId: string, cursor?: string, take = 100) {
+    const decodedCursor = this.decodeSyncCursor(cursor);
+    const pageSize = Math.min(take, 200);
+    const items = await this.transactionRepository.findSyncDelta(userId, decodedCursor, pageSize);
     const last = items.at(-1);
     return {
       items,
-      nextCursor: last?.updatedAt.toISOString() || cursor?.toISOString() || null,
-      hasMore: items.length === Math.min(take, 200)
+      nextCursor: last
+        ? this.encodeSyncCursor({ updatedAt: last.updatedAt, id: last.id })
+        : cursor || null,
+      hasMore: items.length === pageSize
     };
   }
 
@@ -126,13 +199,25 @@ export class TransactionService {
     version?: number;
   }) {
     const oldTx = await this.getTransaction(userId, id);
+    if (oldTx.type === TransactionType.TRANSFER) {
+      throw new AppError('Transfers cannot be edited as regular transactions', 400);
+    }
     if (data.version !== undefined && data.version !== oldTx.version) {
       throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
     }
 
-    // Validate wallet and category if changed
+    if (data.transactionDate && data.transactionDate.getTime() > Date.now()) {
+      throw new AppError('Transaction date cannot be in the future', 400);
+    }
+
+    // Validate the resulting wallet/category/type combination, not only changed fields.
     const targetWalletId = data.walletId || oldTx.walletId;
     const targetCategoryId = data.categoryId || oldTx.categoryId;
+    const newType = data.type || oldTx.type;
+
+    if (newType === TransactionType.TRANSFER) {
+      throw new AppError('Transfers must be changed through the transfer workflow', 400);
+    }
 
     if (data.walletId && data.walletId !== oldTx.walletId) {
       const wallet = await this.walletRepository.findById(data.walletId);
@@ -141,19 +226,22 @@ export class TransactionService {
       }
     }
 
-    if (data.categoryId && data.categoryId !== oldTx.categoryId) {
-      const category = await this.categoryRepository.findById(data.categoryId);
-      if (!category || (category.userId !== null && category.userId !== userId)) {
-        throw new AppError('Target category not found or unauthorized', 404);
-      }
+    const category = await this.categoryRepository.findById(targetCategoryId);
+    if (!category || (category.userId !== null && category.userId !== userId)) {
+      throw new AppError('Target category not found or unauthorized', 404);
+    }
+    if (
+      (newType === TransactionType.INCOME && category.type !== CategoryType.INCOME) ||
+      (newType === TransactionType.EXPENSE && category.type !== CategoryType.EXPENSE)
+    ) {
+      throw new AppError('Transaction type must match category type', 400);
     }
 
     const oldAmount = new Prisma.Decimal(oldTx.amount);
     const newAmount = data.amount ? new Prisma.Decimal(data.amount) : oldAmount;
     const oldType = oldTx.type;
-    const newType = data.type || oldType;
 
-    return prisma.$transaction(async (tx) => {
+    const updatedTransaction = await prisma.$transaction(async (tx) => {
       // 1. Reverse the old transaction balance change on the old wallet
       if (oldType === TransactionType.INCOME) {
         await tx.wallet.update({
@@ -204,12 +292,31 @@ export class TransactionService {
         });
       }
 
+
+      await this.invalidateClosedSnapshots(tx, userId, [
+        oldTx.transactionDate,
+        data.transactionDate ?? oldTx.transactionDate,
+      ]);
+
       return updatedTx;
     });
+
+    if (newType === TransactionType.EXPENSE) {
+      await this.checkBudgetAlertsAfterCommit(
+        userId,
+        targetCategoryId,
+        data.transactionDate ?? oldTx.transactionDate,
+        updatedTransaction.id,
+      );
+    }
+    return updatedTransaction;
   }
 
   async deleteTransaction(userId: string, id: string, version?: number) {
     const txVal = await this.getTransaction(userId, id);
+    if (txVal.type === TransactionType.TRANSFER) {
+      throw new AppError('Transfers cannot be deleted as regular transactions', 400);
+    }
     if (version !== undefined && version !== txVal.version) {
       throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
     }
@@ -237,6 +344,9 @@ export class TransactionService {
         });
       }
 
+
+      await this.invalidateClosedSnapshots(tx, userId, [txVal.transactionDate]);
+
       return true;
     });
   }
@@ -255,8 +365,11 @@ export class TransactionService {
       throw new AppError('Amount must be positive and non-zero', 400);
     }
 
-    const category = await this.categoryRepository.findFirst({ type: CategoryType.EXPENSE }, { name: 'asc' });
-    const categoryId = category?.id || (await this.categoryRepository.findFirst({ type: CategoryType.INCOME }, { name: 'asc' }))?.id;
+    const category = await this.categoryRepository.findFirst(
+      { type: CategoryType.EXPENSE, userId: null },
+      { name: 'asc' },
+    );
+    const categoryId = category?.id;
     if (!categoryId) throw new AppError('No category found for transfer', 500);
 
     return this.transactionRepository.transferFunds({

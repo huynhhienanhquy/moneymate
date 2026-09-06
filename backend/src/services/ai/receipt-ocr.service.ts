@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { CategoryRepository } from '../../repositories/category.repository';
 import { LlmProvider } from './llm.provider';
 import { CategoryType } from '@prisma/client';
+import { PDFParse } from 'pdf-parse';
 
 export interface ReceiptScanResult {
   amount: number | null;
@@ -74,14 +75,18 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
   }
 
   private async extractPdfText(filePath: string): Promise<string> {
+    let parser: { destroy(): Promise<void> } | undefined;
     try {
-      const pdfParseModule = await import('pdf-parse');
-      const pdfParse = (pdfParseModule as any).default || pdfParseModule;
       const buffer = fs.readFileSync(filePath);
-      const data = await pdfParse(buffer);
+      const instance = new PDFParse({ data: buffer });
+      parser = instance;
+      const data = await instance.getText();
       return data.text || '';
-    } catch {
+    } catch (error) {
+      console.warn('PDF text extraction failed', error instanceof Error ? error.message : error);
       return '';
+    } finally {
+      await parser?.destroy().catch(() => undefined);
     }
   }
 

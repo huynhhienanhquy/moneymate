@@ -14,4 +14,10 @@ describe('DashboardPage', () => {
     renderPage(DashboardPage, 'loading');
     expect(screen.getByText('Đang tải tổng quan tài chính...')).toBeInTheDocument();
   });
+
+  it('shows an explicit error instead of zeroed financial data', () => {
+    renderPage(DashboardPage, 'error');
+    expect(screen.getByRole('alert')).toHaveTextContent('Không thể tải tổng quan tài chính');
+    expect(screen.getByRole('button', { name: 'Thử lại' })).toBeInTheDocument();
+  });
 });

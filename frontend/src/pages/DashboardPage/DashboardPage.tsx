@@ -1,5 +1,6 @@
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppCard from '@/components/common/AppCard/AppCard';
+import AppButton from '@/components/common/AppButton/AppButton';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight, Zap } from 'lucide-react';
@@ -56,14 +57,14 @@ const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
 
-  const { data: dashData, isLoading: dashLoading } = useQuery({
+  const dashboardQuery = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => api.get('/transactions/dashboard').then(r => r.data.data),
     staleTime: 60_000,
   });
 
   const now = new Date();
-  const { data: reportData } = useQuery({
+  const reportQuery = useQuery({
     queryKey: ['monthly-report', now.getMonth() + 1, now.getFullYear()],
     queryFn: () =>
       api.get('/transactions/report', { params: { month: now.getMonth() + 1, year: now.getFullYear() } })
@@ -71,7 +72,7 @@ const DashboardPage: React.FC = () => {
     staleTime: 60_000,
   });
 
-  const { data: trendData = [] } = useQuery({
+  const trendQuery = useQuery({
     queryKey: ['monthly-trend', 6],
     queryFn: () => api.get('/transactions/trend', { params: { months: 6 } }).then(r => r.data.data),
     staleTime: 60_000,
@@ -83,7 +84,7 @@ const DashboardPage: React.FC = () => {
     staleTime: 120_000,
   });
 
-  if (dashLoading) {
+  if (dashboardQuery.isLoading) {
     return (
       <div className="flex h-full min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -94,9 +95,27 @@ const DashboardPage: React.FC = () => {
     );
   }
 
+  if (dashboardQuery.isError || reportQuery.isError || trendQuery.isError) {
+    return (
+      <AppCard padding="none" className="flex min-h-[50vh] flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
+        <p className="text-base font-bold text-rose-600 dark:text-rose-400">Không thể tải tổng quan tài chính</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Dữ liệu hiện tại chưa được thay bằng số 0. Vui lòng kiểm tra kết nối và thử lại.</p>
+        <AppButton onClick={() => {
+          void dashboardQuery.refetch();
+          void reportQuery.refetch();
+          void trendQuery.refetch();
+        }}>Thử lại</AppButton>
+      </AppCard>
+    );
+  }
+
+  const dashData = dashboardQuery.data;
+  const reportData = reportQuery.data;
+  const trendData = trendQuery.data ?? [];
+
   const netWorth: number = dashData?.netWorth || 0;
   const monthlyExpense: number = dashData?.monthlyExpense || 0;
-  const monthlySavings = netWorth - monthlyExpense;
+  const monthlySavings: number = dashData?.monthlySavings || 0;
   const actualExpense: number = dashData?.actualExpense || 0;
   const recentTransactions: any[] = dashData?.recentTransactions || [];
   const categoryExpenses: any[] = reportData?.categoryExpenses || [];

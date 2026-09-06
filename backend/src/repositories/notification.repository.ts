@@ -11,10 +11,22 @@ export class NotificationRepository {
     locale?: string;
     timezone?: string;
   }) {
-    return prisma.deviceToken.upsert({
-      where: { userId_deviceId_provider: { userId, deviceId: data.deviceId, provider: data.provider } },
-      update: { ...data, isActive: true, lastSeenAt: new Date() },
-      create: { userId, ...data }
+    return prisma.$transaction(async (tx) => {
+      // Remove an obsolete token for this logical device, then atomically claim
+      // the globally unique physical token for the currently authenticated user.
+      await tx.deviceToken.deleteMany({
+        where: {
+          userId,
+          deviceId: data.deviceId,
+          provider: data.provider,
+          token: { not: data.token },
+        },
+      });
+      return tx.deviceToken.upsert({
+        where: { token: data.token },
+        update: { userId, ...data, isActive: true, lastSeenAt: new Date() },
+        create: { userId, ...data },
+      });
     });
   }
 
@@ -27,7 +39,7 @@ export class NotificationRepository {
 
   async findActiveDeviceTokens(userId: string) {
     return prisma.deviceToken.findMany({
-      where: { userId, isActive: true },
+      where: { userId, isActive: true, provider: 'expo' },
       select: { id: true, token: true }
     });
   }

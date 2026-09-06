@@ -2,7 +2,6 @@ import { TransactionService } from '../transaction.service';
 import { BudgetService } from '../budget.service';
 import { SavingGoalService } from '../saving-goal.service';
 import { WalletRepository } from '../../repositories/wallet.repository';
-import { CategoryRepository } from '../../repositories/category.repository';
 import { RecurringRepository } from '../../repositories/recurring.repository';
 import { formatVND } from '../../config/ai';
 
@@ -32,7 +31,6 @@ export class ContextBuilderService {
   private budgetService = new BudgetService();
   private savingGoalService = new SavingGoalService();
   private walletRepository = new WalletRepository();
-  private categoryRepository = new CategoryRepository();
   private recurringRepository = new RecurringRepository();
 
   async build(userId: string, month?: number, year?: number): Promise<FinancialContext> {
@@ -65,16 +63,18 @@ export class ContextBuilderService {
       ? { name: categoryExpenses[0].name, amount: categoryExpenses[0].amount }
       : null;
 
-    const savingsRate = dashboard.monthlyIncome > 0
-      ? Math.round((dashboard.monthlySavings / dashboard.monthlyIncome) * 100)
+    const monthlyIncome = report.summary.totalIncome;
+    const monthlySavings = report.summary.netSavings;
+    const savingsRate = monthlyIncome > 0
+      ? Math.round((monthlySavings / monthlyIncome) * 100)
       : 0;
 
     return {
       summary: {
         netWorth: dashboard.netWorth,
-        monthlyIncome: dashboard.monthlyIncome,
-        monthlyExpense: dashboard.monthlyExpense,
-        monthlySavings: dashboard.monthlySavings,
+        monthlyIncome,
+        monthlyExpense,
+        monthlySavings,
         savingsRate,
       },
       month: m,

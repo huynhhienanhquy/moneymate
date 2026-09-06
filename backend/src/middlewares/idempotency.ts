@@ -39,12 +39,12 @@ export async function idempotency(req: AuthenticatedRequest, res: Response, next
   const originalJson = res.json.bind(res);
   res.json = ((body: unknown) => {
     const statusCode = res.statusCode;
-    const operation = statusCode >= 500
-      ? prisma.idempotencyRecord.deleteMany({ where: { userId: req.user!.id, key } })
-      : prisma.idempotencyRecord.updateMany({
-          where: { userId: req.user!.id, key },
-          data: { status: 'COMPLETED', statusCode, responseBody: body as Prisma.InputJsonValue }
-        });
+    // A 5xx is ambiguous because the primary mutation may already have committed.
+    // Persist every terminal response so replaying this key never repeats the mutation.
+    const operation = prisma.idempotencyRecord.updateMany({
+      where: { userId: req.user!.id, key },
+      data: { status: 'COMPLETED', statusCode, responseBody: body as Prisma.InputJsonValue }
+    });
     operation
       .catch((error) => console.error('Idempotency response persistence failed', {
         userId: req.user!.id,

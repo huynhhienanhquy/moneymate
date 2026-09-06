@@ -1,10 +1,11 @@
 import { randomUUID } from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 export interface ObjectStorage {
   put(scope: string, file: Express.Multer.File): Promise<{ key: string; url: string }>;
+  read(url: string): Promise<Buffer>;
   remove(url: string): Promise<void>;
 }
 
@@ -33,6 +34,13 @@ class LocalObjectStorage implements ObjectStorage {
     if (!target.startsWith(this.root + path.sep)) throw new Error('Invalid storage path');
     await fs.rm(target, { force: true });
   }
+
+  async read(url: string) {
+    const relative = url.replace(/^\/uploads\//, '');
+    const target = path.resolve(this.root, relative);
+    if (!target.startsWith(this.root + path.sep)) throw new Error('Invalid storage path');
+    return fs.readFile(target);
+  }
 }
 
 class S3ObjectStorage implements ObjectStorage {
@@ -60,6 +68,17 @@ class S3ObjectStorage implements ObjectStorage {
     const prefix = `${this.publicUrl}/`;
     if (!url.startsWith(prefix)) throw new Error('Attachment URL does not belong to configured storage');
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: url.slice(prefix.length) }));
+  }
+
+  async read(url: string) {
+    const prefix = `${this.publicUrl}/`;
+    if (!url.startsWith(prefix)) throw new Error('Attachment URL does not belong to configured storage');
+    const result = await this.client.send(new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: url.slice(prefix.length),
+    }));
+    if (!result.Body) throw new Error('Attachment content not found');
+    return Buffer.from(await result.Body.transformToByteArray());
   }
 }
 

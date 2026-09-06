@@ -21,6 +21,7 @@ export const updateRecurringSchema = z.object({
     type: z.nativeEnum(CategoryType).optional(),
     frequency: z.nativeEnum(Frequency).optional(),
     note: z.string().optional(),
+    startDate: z.coerce.date().optional(),
     isActive: z.boolean().optional(),
   }),
 });

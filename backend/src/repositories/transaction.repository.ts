@@ -1,6 +1,7 @@
 import prisma from '../config/db';
-import { CategoryType, Frequency, TransactionType, Prisma } from '@prisma/client';
+import { CategoryType, TransactionType, Prisma } from '@prisma/client';
 import { AppError } from '../common/app-error';
+import { calculateNextDate } from '../common/recurrence';
 
 export interface TransactionFilter {
   userId: string;
@@ -16,28 +17,12 @@ export interface TransactionFilter {
   take?: number;
 }
 
+export interface TransactionSyncCursor {
+  updatedAt: Date;
+  id: string;
+}
+
 export class TransactionRepository {
-
-
-  private calculateNextDate(current: Date, frequency: Frequency): Date {
-    const next = new Date(current);
-    switch (frequency) {
-      case Frequency.DAILY:
-        next.setDate(next.getDate() + 1);
-        break;
-      case Frequency.WEEKLY:
-        next.setDate(next.getDate() + 7);
-        break;
-      case Frequency.MONTHLY:
-        next.setMonth(next.getMonth() + 1);
-        break;
-      case Frequency.YEARLY:
-        next.setFullYear(next.getFullYear() + 1);
-        break;
-    }
-    return next;
-  }
-
   private async getProjectedRecurringAmount(
     userId: string,
     startDate: Date,
@@ -60,14 +45,22 @@ export class TransactionRepository {
 
     for (const item of recurringItems) {
       let executionDate = new Date(item.startDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const existingTransactions = await prisma.transaction.findMany({
         where: {
           userId,
           deletedAt: null,
-          walletId: item.walletId,
-          categoryId: item.categoryId,
-          type: transactionType,
-          amount: item.amount,
+          OR: [
+            { recurringTransactionId: item.id },
+            {
+              recurringTransactionId: null,
+              walletId: item.walletId,
+              categoryId: item.categoryId,
+              type: transactionType,
+              amount: item.amount,
+            },
+          ],
           transactionDate: { gte: startDate, lte: endDate },
         },
         select: { transactionDate: true },
@@ -77,10 +70,10 @@ export class TransactionRepository {
       );
 
       while (executionDate <= endDate) {
-        if (executionDate >= startDate) {
+        if (executionDate >= startDate && executionDate >= today) {
           const dateKey = executionDate.toISOString().slice(0, 10);
           if (existingDates.has(dateKey)) {
-            executionDate = this.calculateNextDate(executionDate, item.frequency);
+            executionDate = calculateNextDate(executionDate, item.frequency, item.startDate);
             continue;
           }
 
@@ -97,7 +90,7 @@ export class TransactionRepository {
           }
           byCategory[item.categoryId].amount += amount;
         }
-        executionDate = this.calculateNextDate(executionDate, item.frequency);
+        executionDate = calculateNextDate(executionDate, item.frequency, item.startDate);
       }
     }
 
@@ -260,9 +253,17 @@ export class TransactionRepository {
     });
   }
 
-  async findSyncDelta(userId: string, cursor: Date | undefined, take: number) {
+  async findSyncDelta(userId: string, cursor: TransactionSyncCursor | undefined, take: number) {
     return prisma.transaction.findMany({
-      where: { userId, ...(cursor ? { updatedAt: { gt: cursor } } : {}) },
+      where: {
+        userId,
+        ...(cursor ? {
+          OR: [
+            { updatedAt: { gt: cursor.updatedAt } },
+            { updatedAt: cursor.updatedAt, id: { gt: cursor.id } },
+          ],
+        } : {}),
+      },
       orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
       take,
       select: {
@@ -311,17 +312,27 @@ export class TransactionRepository {
         throw new AppError('Insufficient balance in source wallet', 400);
       }
 
-      // Debit Source Wallet
-      await tx.wallet.update({
-        where: { id: data.sourceWalletId },
+      // Debit only if the balance is still sufficient at the moment of the write.
+      const sourceDebit = await tx.wallet.updateMany({
+        where: {
+          id: data.sourceWalletId,
+          userId: data.userId,
+          initialBalance: { gte: amountDec },
+        },
         data: { initialBalance: { decrement: amountDec } }
       });
+      if (sourceDebit.count !== 1) {
+        throw new AppError('Insufficient balance in source wallet', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
+      }
 
       // Credit Destination Wallet
-      await tx.wallet.update({
-        where: { id: data.destinationWalletId },
+      const destinationCredit = await tx.wallet.updateMany({
+        where: { id: data.destinationWalletId, userId: data.userId },
         data: { initialBalance: { increment: amountDec } }
       });
+      if (destinationCredit.count !== 1) {
+        throw new AppError('Destination wallet not found or unauthorized', 404);
+      }
 
       // Create corresponding Transaction records for both sides
       const srcTx = await tx.transaction.create({
@@ -436,6 +447,64 @@ export class TransactionRepository {
     };
   }
 
+  /**
+   * initialBalance stores the live balance. Recover historical assets by reversing
+   * later movements, using only wallets that existed at the requested cutoff.
+   */
+  async getWalletBalancesAtDate(userId: string, endDate: Date): Promise<number> {
+    if (endDate >= new Date()) return this.getWalletBalanceTotal(userId);
+
+    const wallets = await prisma.wallet.findMany({ where: { userId, createdAt: { lte: endDate } } });
+    if (wallets.length === 0) return 0;
+    const walletIds = wallets.map((wallet) => wallet.id);
+    const walletIdSet = new Set(walletIds);
+    const currentBalance = wallets.reduce((sum, wallet) => sum + Number(wallet.initialBalance), 0);
+
+    const [incomeAgg, expenseAgg, transfers, goalTransactions] = await Promise.all([
+      prisma.transaction.aggregate({
+        where: {
+          userId,
+          deletedAt: null,
+          walletId: { in: walletIds },
+          type: TransactionType.INCOME,
+          transactionDate: { gt: endDate },
+        },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: {
+          userId,
+          deletedAt: null,
+          walletId: { in: walletIds },
+          type: TransactionType.EXPENSE,
+          transactionDate: { gt: endDate },
+        },
+        _sum: { amount: true },
+      }),
+      prisma.walletTransfer.findMany({
+        where: {
+          userId,
+          transferDate: { gt: endDate },
+          OR: [{ sourceWalletId: { in: walletIds } }, { destinationWalletId: { in: walletIds } }],
+        },
+      }),
+      prisma.goalTransaction.findMany({
+        where: { walletId: { in: walletIds }, createdAt: { gt: endDate } },
+      }),
+    ]);
+
+    const totalIncome = Number(incomeAgg._sum.amount ?? 0);
+    const totalExpense = Number(expenseAgg._sum.amount ?? 0);
+    const transferAdjustment = transfers.reduce((sum, transfer) => sum
+      + (walletIdSet.has(transfer.sourceWalletId) ? Number(transfer.amount) : 0)
+      - (walletIdSet.has(transfer.destinationWalletId) ? Number(transfer.amount) : 0), 0);
+    const goalAdjustment = goalTransactions.reduce((sum, transaction) => sum
+      + (transaction.type === 'DEPOSIT' ? Number(transaction.amount) : -Number(transaction.amount)), 0);
+    return currentBalance - totalIncome + totalExpense + transferAdjustment + goalAdjustment;
+  }
+
+
+
   // Get Category breakdown for Pie Chart
   async getCategoryBreakdown(userId: string, month: number, year: number) {
     const startDate = new Date(year, month - 1, 1);
@@ -509,6 +578,11 @@ export class TransactionRepository {
     return trend;
   }
 
+  async getWalletBalanceTotal(userId: string): Promise<number> {
+    const wallets = await prisma.wallet.findMany({ where: { userId } });
+    return wallets.reduce((sum, wallet) => sum + Number(wallet.initialBalance), 0);
+  }
+
   async getYearlySummary(userId: string, year: number) {
     const currentFormulaVersion = 8;
     const monthlyData = [];
@@ -575,62 +649,5 @@ export class TransactionRepository {
       netSavings: totalIncome - totalExpense,
       monthlyData,
     };
-  }
-
-  async getWalletBalanceTotal(userId: string): Promise<number> {
-    const wallets = await prisma.wallet.findMany({ where: { userId } });
-    return wallets.reduce((sum, wallet) => sum + Number(wallet.initialBalance), 0);
-  }
-
-  async getWalletBalancesAtDate(userId: string, endDate: Date): Promise<number> {
-    if (endDate >= new Date()) return this.getWalletBalanceTotal(userId);
-
-    const wallets = await prisma.wallet.findMany({ where: { userId, createdAt: { lte: endDate } } });
-    if (wallets.length === 0) return 0;
-    const walletIds = wallets.map((wallet) => wallet.id);
-    const walletIdSet = new Set(walletIds);
-    const currentBalance = wallets.reduce((sum, wallet) => sum + Number(wallet.initialBalance), 0);
-
-    const [incomeAgg, expenseAgg, transfers, goalTransactions] = await Promise.all([
-      prisma.transaction.aggregate({
-        where: {
-          userId,
-          deletedAt: null,
-          walletId: { in: walletIds },
-          type: TransactionType.INCOME,
-          transactionDate: { gt: endDate },
-        },
-        _sum: { amount: true },
-      }),
-      prisma.transaction.aggregate({
-        where: {
-          userId,
-          deletedAt: null,
-          walletId: { in: walletIds },
-          type: TransactionType.EXPENSE,
-          transactionDate: { gt: endDate },
-        },
-        _sum: { amount: true },
-      }),
-      prisma.walletTransfer.findMany({
-        where: {
-          userId,
-          transferDate: { gt: endDate },
-          OR: [{ sourceWalletId: { in: walletIds } }, { destinationWalletId: { in: walletIds } }],
-        },
-      }),
-      prisma.goalTransaction.findMany({
-        where: { walletId: { in: walletIds }, createdAt: { gt: endDate } },
-      }),
-    ]);
-
-    const totalIncome = Number(incomeAgg._sum.amount ?? 0);
-    const totalExpense = Number(expenseAgg._sum.amount ?? 0);
-    const transferAdjustment = transfers.reduce((sum, transfer) => sum
-      + (walletIdSet.has(transfer.sourceWalletId) ? Number(transfer.amount) : 0)
-      - (walletIdSet.has(transfer.destinationWalletId) ? Number(transfer.amount) : 0), 0);
-    const goalAdjustment = goalTransactions.reduce((sum, transaction) => sum
-      + (transaction.type === 'DEPOSIT' ? Number(transaction.amount) : -Number(transaction.amount)), 0);
-    return currentBalance - totalIncome + totalExpense + transferAdjustment + goalAdjustment;
   }
 }

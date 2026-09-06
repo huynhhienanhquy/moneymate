@@ -14,6 +14,7 @@ const mockPrismaClient = {
     findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     delete: jest.fn(),
   },
   category: {
@@ -27,10 +28,12 @@ const mockPrismaClient = {
   transaction: {
     aggregate: jest.fn(),
     findUnique: jest.fn(),
+    findUniqueOrThrow: jest.fn(),
     findMany: jest.fn(),
     count: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     delete: jest.fn(),
   },
   refreshToken: {
@@ -49,6 +52,7 @@ const mockPrismaClient = {
     findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
   },
@@ -62,6 +66,8 @@ const mockPrismaClient = {
   },
   deviceToken: {
     upsert: jest.fn(),
+    create: jest.fn(),
+    deleteMany: jest.fn(),
     updateMany: jest.fn(),
     findMany: jest.fn(),
   },
@@ -77,6 +83,7 @@ const mockPrismaClient = {
     findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
   },
@@ -85,7 +92,9 @@ const mockPrismaClient = {
     findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     delete: jest.fn(),
+    deleteMany: jest.fn(),
     count: jest.fn(),
   },
   goalTransaction: {

@@ -6,6 +6,7 @@ import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppSelect from '@/components/common/AppSelect/AppSelect';
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import { formatVND } from '@/utils/formatCurrency';
+import { toLocalDateInputValue } from '@/utils/dateInput';
 
 type TransferModalProps = {
   wallets: any[];
@@ -19,7 +20,7 @@ const createEmptyTransfer = () => ({
   destinationWalletId: '',
   amount: '',
   note: '',
-  transferDate: new Date().toISOString().slice(0, 10),
+  transferDate: toLocalDateInputValue(),
 });
 
 const TransferModal = ({ wallets, onClose, onSave, loading }: TransferModalProps) => {

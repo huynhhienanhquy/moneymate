@@ -17,4 +17,10 @@ describe('WalletsPage', () => {
     renderPage(WalletsPage, 'empty');
     expect(screen.getByText('Chưa có ví nào')).toBeInTheDocument();
   });
+
+  it('distinguishes an API error from an empty wallet list', () => {
+    renderPage(WalletsPage, 'error');
+    expect(screen.getByRole('alert')).toHaveTextContent('Không thể tải danh sách ví');
+    expect(screen.queryByText('Chưa có ví nào')).not.toBeInTheDocument();
+  });
 });

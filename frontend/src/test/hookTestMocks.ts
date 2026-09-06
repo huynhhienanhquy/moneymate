@@ -1,4 +1,7 @@
-type HookMocks = { mutate: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn>; invalidateQueries: ReturnType<typeof vi.fn>; login: ReturnType<typeof vi.fn>; get: ReturnType<typeof vi.fn>; post: ReturnType<typeof vi.fn>; patch: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> };
+import type { Mock } from 'vitest';
+
+type MockFn = Mock<(...args: any[]) => any>;
+type HookMocks = { mutate: MockFn; navigate: MockFn; invalidateQueries: MockFn; login: MockFn; get: MockFn; post: MockFn; patch: MockFn; delete: MockFn };
 const getMocks = () => {
   const scope = globalThis as typeof globalThis & { __moneyMateHookMocks?: HookMocks };
   scope.__moneyMateHookMocks ??= {

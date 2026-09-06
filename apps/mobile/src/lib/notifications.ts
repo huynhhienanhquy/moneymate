@@ -9,6 +9,9 @@ Notifications.setNotificationHandler({
 });
 
 export async function registerForPushNotifications() {
+  if (Platform.OS === 'web') {
+    throw new Error('Thông báo đẩy chưa được hỗ trợ trên phiên bản web');
+  }
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('money-alerts', {
       name: 'Cảnh báo tài chính',

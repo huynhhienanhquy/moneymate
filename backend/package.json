@@ -5,27 +5,32 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",
+    "test:dev-startup": "node scripts/check-dev-start.cjs",
+    "test:copilot-live": "node scripts/check-copilot-expense.cjs",
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "test": "jest --runInBand --forceExit",
+    "test": "npm run test:unit",
+    "test:unit": "jest --runInBand --testPathIgnorePatterns=/integration/",
+    "test:integration": "node scripts/run-integration-tests.cjs",
+    "test:all": "npm run test:unit && npm run test:integration",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage --forceExit"
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1116.0",
+    "@copilotkit/runtime": "1.69.0",
     "@moneymate/validation": "file:../packages/validation",
     "@prisma/client": "^5.12.1",
     "bcryptjs": "^2.4.3",
-    "body-parser": "1.20.6",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "exceljs": "^4.4.0",
     "express": "^4.19.2",
-    "fast-uri": "3.1.5",
+    "fast-uri": "3.1.7",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.2.0",
     "openai": "^6.45.0",
@@ -59,7 +64,6 @@
     "typescript": "^5.4.5"
   },
   "overrides": {
-    "body-parser": "1.20.6",
     "minimatch@3.1.5": {
       "brace-expansion": "1.1.18"
     },
@@ -69,9 +73,7 @@
     "minimatch@10.2.5": {
       "brace-expansion": "5.0.9"
     },
-    "ajv@8.20.0": {
-      "fast-uri": "3.1.5"
-    },
+    "fast-uri": "3.1.7",
     "@apidevtools/json-schema-ref-parser@14.0.1": {
       "js-yaml": "4.3.1"
     }

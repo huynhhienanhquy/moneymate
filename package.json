@@ -11,17 +11,17 @@
   "scripts": {
     "build": "npm run build:packages && npm run build --workspace=moneymate-backend && npm run build --workspace=moneymate-frontend && npm run build --workspace=moneymate-mobile",
     "build:packages": "npm run build --workspace=@moneymate/contracts --workspace=@moneymate/validation --workspace=@moneymate/domain --workspace=@moneymate/api-core --workspace=@moneymate/design-tokens",
-    "test": "npm run test --workspace=moneymate-backend",
+    "test": "npm run test:unit --workspace=moneymate-backend && npm run test --workspace=moneymate-frontend",
+    "test:integration": "npm run test:integration --workspace=moneymate-backend",
     "lint": "npm run lint --workspace=moneymate-frontend && npm run lint --workspace=moneymate-mobile",
     "dev:backend": "npm run dev --workspace=moneymate-backend",
     "dev:frontend": "npm run dev --workspace=moneymate-frontend",
     "dev:mobile": "npm run start --workspace=moneymate-mobile"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "overrides": {
-    "body-parser": "1.20.6",
     "minimatch@3.1.5": {
       "brace-expansion": "1.1.18"
     },
@@ -31,17 +31,16 @@
     "minimatch@10.2.5": {
       "brace-expansion": "5.0.9"
     },
-    "ajv@8.20.0": {
-      "fast-uri": "3.1.5"
-    },
+    "qs@6.15.3": "6.16.0",
+    "fast-uri": "3.1.7",
     "@apidevtools/json-schema-ref-parser@14.0.1": {
       "js-yaml": "4.3.1"
     }
   },
   "devDependencies": {
-    "@types/react": "^18.3.31",
-    "@types/react-dom": "^18.3.7",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "@types/react": "~19.2.4",
+    "@types/react-dom": "~19.2.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   }
 }

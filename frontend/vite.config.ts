@@ -1,33 +1,44 @@
 import { defineConfig } from 'vitest/config';
+import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, import.meta.dirname, 'VITE_');
+  let apiTarget = 'http://localhost:5000';
+  try {
+    const configured = new URL(env.VITE_API_URL || apiTarget);
+    if (['localhost', '127.0.0.1', '[::1]'].includes(configured.hostname)) apiTarget = configured.origin;
+  } catch { /* A relative VITE_API_URL uses the default local backend. */ }
+
+  return {
   plugins: [react()],
-  publicDir: path.resolve(__dirname, '../assets/images'),
+  publicDir: path.resolve(import.meta.dirname, '../assets/images'),
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      react: path.resolve(__dirname, './node_modules/react'),
-      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+      '@': path.resolve(import.meta.dirname, './src'),
+      react: path.resolve(import.meta.dirname, './node_modules/react'),
+      'react-dom': path.resolve(import.meta.dirname, './node_modules/react-dom'),
     },
   },
   server: {
     port: 5173,
-    // Windows resolves localhost to ::1 first. Listening on IPv6 also keeps
-    // the dev server reachable from IPv4/LAN on dual-stack Windows.
-    host: '::'
+    host: true,
+    proxy: {
+      '/api': { target: apiTarget, changeOrigin: true },
+    },
   },
   test: {
     environment: 'jsdom',
+    // Resolve shared React dependencies through the frontend alias in integration tests.
+    server: { deps: { inline: ['@tanstack/react-query'] } },
     globals: true,
     setupFiles: './src/test/setup.ts',
     css: true,
     coverage: {
       provider: 'v8',
-      all: true,
       // Measure executable application logic. React views are verified by the
       // render/integration suite, while their JSX callback wrappers would make
       // function coverage depend on implementation details rather than behavior.
@@ -49,4 +60,5 @@ export default defineConfig({
       },
     },
   },
+  };
 });

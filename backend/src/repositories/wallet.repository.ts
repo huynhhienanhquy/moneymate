@@ -39,4 +39,16 @@ export class WalletRepository {
       where: { id }
     });
   }
+
+  async countReferences(id: string) {
+    const [transactions, recurringTransactions, transfers, goalTransactions] = await Promise.all([
+      prisma.transaction.count({ where: { walletId: id } }),
+      prisma.recurringTransaction.count({ where: { walletId: id } }),
+      prisma.walletTransfer.count({
+        where: { OR: [{ sourceWalletId: id }, { destinationWalletId: id }] },
+      }),
+      prisma.goalTransaction.count({ where: { walletId: id } }),
+    ]);
+    return transactions + recurringTransactions + transfers + goalTransactions;
+  }
 }

@@ -9,7 +9,7 @@ import Storage from 'expo-sqlite/kv-store';
 import * as ScreenCapture from 'expo-screen-capture';
 import * as Notifications from 'expo-notifications';
 import { useRouter, useSegments } from 'expo-router';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, setSessionExpiredHandler } from '@/lib/api';
 import { applyTransactionDelta, getPendingMutations, getSyncCursor, markMutationFailed, markMutationSynced, migrateDatabase, type TransactionDelta } from '@/storage/database';
 import { useAuthStore } from '@/stores/auth.store';
 import { theme } from '@/theme';
@@ -21,9 +21,18 @@ const queryPersister = createAsyncStoragePersister({ storage: Storage, key: 'mon
 
 function SessionBootstrap({ children }: PropsWithChildren) {
   const initialize = useAuthStore((state) => state.initialize);
+  const expireSession = useAuthStore((state) => state.expireSession);
+  const queryClient = useQueryClient();
   const [privateScreen, setPrivateScreen] = useState(false);
 
   useEffect(() => { initialize(); }, [initialize]);
+  useEffect(() => {
+    setSessionExpiredHandler(async () => {
+      await expireSession();
+      queryClient.clear();
+    });
+    return () => setSessionExpiredHandler(null);
+  }, [expireSession, queryClient]);
   useEffect(() => {
     ScreenCapture.preventScreenCaptureAsync('moneymate-private-data').catch(() => undefined);
     const subscription = AppState.addEventListener('change', (state) => setPrivateScreen(state !== 'active'));
@@ -85,7 +94,7 @@ function OutboxSync() {
     if (!user || syncing.current) return;
     syncing.current = true;
     try {
-      const items = await getPendingMutations(db);
+      const items = await getPendingMutations(db, user.id);
       for (const item of items) {
         try {
           await apiRequest(item.path, {
@@ -93,16 +102,16 @@ function OutboxSync() {
             headers: { 'Idempotency-Key': item.id },
             body: item.body
           });
-          await markMutationSynced(db, item.id);
+          await markMutationSynced(db, user.id, item.id);
         } catch (error) {
-          await markMutationFailed(db, item.id, error instanceof Error ? error.message : 'Sync failed', item.attempts);
+          await markMutationFailed(db, user.id, item.id, error instanceof Error ? error.message : 'Sync failed', item.attempts);
         }
       }
-      let cursor = await getSyncCursor(db);
+      let cursor = await getSyncCursor(db, user.id);
       for (let page = 0; page < 10; page++) {
         const query = cursor ? `?cursor=${encodeURIComponent(cursor)}&take=100` : '?take=100';
         const delta = await apiRequest<{ items: TransactionDelta[]; nextCursor: string | null; hasMore: boolean }>(`/transactions/sync${query}`);
-        await applyTransactionDelta(db, delta.items, delta.nextCursor);
+        await applyTransactionDelta(db, user.id, delta.items, delta.nextCursor);
         cursor = delta.nextCursor || cursor;
         if (!delta.hasMore) break;
       }
@@ -138,7 +147,11 @@ export function AppProvider({ children }: PropsWithChildren) {
 
 const styles = StyleSheet.create({
   privacyShield: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: theme.colors.background,
     zIndex: 9999,
     alignItems: 'center',

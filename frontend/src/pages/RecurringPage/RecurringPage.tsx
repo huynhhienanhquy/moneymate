@@ -13,6 +13,7 @@ import { formatVND } from '@/utils/formatCurrency';
 import { useCategories, useWallets } from '@/hooks/useReferenceData';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
+import { toLocalDateInputValue } from '@/utils/dateInput';
 
 const FREQ_LABELS: Record<string, string> = {
   DAILY: 'Hàng ngày', WEEKLY: 'Hàng tuần', MONTHLY: 'Hàng tháng', YEARLY: 'Hàng năm',
@@ -28,7 +29,7 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
     type: item?.type || 'EXPENSE',
     frequency: item?.frequency || 'MONTHLY',
     note: item?.note || '',
-    startDate: item ? item.startDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+    startDate: item ? item.startDate.slice(0, 10) : toLocalDateInputValue(),
   });
 
   const filteredCats = categories.filter((c: any) => c.type === form.type);

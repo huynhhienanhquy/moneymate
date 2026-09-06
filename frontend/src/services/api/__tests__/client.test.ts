@@ -84,7 +84,36 @@ describe('API client', () => {
     finish({ data: { data: { accessToken: 'queued-token' } } });
     await expect(Promise.all([firstRetry, secondRetry])).resolves.toHaveLength(2);
     expect(second.headers.Authorization).toBe('Bearer queued-token');
+    expect(second._retry).toBe(true);
     expect(post).toHaveBeenCalledOnce();
+  });
+
+  it('shares startup refresh with concurrent 401 recovery', async () => {
+    const { refreshAccessToken } = await import('../client');
+    accessToken = null;
+    let finish!: (value: unknown) => void;
+    post.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    const startup = refreshAccessToken();
+    expect(refreshAccessToken()).toBe(startup);
+    const request = responseErrorHandler({ config: { url: '/notifications', headers: {} }, response: { status: 401 } });
+    finish({ data: { data: { accessToken: 'startup-token' } } });
+    await Promise.all([startup, request]);
+    expect(post).toHaveBeenCalledOnce();
+    expect(setToken).toHaveBeenCalledOnce();
+  });
+
+  it('does not refresh a late unauthorized request after logout', async () => {
+    accessToken = null;
+    const error = { config: { url: '/notifications', headers: {} }, response: { status: 401 } };
+    await expect(responseErrorHandler(error)).rejects.toBe(error);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('retries a late 401 with the already refreshed token', async () => {
+    const config = { url: '/notifications', headers: { Authorization: 'Bearer old-token' } };
+    await responseErrorHandler({ config, response: { status: 401 } });
+    expect(config.headers.Authorization).toBe('Bearer access-token');
+    expect(post).not.toHaveBeenCalled();
   });
 
   it('rejects the queue and logs out when refresh fails', async () => {
@@ -92,12 +121,23 @@ describe('API client', () => {
     let fail!: (reason: unknown) => void;
     post.mockReturnValueOnce(new Promise((_, reject) => { fail = reject; }));
     const handle = responseErrorHandler;
-    const failure = new Error('refresh failed');
+    const failure = { response: { status: 401 } };
     const first = handle({ config: { url: '/wallets', headers: {} }, response: { status: 401 } });
     const queued = handle({ config: { url: '/transactions', headers: {} }, response: { status: 401 } });
     fail(failure);
     await expect(first).rejects.toBe(failure);
     await expect(queued).rejects.toBe(failure);
     expect(logout).toHaveBeenCalledOnce();
+  });
+
+  it.each([undefined, 500, 502, 503])('keeps the login when refresh fails temporarily (%s)', async (status) => {
+    const { refreshAccessToken } = await import('../client');
+    const error = { response: status ? { status } : undefined };
+    post.mockRejectedValueOnce(error);
+    await expect(refreshAccessToken()).rejects.toBe(error);
+    expect(logout).not.toHaveBeenCalled();
+
+    post.mockResolvedValueOnce({ data: { data: { accessToken: 'recovered-token' } } });
+    await expect(refreshAccessToken()).resolves.toBe('recovered-token');
   });
 });

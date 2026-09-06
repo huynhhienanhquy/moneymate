@@ -74,6 +74,7 @@ export class RecurringRepository {
     type: CategoryType;
     frequency: Frequency;
     note: string;
+    startDate: Date;
     nextExecutionDate: Date;
     isActive: boolean;
   }>) {
@@ -86,6 +87,7 @@ export class RecurringRepository {
         type: data.type,
         frequency: data.frequency,
         note: data.note,
+        startDate: data.startDate,
         nextExecutionDate: data.nextExecutionDate,
         isActive: data.isActive,
       },
