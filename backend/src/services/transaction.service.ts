@@ -271,15 +271,12 @@ export class TransactionService {
   }
 
   async getDashboardSummary(userId: string) {
-    await this.recurringService.processDueTransactions();
-
     // Current date values
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
 
-    const wallets = await this.walletRepository.findAllByUserId(userId);
-    const walletBalanceTotal = wallets.reduce((sum, w) => sum + Number(w.initialBalance), 0);
+    const walletBalanceTotal = await this.transactionRepository.getWalletBalanceTotal(userId);
 
     const monthlyStats = await this.transactionRepository.getMonthlySummary(userId, currentMonth, currentYear);
     
@@ -309,11 +306,14 @@ export class TransactionService {
   async getMonthlyReport(userId: string, month: number, year: number) {
     const stats = await this.transactionRepository.getMonthlySummary(userId, month, year);
     const categoryBreakdown = await this.transactionRepository.getCategoryBreakdown(userId, month, year);
+    // Report income follows the dashboard's current assets, including opening balances.
+    const totalIncome = await this.transactionRepository.getWalletBalanceTotal(userId);
+    const netSavings = totalIncome - stats.totalExpense;
 
     return {
       month,
       year,
-      summary: stats,
+      summary: { ...stats, totalIncome, netSavings, remainingAmount: netSavings },
       categoryExpenses: categoryBreakdown
     };
   }
@@ -329,8 +329,7 @@ export class TransactionService {
       where: { id: userId },
       select: { createdAt: true },
     });
-    const wallets = await this.walletRepository.findAllByUserId(userId);
-    const walletBalanceTotal = wallets.reduce((sum, w) => sum + Number(w.initialBalance), 0);
+    const walletBalanceTotal = await this.transactionRepository.getWalletBalanceTotal(userId);
 
     const yearlyCategories: Record<string, { id: string; name: string; color: string; amount: number }> = {};
     for (let month = 1; month <= 12; month++) {

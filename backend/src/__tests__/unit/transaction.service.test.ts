@@ -52,6 +52,7 @@ describe('TransactionService', () => {
   let txService: TransactionService;
   let mockWalletRepo: jest.Mocked<WalletRepository>;
   let mockCategoryRepo: jest.Mocked<CategoryRepository>;
+  let mockTransactionRepo: jest.Mocked<TransactionRepository>;
   let mockPrisma: any;
 
   beforeEach(() => {
@@ -61,6 +62,7 @@ describe('TransactionService', () => {
     txService = new TransactionService();
     mockWalletRepo = MockWalletRepo.mock.instances[0] as jest.Mocked<WalletRepository>;
     mockCategoryRepo = MockCategoryRepo.mock.instances[0] as jest.Mocked<CategoryRepository>;
+    mockTransactionRepo = MockTransactionRepo.mock.instances[0] as jest.Mocked<TransactionRepository>;
     mockPrisma = prisma as any;
   });
 
@@ -188,4 +190,35 @@ describe('TransactionService', () => {
       })).rejects.toThrow('Amount must be positive and non-zero');
     });
   });
+  describe('getMonthlyReport()', () => {
+    it.each([5_000_000, 0, -1_000_000])('uses dashboard assets of %s for report income and savings', async (assets) => {
+      mockTransactionRepo.getWalletBalanceTotal.mockResolvedValue(assets);
+      mockTransactionRepo.getMonthlySummary.mockResolvedValue({
+        totalIncome: 10_000_000,
+        actualIncome: 9_000_000,
+        recurringIncome: 1_000_000,
+        salaryIncome: 10_000_000,
+        otherIncome: 0,
+        totalExpense: 4_000_000,
+        actualExpense: 3_000_000,
+        recurringExpense: 1_000_000,
+        netSavings: 6_000_000,
+        remainingAmount: 6_000_000,
+        walletBalance: 11_000_000,
+      });
+      mockTransactionRepo.getCategoryBreakdown.mockResolvedValue([]);
+      mockTransactionRepo.findAll.mockResolvedValue([]);
+
+      const dashboard = await txService.getDashboardSummary('user-1');
+      const report = await txService.getMonthlyReport('user-1', 8, 2026);
+
+      expect(report.summary.totalIncome).toBe(dashboard.netWorth);
+      expect(report.summary.netSavings).toBe(assets - 4_000_000);
+      expect(report.summary.remainingAmount).toBe(report.summary.netSavings);
+      expect(report.summary.actualIncome).toBe(9_000_000);
+      expect(report.summary.recurringIncome).toBe(1_000_000);
+      expect(mockTransactionRepo.getMonthlySummary).toHaveBeenCalledWith('user-1', 8, 2026);
+    });
+  });
+
 });

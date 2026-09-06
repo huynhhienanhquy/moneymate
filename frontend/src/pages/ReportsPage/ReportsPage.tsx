@@ -83,7 +83,11 @@ const ReportsPage: React.FC = () => {
 
   const summary = reportType === 'monthly'
     ? monthlyReport?.summary
-    : { totalIncome: yearlyReport?.totalIncome, totalExpense: yearlyReport?.totalExpense, netSavings: yearlyReport?.netSavings };
+    : {
+        totalIncome: yearlyReport?.walletBalanceTotal ?? 0,
+        totalExpense: yearlyReport?.totalExpense ?? 0,
+        netSavings: (yearlyReport?.walletBalanceTotal ?? 0) - (yearlyReport?.totalExpense ?? 0),
+      };
 
   const categoryExpenses = reportType === 'monthly'
     ? monthlyReport?.categoryExpenses || []
@@ -156,6 +160,9 @@ const ReportsPage: React.FC = () => {
             <SummaryCard icon={<TrendingDown size={18} />} label="Tổng chi tiêu" value={formatVND(summary?.totalExpense || 0)} tone="red" />
             <SummaryCard icon={<Sparkles size={18} />} label="Tiết kiệm" badge={`${savingsRate}%`} value={formatVND(summary?.netSavings || 0)} tone={(summary?.netSavings || 0) >= 0 ? 'blue' : 'red'} />
           </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Tổng thu nhập bằng tổng tài sản hiện tại ở trang Tổng quan. Tiết kiệm = tổng thu nhập − chi tiêu trong kỳ đã chọn.
+          </p>
 
           {/* Charts */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">

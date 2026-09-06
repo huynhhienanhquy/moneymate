@@ -23,7 +23,7 @@ const MonthlyBalancePage: React.FC = () => {
   const [year, setYear] = useState(new Date().getFullYear());
 
   const { data, isLoading } = useQuery({
-    queryKey: ['monthly-balance-v4', year],
+    queryKey: ['monthly-balance-v5', year],
     queryFn: () => api.get('/transactions/report/yearly', { params: { year } }).then((r) => r.data.data),
     staleTime: 0,
   });
@@ -42,22 +42,22 @@ const MonthlyBalancePage: React.FC = () => {
       return itemDate >= createdMonth;
     })
     .map((item: any) => {
-      const salaryIncome = Number(item.salaryIncome || 0);
+      const income = Number(item.income || 0);
       const expense = Number(item.expense || 0);
-      const remaining = salaryIncome - expense;
+      const remaining = Number(item.savings ?? income - expense);
       cumulativeSavings += remaining;
 
       return {
         month: item.month,
         label: item.label || MONTHS[item.month - 1],
-        salaryIncome,
+        income,
         expense,
         remaining,
         cumulativeSavings,
       };
     });
 
-  const totalSalary = monthlyData.reduce((sum: number, item: any) => sum + item.salaryIncome, 0);
+  const totalIncome = monthlyData.reduce((sum: number, item: any) => sum + item.income, 0);
   const totalExpense = monthlyData.reduce((sum: number, item: any) => sum + item.expense, 0);
   const averageSavings = monthlyData.length
     ? monthlyData.reduce((sum: number, item: any) => sum + item.remaining, 0) / monthlyData.length
@@ -118,9 +118,9 @@ const MonthlyBalancePage: React.FC = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/10">
                   <TrendingUp size={18} className="text-emerald-500" />
                 </div>
-                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng lương</p>
+                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng thu nhập</p>
               </div>
-              <p className="text-2xl font-extrabold text-emerald-500">{formatVND(totalSalary)}</p>
+              <p className="text-2xl font-extrabold text-emerald-500">{formatVND(totalIncome)}</p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
@@ -151,7 +151,7 @@ const MonthlyBalancePage: React.FC = () => {
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
               <div>
               <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</AppTitle>
-              <p className="mt-1 text-slate-500 dark:text-slate-400">Tổng lương tháng được tính bằng tổng tài sản cuối tháng. Tiết kiệm tháng = tổng lương tháng - chi tiêu tháng.</p>
+              <p className="mt-1 text-slate-500 dark:text-slate-400">Tổng thu nhập bằng tổng tài sản cuối từng tháng, đồng bộ với biểu đồ Tổng quan; tháng hiện tại lấy tổng tài sản hiện tại. Tiết kiệm tháng = tổng thu nhập tháng - tổng chi tiêu tháng.</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={320}>
@@ -181,7 +181,7 @@ const MonthlyBalancePage: React.FC = () => {
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800">
                     <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Tháng</th>
-                    <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Tổng lương tháng</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Tổng thu nhập tháng</th>
                     <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Chi tiêu</th>
                     <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Tiết kiệm tháng</th>
                     <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500">Tổng tiền tiết kiệm được</th>
@@ -191,7 +191,7 @@ const MonthlyBalancePage: React.FC = () => {
                   {monthlyData.map((item: any) => (
                     <tr key={item.month} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="px-5 py-3.5 text-sm font-semibold text-slate-900 dark:text-slate-100">Tháng {item.month}</td>
-                      <td className="px-5 py-3.5 text-right text-sm font-semibold text-emerald-500">{formatVND(item.salaryIncome)}</td>
+                      <td className="px-5 py-3.5 text-right text-sm font-semibold text-emerald-500">{formatVND(item.income)}</td>
                       <td className="px-5 py-3.5 text-right text-sm font-semibold text-rose-500">{formatVND(item.expense)}</td>
                       <td className={`px-5 py-3.5 text-right text-sm font-extrabold ${item.remaining >= 0 ? 'text-brand-500' : 'text-rose-500'}`}>
                         {formatVND(item.remaining)}

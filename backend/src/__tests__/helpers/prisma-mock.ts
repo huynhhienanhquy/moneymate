@@ -25,6 +25,7 @@ const mockPrismaClient = {
     delete: jest.fn(),
   },
   transaction: {
+    aggregate: jest.fn(),
     findUnique: jest.fn(),
     findMany: jest.fn(),
     count: jest.fn(),
@@ -93,6 +94,11 @@ const mockPrismaClient = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+  },
+  monthlySavingsSnapshot: {
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
+    deleteMany: jest.fn(),
   },
   attachment: {
     findUnique: jest.fn(),

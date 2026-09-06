@@ -240,6 +240,9 @@ const DashboardPage: React.FC = () => {
               <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Thu nhập & Chi tiêu 6 tháng</AppTitle>
               <span className="text-xs font-semibold text-brand-500 uppercase">Xu hướng</span>
             </div>
+            <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
+              Thu nhập bằng tổng tài sản cuối từng tháng; tháng hiện tại lấy tổng tài sản hiện tại.
+            </p>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={barData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
