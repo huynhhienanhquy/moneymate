@@ -45,8 +45,6 @@ export const MoneyMateCopilot = () => {
         labels={VIETNAMESE_LABELS}
         defaultOpen={false}
         clickOutsideToClose
-        width={400}
-        height={560}
       />
     </div>
   );

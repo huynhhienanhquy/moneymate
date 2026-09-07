@@ -23,7 +23,7 @@ const tones: Record<SummaryTone, { icon: string; value: string }> = {
 const SummaryCard = ({ icon, label, value, tone = 'blue', badge, caption }: SummaryCardProps) => {
   const palette = tones[tone];
   return (
-    <AppCard padding="none" className="relative overflow-hidden rounded-2xl p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)]">
+    <AppCard padding="none" className="relative overflow-hidden rounded-2xl p-5 shadow-summary">
       <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-slate-50 dark:bg-slate-800/50" />
       <div className="relative flex items-center gap-3">
         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${palette.icon}`}>{icon}</span>

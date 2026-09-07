@@ -6,7 +6,7 @@ interface LoadingStateProps {
 
 const LoadingState = ({ className = '' }: LoadingStateProps) => (
   <div className={`flex justify-center py-20 ${className}`} role="status">
-    <Loader2 aria-label="Đang tải" className="animate-spin text-brand-500" size={28} />
+    <Loader2 aria-label="Đang tải" className="size-7 animate-spin text-brand-500"  />
   </div>
 );
 

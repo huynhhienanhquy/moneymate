@@ -1,3 +1,4 @@
+import { chartTheme } from '@/theme/charts';
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppCard from '@/components/common/AppCard/AppCard';
 import AppButton from '@/components/common/AppButton/AppButton';
@@ -13,7 +14,7 @@ import api from '@/services/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import { formatVND } from '@/utils/formatCurrency';
 
-const PIE_COLORS = ['#2a95ff', '#a855f7', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#f97316', '#8b5cf6'];
+const PIE_COLORS = chartTheme.palette;
 
 const StatCard: React.FC<{
   title: string;
@@ -86,9 +87,9 @@ const DashboardPage: React.FC = () => {
 
   if (dashboardQuery.isLoading) {
     return (
-      <div className="flex h-full min-h-[60vh] items-center justify-center">
+      <div className="flex h-full min-h-empty-large items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 size={36} className="animate-spin text-brand-500" />
+          <Loader2  className="size-9 animate-spin text-brand-500" />
           <p className="text-slate-400 font-medium text-sm">Đang tải tổng quan tài chính...</p>
         </div>
       </div>
@@ -97,7 +98,7 @@ const DashboardPage: React.FC = () => {
 
   if (dashboardQuery.isError || reportQuery.isError || trendQuery.isError) {
     return (
-      <AppCard padding="none" className="flex min-h-[50vh] flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
+      <AppCard padding="none" className="flex min-h-empty-half flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
         <p className="text-base font-bold text-rose-600 dark:text-rose-400">Không thể tải tổng quan tài chính</p>
         <p className="text-sm text-slate-500 dark:text-slate-400">Dữ liệu hiện tại chưa được thay bằng số 0. Vui lòng kiểm tra kết nối và thử lại.</p>
         <AppButton onClick={() => {
@@ -133,7 +134,7 @@ const DashboardPage: React.FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
-              <Zap size={14} /> Tổng quan tài chính
+              <Zap className="size-3.5" /> Tổng quan tài chính
             </div>
             <AppTitle unstyled level={1} className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
               Xin chào, {user?.fullName?.split(' ').pop() || 'bạn'} 👋
@@ -152,7 +153,7 @@ const DashboardPage: React.FC = () => {
       {aiInsight?.insights?.[0] && (
         <Link to="/ai" className="dashboard-insight app-card flex items-center gap-4 p-3.5 group">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-cyan-400 text-white shadow-lg shadow-brand-500/25 flex-shrink-0">
-            <Sparkles size={22} className="animate-pulse" />
+            <Sparkles  className="size-icon-medium animate-pulse" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -161,7 +162,7 @@ const DashboardPage: React.FC = () => {
             </div>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">{aiInsight.insights[0].message}</p>
           </div>
-          <ChevronRight size={18} className="text-brand-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+          <ChevronRight  className="size-4.5 text-brand-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
         </Link>
       )}
       </div>
@@ -171,7 +172,7 @@ const DashboardPage: React.FC = () => {
         <StatCard
           title="Tổng tài sản"
           value={formatVND(netWorth)}
-          icon={<Wallet size={24} className="text-brand-500" />}
+          icon={<Wallet  className="size-6 text-brand-500" />}
           iconBg="bg-brand-500/10"
           variant="asset"
           trend="Số dư khả dụng trong tất cả ví"
@@ -180,7 +181,7 @@ const DashboardPage: React.FC = () => {
         <StatCard
           title="Chi tiêu tháng này"
           value={formatVND(monthlyExpense)}
-          icon={<TrendingDown size={24} className="text-rose-500" />}
+          icon={<TrendingDown  className="size-6 text-rose-500" />}
           iconBg="bg-rose-500/10"
           variant="expense"
           trend={`Chi trực tiếp: ${formatVND(actualExpense)}`}
@@ -189,7 +190,7 @@ const DashboardPage: React.FC = () => {
         <StatCard
           title="Tiết kiệm tháng này"
           value={formatVND(monthlySavings)}
-          icon={<Sparkles size={24} className="text-amber-500" />}
+          icon={<Sparkles  className="size-6 text-amber-500" />}
           iconBg="bg-amber-500/10"
           variant="savings"
           trend="Tổng tài sản - chi tiêu tháng này"
@@ -208,7 +209,7 @@ const DashboardPage: React.FC = () => {
             </div>
             {categoryExpenses.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height={210}>
+                <ResponsiveContainer width="100%" height={chartTheme.donutHeight}>
                   <PieChart>
                     <Pie
                       data={categoryExpenses}
@@ -216,8 +217,8 @@ const DashboardPage: React.FC = () => {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={62}
-                      outerRadius={92}
+                      innerRadius={chartTheme.donutInnerRadius}
+                      outerRadius={chartTheme.donutOuterRadius}
                       paddingAngle={4}
                       strokeWidth={0}
                     >
@@ -227,7 +228,7 @@ const DashboardPage: React.FC = () => {
                     </Pie>
                     <Tooltip
                       formatter={(value: any) => formatVND(value)}
-                      contentStyle={{ background: '#0b1120', border: '1px solid #1e293b', borderRadius: '12px', color: '#f1f5f9', fontSize: '12px', fontWeight: 600 }}
+                      contentStyle={chartTheme.tooltip}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -245,7 +246,7 @@ const DashboardPage: React.FC = () => {
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-52 text-slate-400 text-sm">
-                <Wallet size={36} className="mb-2 opacity-30" />
+                <Wallet  className="size-9 mb-2 opacity-30" />
                 <p>Chưa có dữ liệu chi tiêu tháng này</p>
               </div>
             )}
@@ -262,18 +263,18 @@ const DashboardPage: React.FC = () => {
             <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
               Thu nhập bằng tổng tài sản cuối từng tháng; tháng hiện tại lấy tổng tài sản hiện tại.
             </p>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={chartTheme.dashboardHeight}>
               <BarChart data={barData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}M`} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
+                <XAxis dataKey="name" tick={{ fill: chartTheme.muted, fontSize: chartTheme.tickSize, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: chartTheme.muted, fontSize: chartTheme.smallTickSize }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}M`} />
                 <Tooltip
-                  contentStyle={{ background: '#0b1120', border: '1px solid #1e293b', borderRadius: '12px', color: '#f1f5f9', fontSize: '12px', fontWeight: 600 }}
+                  contentStyle={chartTheme.tooltip}
                   formatter={(value: any) => formatVND(value)}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', paddingTop: '10px' }} />
-                <Bar dataKey="income" name="Thu nhập" fill="#10b981" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="expense" name="Chi tiêu" fill="#ef4444" radius={[6, 6, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: chartTheme.tickSize, fontWeight: 600, color: chartTheme.muted, paddingTop: '10px' }} />
+                <Bar dataKey="income" name="Thu nhập" fill={chartTheme.income} radius={[chartTheme.barRadius, chartTheme.barRadius, 0, 0]} />
+                <Bar dataKey="expense" name="Chi tiêu" fill={chartTheme.expense} radius={[chartTheme.barRadius, chartTheme.barRadius, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -298,8 +299,8 @@ const DashboardPage: React.FC = () => {
                     className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${isIncome ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}
                   >
                     {isIncome
-                      ? <ArrowUpRight size={18} />
-                      : <ArrowDownLeft size={18} />}
+                      ? <ArrowUpRight className="size-4.5" />
+                      : <ArrowDownLeft className="size-4.5" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{tx.note || tx.category?.name}</p>
@@ -316,7 +317,7 @@ const DashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-            <Wallet size={40} className="mb-3 opacity-30" />
+            <Wallet  className="size-10 mb-3 opacity-30" />
             <p className="text-sm font-medium">Chưa có giao dịch nào. Hãy thêm giao dịch đầu tiên!</p>
           </div>
         )}

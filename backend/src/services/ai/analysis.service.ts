@@ -3,6 +3,7 @@ import { LlmProvider } from './llm.provider';
 import { formatVND } from '../../config/ai';
 
 export interface ExpenseInsight {
+  id: string;
   type: 'increase' | 'decrease' | 'warning' | 'positive' | 'info';
   title: string;
   message: string;
@@ -44,6 +45,7 @@ export class AnalysisService {
     if (ctx.expenseChangePercent > 10) {
       insights.push({
         type: 'increase',
+        id: 'expense-trend',
         title: 'Chi tiêu tăng',
         message: `Bạn đã chi tiêu nhiều hơn ${ctx.expenseChangePercent}% so với tháng trước.`,
         value: ctx.expenseChangePercent,
@@ -51,6 +53,7 @@ export class AnalysisService {
     } else if (ctx.expenseChangePercent < -5) {
       insights.push({
         type: 'positive',
+        id: 'expense-trend',
         title: 'Chi tiêu giảm',
         message: `Tuyệt vời! Chi tiêu giảm ${Math.abs(ctx.expenseChangePercent)}% so với tháng trước.`,
         value: ctx.expenseChangePercent,
@@ -61,6 +64,7 @@ export class AnalysisService {
       const pct = Math.round((ctx.topExpenseCategory.amount / ctx.summary.monthlyExpense) * 100);
       insights.push({
         type: 'info',
+        id: 'top-expense-category',
         title: 'Danh mục chi nhiều nhất',
         message: `${ctx.topExpenseCategory.name} chiếm ${pct}% tổng chi tiêu (${formatVND(ctx.topExpenseCategory.amount)}).`,
         category: ctx.topExpenseCategory.name,
@@ -71,6 +75,7 @@ export class AnalysisService {
     ctx.budgets.filter(b => b.status === 'EXCEEDED').forEach(b => {
       insights.push({
         type: 'warning',
+        id: `budget-${b.id}`,
         title: 'Vượt ngân sách',
         message: `Danh mục "${b.categoryName}" đã vượt ngân sách (${b.percentage}%).`,
         category: b.categoryName,
@@ -80,6 +85,7 @@ export class AnalysisService {
     ctx.budgets.filter(b => b.status === 'WARNING').forEach(b => {
       insights.push({
         type: 'warning',
+        id: `budget-${b.id}`,
         title: 'Sắp vượt ngân sách',
         message: `"${b.categoryName}" đã dùng ${b.percentage}% ngân sách tháng này.`,
         category: b.categoryName,
@@ -89,6 +95,7 @@ export class AnalysisService {
     if (ctx.summary.savingsRate < 10 && ctx.summary.monthlyIncome > 0) {
       insights.push({
         type: 'warning',
+        id: 'savings-rate',
         title: 'Tỷ lệ tiết kiệm thấp',
         message: `Tỷ lệ tiết kiệm chỉ ${ctx.summary.savingsRate}%. Nên mục tiêu ít nhất 20%.`,
         value: ctx.summary.savingsRate,
@@ -96,6 +103,7 @@ export class AnalysisService {
     } else if (ctx.summary.savingsRate >= 20) {
       insights.push({
         type: 'positive',
+        id: 'savings-rate',
         title: 'Tiết kiệm tốt',
         message: `Bạn đang tiết kiệm ${ctx.summary.savingsRate}% thu nhập. Rất tốt!`,
         value: ctx.summary.savingsRate,
@@ -107,6 +115,7 @@ export class AnalysisService {
       const top = ctx.categoryExpenses[0];
       insights.push({
         type: 'info',
+        id: 'optimize-expenses',
         title: 'Gợi ý tối ưu',
         message: `Xem xét giảm chi tiêu "${top.name}" nếu muốn tăng tiết kiệm thêm ${formatVND(Math.round(top.amount * 0.1))}/tháng.`,
         category: top.name,

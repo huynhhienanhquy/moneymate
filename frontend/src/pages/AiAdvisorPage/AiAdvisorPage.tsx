@@ -44,7 +44,7 @@ const AiAdvisorPage: React.FC = () => {
     <div className="space-y-8">
       <div className="app-page-header">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles size={22} className="text-brand-500" />
+          <Sparkles  className="size-icon-medium text-brand-500" />
           <AppTitle unstyled level={1} className="text-2xl font-extrabold text-slate-950 dark:text-slate-100">AI Tài chính</AppTitle>
         </div>
         <p className="text-slate-500 dark:text-slate-400 text-sm">
@@ -58,14 +58,14 @@ const AiAdvisorPage: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-24"><Loader2 size={32} className="animate-spin text-brand-500" /></div>
+        <div className="flex justify-center py-24"><Loader2  className="size-8 animate-spin text-brand-500" /></div>
       ) : (
         <>
           {/* Health Score + Summary */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <AppCard padding="none" className="col-span-1 p-6 flex flex-col items-center justify-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 mb-3">
-                <Brain size={24} className="text-brand-500" />
+                <Brain  className="size-6 text-brand-500" />
               </div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Điểm sức khỏe tài chính</p>
               <p className={`text-5xl font-extrabold ${scoreColor}`}>{healthScore}</p>
@@ -80,7 +80,7 @@ const AiAdvisorPage: React.FC = () => {
             </AppCard>
             <AppCard padding="none" className="lg:col-span-2 p-6">
               <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <Sparkles size={16} className="text-brand-500" /> Tóm tắt AI
+                <Sparkles  className="size-4 text-brand-500" /> Tóm tắt AI
               </AppTitle>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 {advisor?.aiAdvice || analysis?.aiSummary || 'Đang phân tích dữ liệu...'}
@@ -108,11 +108,11 @@ const AiAdvisorPage: React.FC = () => {
           {analysis?.insights?.length > 0 && (
             <div className="animate-slide-up">
               <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <TrendingUp size={18} className="text-brand-500" /> Phân tích chi tiêu
+                <TrendingUp  className="size-4.5 text-brand-500" /> Phân tích chi tiêu
               </AppTitle>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {analysis.insights.map((ins: any, i: number) => (
-                  <AiInsightCard key={i} type={ins.type} title={ins.title} message={ins.message} />
+                {analysis.insights.map((ins: any) => (
+                  <AiInsightCard key={ins.id} type={ins.type} title={ins.title} message={ins.message} />
                 ))}
               </div>
             </div>
@@ -122,12 +122,12 @@ const AiAdvisorPage: React.FC = () => {
           {forecast?.forecasts?.length > 0 && (
             <div className="animate-slide-up">
               <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <AlertTriangle size={18} className="text-amber-500" /> Dự đoán ngân sách
+                <AlertTriangle  className="size-4.5 text-amber-500" /> Dự đoán ngân sách
               </AppTitle>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{forecast.summary}</p>
               <div className="space-y-2">
-                {forecast.forecasts.filter((f: any) => f.severity !== 'OK').map((f: any, i: number) => (
-                  <div key={i} className={`p-4 rounded-xl border text-sm ${
+                {forecast.forecasts.filter((f: any) => f.severity !== 'OK').map((f: any) => (
+                  <div key={f.categoryId ?? 'global'} className={`p-4 rounded-xl border text-sm ${
                     f.severity === 'CRITICAL' ? 'border-rose-500/20 bg-rose-500/5 text-rose-500 dark:text-rose-400' : 'border-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-400'
                   }`}>
                     {f.message}
@@ -135,12 +135,12 @@ const AiAdvisorPage: React.FC = () => {
                 ))}
                 {forecast.forecasts.every((f: any) => f.severity === 'OK') && (
                   <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-2">
-                    <TrendingUp size={16} /> Tất cả ngân sách đang được kiểm soát tốt.
+                    <TrendingUp className="size-4" /> Tất cả ngân sách đang được kiểm soát tốt.
                   </div>
                 )}
               </div>
               <Link to="/budgets" className="inline-flex items-center gap-1 text-sm text-brand-600 dark:text-brand-400 mt-3 hover:text-brand-500 dark:hover:text-brand-300 font-semibold transition">
-                Xem ngân sách <ChevronRight size={14} />
+                Xem ngân sách <ChevronRight className="size-3.5" />
               </Link>
             </div>
           )}
@@ -149,11 +149,11 @@ const AiAdvisorPage: React.FC = () => {
           {advisor?.recommendations?.length > 0 && (
             <div className="animate-slide-up">
               <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <Target size={18} className="text-brand-500" /> Lời khuyên tài chính
+                <Target  className="size-4.5 text-brand-500" /> Lời khuyên tài chính
               </AppTitle>
               <div className="space-y-3">
-                {advisor.recommendations.map((rec: any, i: number) => (
-                  <AppCard key={i} padding="none" className="p-4">
+                {advisor.recommendations.map((rec: any) => (
+                  <AppCard key={rec.id} padding="none" className="p-4">
                     <div className="flex items-start gap-3">
                       <span className={`app-badge flex-shrink-0 ${
                         rec.priority === 'high' ? 'app-badge-danger' :
@@ -182,17 +182,17 @@ const AiAdvisorPage: React.FC = () => {
             <Link to="/transactions"
               className="app-card app-card-hover flex items-center gap-4 p-5 group">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 group-hover:bg-brand-500/20 transition">
-                <ScanLine size={22} className="text-brand-500" />
+                <ScanLine  className="size-icon-medium text-brand-500" />
               </div>
               <div className="flex-1">
                 <p className="font-bold text-sm text-slate-900 dark:text-slate-200">Quét hóa đơn OCR</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Tự động điền giao dịch từ ảnh/PDF</p>
               </div>
-              <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition" />
+              <ChevronRight  className="size-4 text-slate-400 group-hover:translate-x-0.5 transition" />
             </Link>
             <AppCard padding="none" className="flex items-center gap-4 p-5 opacity-80">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10">
-                <MessageCircle size={22} className="text-brand-500" />
+                <MessageCircle  className="size-icon-medium text-brand-500" />
               </div>
               <div>
                 <p className="font-bold text-sm text-slate-900 dark:text-slate-200">Chatbot tài chính</p>

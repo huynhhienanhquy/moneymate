@@ -36,7 +36,7 @@ const TransferModal = ({ wallets, onClose, onSave, loading }: TransferModalProps
       <div className="app-shell-card w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">Chuyển tiền giữa ví</AppTitle>
-          <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></AppButton>
+          <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X className="size-5" /></AppButton>
         </div>
         <div className="space-y-4">
           <div>
@@ -46,7 +46,7 @@ const TransferModal = ({ wallets, onClose, onSave, loading }: TransferModalProps
                 <option value="">-- Chọn ví nguồn --</option>
                 {wallets.map((wallet: any) => <option key={wallet.id} value={wallet.id}>{wallet.name} ({formatVND(Number(wallet.initialBalance))})</option>)}
               </AppSelect>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <ChevronDown  className="size-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             </div>
           </div>
           <div>
@@ -56,7 +56,7 @@ const TransferModal = ({ wallets, onClose, onSave, loading }: TransferModalProps
                 <option value="">-- Chọn ví đích --</option>
                 {wallets.filter((wallet: any) => wallet.id !== form.sourceWalletId).map((wallet: any) => <option key={wallet.id} value={wallet.id}>{wallet.name}</option>)}
               </AppSelect>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <ChevronDown  className="size-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             </div>
           </div>
           <div>
@@ -71,7 +71,7 @@ const TransferModal = ({ wallets, onClose, onSave, loading }: TransferModalProps
         <div className="flex gap-3 mt-6">
           <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
           <AppButton unstyled onClick={handleSave} disabled={loading || !form.sourceWalletId || !form.destinationWalletId || !form.amount} className="app-primary-button flex-1">
-            {loading && <Loader2 size={16} className="animate-spin" />} Chuyển tiền
+            {loading && <Loader2  className="size-4 animate-spin" />} Chuyển tiền
           </AppButton>
         </div>
       </div>

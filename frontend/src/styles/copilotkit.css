@@ -1,91 +1,52 @@
 .moneymate-copilot [data-copilotkit] {
-  --background: rgb(255 255 255);
-  --foreground: rgb(15 23 42);
-  --card: rgb(255 255 255);
-  --card-foreground: rgb(15 23 42);
-  --popover: rgb(255 255 255);
-  --popover-foreground: rgb(15 23 42);
-  --primary: rgb(8 120 188);
-  --primary-foreground: rgb(255 255 255);
-  --secondary: rgb(240 249 255);
-  --secondary-foreground: rgb(3 105 161);
-  --muted: rgb(241 245 249);
-  --muted-foreground: rgb(100 116 139);
-  --accent: rgb(224 242 254);
-  --accent-foreground: rgb(3 105 161);
-  --border: rgb(203 213 225);
-  --input: rgb(203 213 225);
-  --ring: rgb(42 149 255);
-  --radius: 1rem;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --background: rgb(var(--ui-surface));
+  --foreground: rgb(var(--ui-text));
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --primary: theme('colors.primary');
+  --primary-foreground: theme('colors.white');
+  --secondary: rgb(var(--ui-raised));
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: rgb(var(--ui-muted));
+  --accent: var(--secondary);
+  --accent-foreground: var(--foreground);
+  --border: rgb(var(--ui-border));
+  --input: var(--border);
+  --ring: theme('colors.brand.500');
+  --radius: theme('borderRadius.2xl');
+  font-family: theme('fontFamily.sans');
 }
 
 .dark .moneymate-copilot [data-copilotkit] {
-  --background: rgb(15 23 42);
-  --foreground: rgb(241 245 249);
-  --card: rgb(15 23 42);
-  --card-foreground: rgb(241 245 249);
-  --popover: rgb(15 23 42);
-  --popover-foreground: rgb(241 245 249);
-  --primary: rgb(42 149 255);
-  --primary-foreground: rgb(255 255 255);
-  --secondary: rgb(30 41 59);
-  --secondary-foreground: rgb(226 232 240);
-  --muted: rgb(30 41 59);
-  --muted-foreground: rgb(148 163 184);
-  --accent: rgb(30 58 83);
-  --accent-foreground: rgb(186 230 253);
-  --border: rgb(51 65 85);
-  --input: rgb(51 65 85);
-  --ring: rgb(56 189 248);
+  --primary: theme('colors.brand.500');
+  --ring: theme('colors.cyan.400');
 }
 
 .moneymate-copilot [data-popup-chat] {
-  max-width: calc(100vw - 2rem);
-  max-height: calc(100dvh - 7rem);
-  border: 1px solid rgb(203 213 225 / 0.8);
-  box-shadow: 0 24px 64px rgb(15 23 42 / 0.22);
-}
-
-.dark .moneymate-copilot [data-popup-chat] {
-  border-color: rgb(51 65 85 / 0.9);
-  box-shadow: 0 24px 72px rgb(0 0 0 / 0.5);
+  /* Override the library's inline defaults; dimensions are owned by Tailwind. */
+  width: theme('spacing.copilot-width') !important;
+  height: theme('spacing.copilot-height') !important;
+  @apply max-w-chat-viewport max-h-copilot-viewport border border-ui-border/80 shadow-copilot dark:shadow-copilot-dark;
 }
 
 .moneymate-copilot__error {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 6rem;
-  z-index: 100;
-  max-width: min(24rem, calc(100vw - 2rem));
-  border: 1px solid rgb(254 205 211);
-  border-radius: 0.875rem;
-  background: rgb(255 241 242 / 0.97);
-  padding: 0.75rem 1rem;
-  color: rgb(190 18 60);
-  font-size: 0.875rem;
-  font-weight: 600;
-  box-shadow: 0 12px 32px rgb(15 23 42 / 0.18);
-  backdrop-filter: blur(12px);
+  @apply fixed right-6 bottom-24 z-notification max-w-chat-viewport rounded-xl border border-rose-200 bg-rose-50/95 px-4 py-3 text-sm font-semibold text-rose-700 shadow-card backdrop-blur-md dark:border-rose-800/70 dark:bg-rose-950/95 dark:text-rose-200;
 }
 
-.dark .moneymate-copilot__error {
-  border-color: rgb(159 18 57 / 0.65);
-  background: rgb(76 5 25 / 0.95);
-  color: rgb(254 205 211);
-}
-
-@media (max-width: 640px) {
+@media (max-width: theme('screens.sm')) {
   .moneymate-copilot [data-popup-chat] {
-    width: calc(100vw - 1rem) !important;
-    height: calc(100dvh - 5.5rem) !important;
+    width: calc(100vw - theme('spacing.4')) !important;
+    height: calc(100dvh - theme('spacing.20') - theme('spacing.2')) !important;
     max-width: none;
     max-height: none;
   }
 
   .moneymate-copilot__error {
-    right: 0.75rem;
-    bottom: calc(5.25rem + env(safe-area-inset-bottom));
+    right: theme('spacing.3');
+    bottom: calc(theme('spacing.20') + theme('spacing.1') + env(safe-area-inset-bottom));
   }
 }
 

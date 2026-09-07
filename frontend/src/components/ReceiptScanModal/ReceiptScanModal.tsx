@@ -19,28 +19,28 @@ const ReceiptScanModal: React.FC<{
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <ScanLine size={20} className="text-brand-400" />
+            <ScanLine  className="size-5 text-brand-400" />
             <AppTitle unstyled level={2} className="text-lg font-bold text-gray-900 dark:text-slate-100">Quét hóa đơn AI</AppTitle>
           </div>
-          <AppButton aria-label="Đóng" variant="icon" size="sm" className="min-h-0 p-2" onClick={onClose}><X size={20} className="text-slate-500" /></AppButton>
+          <AppButton aria-label="Đóng" variant="icon" size="sm" className="min-h-0 p-2" onClick={onClose}><X  className="size-5 text-slate-500" /></AppButton>
         </div>
 
         {!result ? (
           <>
             <AppLabel className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl cursor-pointer hover:border-brand-500/50 transition">
-              <ScanLine size={36} className="text-slate-400" />
+              <ScanLine  className="size-9 text-slate-400" />
               <span className="text-sm text-slate-500">{file ? file.name : 'Chọn ảnh hoặc PDF hóa đơn'}</span>
               <AppInput unstyled type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
                 onChange={(e) => setFile(e.target.files?.[0] || null)} />
             </AppLabel>
-            <AppButton onClick={scan} disabled={!file} loading={isScanning} fullWidth size="lg" className="mt-4" leadingIcon={<ScanLine size={18} />}>
+            <AppButton onClick={scan} disabled={!file} loading={isScanning} fullWidth size="lg" className="mt-4" leadingIcon={<ScanLine className="size-4.5" />}>
               {isScanning ? 'Đang quét...' : 'Quét hóa đơn'}
             </AppButton>
           </>
         ) : (
           <div className="space-y-4">
             <div className={`flex items-center gap-2 text-sm ${result.amount ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {result.amount ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              {result.amount ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}
               {result.amount ? 'Đã nhận diện dữ liệu' : 'Cần kiểm tra lại thủ công'}
               <span className="text-xs text-slate-500 ml-auto">({result.poweredBy})</span>
             </div>

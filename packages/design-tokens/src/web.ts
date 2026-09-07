@@ -1,0 +1,50 @@
+/** Web presentation tokens consumed by Tailwind and numeric chart props. */
+export const webTheme = {
+  colors: {
+    primary: '#0873c9', 'primary-hover': '#0666b4', logo: '#0764b8',
+    action: '#00699b', 'action-hover': '#005b87', accent: '#08b8eb', 'accent-hover': '#00a8d8',
+    'nav-active': '#09b9ed', 'nav-surface': '#f3f5f7', 'panel-muted': '#f2f4f6', 'panel-subtle': '#f7f9fb',
+    'hero-dark': '#062b55', 'hero-start': '#0567ba', 'hero-end': '#087bdf', 'hero-ink': '#0769be',
+    'auth-surface': '#edf6ff', 'auth-start': '#066bc5', 'auth-middle': '#0878bc', 'auth-end': '#007d9b',
+    'balance-positive': '#00b879', 'focus-accent': '#665cff',
+  },
+  light: { surface: '#ffffff', raised: '#f8fafc', text: '#172033', muted: '#64748b', border: '#dce7f5', grid: '#e2e8f0' },
+  dark: { surface: '#111827', raised: '#182235', text: '#f1f5f9', muted: '#a5b4c7', border: '#29364a', grid: '#334155' },
+  chartColors: { income: '#10b981', expense: '#ef4444', savings: '#1475ff', warning: '#f59e0b', blue: '#2a95ff', purple: '#a855f7', cyan: '#06b6d4', orange: '#f97316', violet: '#8b5cf6', pink: '#ec4899', teal: '#14b8a6' },
+  backgroundImage: {
+  "app": "radial-gradient(circle at 0% 0%, rgba(42, 149, 255, 0.12) 0%, transparent 45%), radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 45%), radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%), linear-gradient(135deg, #f4f8ff 0%, #f0fafc 40%, #faf5ff 100%)",
+  "app-dark": "radial-gradient(circle at 0% 0%, rgba(42, 149, 255, 0.18) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 50%), radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.1) 0%, transparent 50%), linear-gradient(135deg, #070b14 0%, #0b1120 40%, #0d0e1a 100%)",
+  "auth": "radial-gradient(circle at 12% 18%, rgba(34, 211, 238, .24), transparent 29%), radial-gradient(circle at 88% 12%, rgba(59, 130, 246, .25), transparent 32%), radial-gradient(circle at 76% 85%, rgba(167, 139, 250, .2), transparent 31%), linear-gradient(135deg, #edf8ff 0%, #dceeff 47%, #eef3ff 100%)",
+  "auth-grid": "radial-gradient(rgba(14, 116, 184, .13) 1px, transparent 1px)",
+  "auth-glow": "linear-gradient(135deg, rgba(14,165,233,.22), rgba(99,102,241,.16))",
+  "radial": "radial-gradient(ellipse at 0% 0%, rgba(42, 149, 255, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 100% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 50% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 50%)",
+  "radial-dark": "radial-gradient(ellipse at 0% 0%, rgba(42, 149, 255, 0.16) 0%, transparent 50%), radial-gradient(ellipse at 100% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 50%), radial-gradient(ellipse at 50% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%)"
+},
+  fontSize: {
+    micro: '7px', tiny: '8px', mini: '9px', badge: '10px', caption: '11px',
+    'body-small': '13px', 'auth-title': '21px', 'page-title': '28px', 'hero-title': '27px', 'auth-display': '29px',
+  },
+  spacing: { sidebar: '206px', 'chat-width': '360px', 'chat-height': '480px', 'copilot-width': '400px', 'copilot-height': '560px', glow: '600px', 'icon-medium': '22px', 'icon-micro': '9px', 'icon-tiny': '11px', 'icon-caption': '13px', 'icon-small': '15px', 'icon-nav': '17px', 'icon-large': '19px', 'icon-title': '30px', 'icon-hero': '42px', 'control-compact': '42px', 'filter-panel': '210px', 'filter-wide': '310px' },
+  maxWidth: { content: '1180px', auth: '440px', 'auth-copy': '290px', 'chat-message': '85%', 'chat-viewport': 'calc(100vw - 2rem)' },
+  width: {
+    'admin-member': '17%', 'admin-email': '34%', 'admin-role': '12%', 'admin-transactions': '10%', 'admin-wallets': '9%', 'admin-date': '18%',
+    'transaction-description': '42%', 'transaction-wallet': '24%', 'transaction-date': '16%', 'transaction-amount': '18%',
+    'recurring-description': '32%', 'recurring-frequency': '25%', 'recurring-date': '20%', 'recurring-amount': '17%', 'recurring-actions': '6%',
+  },
+  minWidth: { counter: '25px', 'table-compact': '500px', table: '760px' },
+  minHeight: { wallet: '102px', category: '138px', 'category-system': '150px', overview: '310px', goal: '320px', 'empty-half': '50vh', 'empty-large': '60vh', auth: 'calc(100vh - 3rem)', 'auth-mobile': 'calc(100vh - 1rem)' },
+  maxHeight: { modal: '90vh', 'copilot-viewport': 'calc(100dvh - 7rem)' },
+  borderRadius: { compact: '9px', control: '10px', inherit: 'inherit' },
+  boxShadow: {
+    summary: '0 8px 28px rgba(15,23,42,0.06)', card: '0 7px 20px rgba(15,23,42,0.06)',
+    wallet: '0 7px 18px rgba(15,23,42,0.05)', 'card-hover': '0 10px 24px rgba(15,23,42,0.08)',
+    category: '0 6px 18px rgba(15,23,42,0.06)', 'category-system': '0 6px 18px rgba(15,23,42,0.05)', 'category-hover': '0 9px 24px rgba(15,23,42,0.09)',
+    toolbar: '0 4px 18px rgba(15,23,42,0.07)', table: '0 5px 22px rgba(15,23,42,0.08)', 'icon-tile': '0 5px 18px rgba(15,23,42,0.10)',
+    'action-button': '0 3px 8px rgba(0,105,155,0.25)', 'accent-button': '0 3px 8px rgba(8,184,235,0.25)', hero: '0 8px 20px rgba(7,105,190,0.22)',
+    auth: '0 24px 70px rgba(27,88,143,0.18)', 'auth-float': '0 12px 35px rgba(14,116,184,.14)', 'auth-button': '0 8px 20px rgba(3,105,161,.25)', 'auth-button-hover': '0 12px 26px rgba(3,105,161,.32)',
+    copilot: '0 24px 64px rgb(15 23 42 / 0.22)', 'copilot-dark': '0 24px 72px rgb(0 0 0 / 0.5)',
+  },
+  letterSpacing: { eyebrow: '0.18em', brand: '-0.8px', 'auth-title': '-0.35px', hero: '-0.045em' },
+  lineHeight: { micro: '9px', heading: '1.3', hero: '1.35', section: '1.4' },
+  chart: { height: 320, dashboardHeight: 260, donutHeight: 210, donutInnerRadius: 62, donutOuterRadius: 92, tickSize: 12, smallTickSize: 11, barRadius: 6, reportBarRadius: 8, maxBarSize: 72, ringRadius: 34 },
+} as const;

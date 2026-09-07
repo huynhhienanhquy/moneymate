@@ -1,6 +1,7 @@
 import { render, screen } from '@/test/render';
 import userEvent from '@testing-library/user-event';
 import AiChatWidget from './AiChatWidget';
+import type { ChatMessage } from '@/hooks/useAiChat';
 
 const setOpen = vi.fn();
 const setInput = vi.fn();
@@ -8,7 +9,7 @@ const send = vi.fn();
 let hookState = {
   open: false,
   input: '',
-  messages: [] as Array<{ role: 'user' | 'assistant'; content: string }>,
+  messages: [] as ChatMessage[],
   suggestions: [] as string[],
   isSending: false,
 };
@@ -41,10 +42,26 @@ describe('AiChatWidget', () => {
 
   it('renders messages and sends from Enter', async () => {
     const user = userEvent.setup();
-    hookState = { ...hookState, open: true, input: 'Tư vấn', messages: [{ role: 'assistant', content: 'Bạn đang chi tiêu ổn.' }] };
+    hookState = { ...hookState, open: true, input: 'Tư vấn', messages: [{ id: 'reply-1', role: 'assistant', content: 'Bạn đang chi tiêu ổn.' }] };
     render(<AiChatWidget />);
     expect(screen.getByText('Bạn đang chi tiêu ổn.')).toBeInTheDocument();
     await user.type(screen.getByPlaceholderText('Hỏi về tài chính của bạn...'), '{Enter}');
     expect(send).toHaveBeenCalledOnce();
+  });
+
+  it('preserves message identity when identical messages are reordered or removed', () => {
+    const first: ChatMessage = { id: 'reply-1', role: 'assistant', content: 'Cùng nội dung' };
+    const second: ChatMessage = { id: 'reply-2', role: 'assistant', content: 'Cùng nội dung' };
+    hookState = { ...hookState, open: true, messages: [first, second] };
+    const { rerender } = render(<AiChatWidget />);
+    const [firstNode, secondNode] = screen.getAllByText('Cùng nội dung');
+
+    hookState.messages = [second, first];
+    rerender(<AiChatWidget />);
+    expect(screen.getAllByText('Cùng nội dung')[0]).toBe(secondNode);
+    expect(screen.getAllByText('Cùng nội dung')[1]).toBe(firstNode);
+    hookState.messages = [second];
+    rerender(<AiChatWidget />);
+    expect(screen.getByText('Cùng nội dung')).toBe(secondNode);
   });
 });

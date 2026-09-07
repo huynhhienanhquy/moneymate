@@ -10,7 +10,7 @@ interface AppTitleProps extends Omit<HTMLAttributes<HTMLHeadingElement>, 'childr
 
 const AppTitle = ({ children, level = 1, eyebrow, description, unstyled = false, className = '', ...headingProps }: AppTitleProps) => {
   const Heading = level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3';
-  const size = level === 1 ? 'text-[28px]' : level === 2 ? 'text-xl' : 'text-lg';
+  const size = level === 1 ? 'text-page-title' : level === 2 ? 'text-xl' : 'text-lg';
   if (unstyled) return <Heading className={className} {...headingProps}>{children}</Heading>;
 
   return (

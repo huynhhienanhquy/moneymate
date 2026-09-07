@@ -10,7 +10,7 @@ export const render = (element: ReactElement) => {
   const root = createRoot(container);
   mountedRoots.add({ root, container });
   act(() => root.render(element));
-  return { container };
+  return { container, rerender: (nextElement: ReactElement) => act(() => root.render(nextElement)) };
 };
 
 export const cleanup = () => {

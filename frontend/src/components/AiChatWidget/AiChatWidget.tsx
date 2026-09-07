@@ -14,23 +14,23 @@ const AiChatWidget: React.FC = () => {
         className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-all hover:scale-105"
         title="MoneyMate AI Chat"
       >
-        <MessageCircle size={24} />
+        <MessageCircle className="size-6" />
       </AppButton>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[480px] flex flex-col bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="fixed bottom-24 right-6 z-50 w-chat-width max-w-chat-viewport h-chat-height flex flex-col bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-800 bg-brand-600/10">
             <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-brand-400" />
+              <Sparkles  className="size-4.5 text-brand-400" />
               <span className="font-semibold text-sm text-gray-900 dark:text-slate-100">MoneyMate AI</span>
             </div>
-            <AppButton unstyled onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300"><X size={18} /></AppButton>
+            <AppButton unstyled onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300"><X className="size-4.5" /></AppButton>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
               <div className="text-center text-sm text-slate-500 py-8">
-                <Sparkles size={32} className="mx-auto mb-3 text-brand-400 opacity-60" />
+                <Sparkles  className="size-8 mx-auto mb-3 text-brand-400 opacity-60" />
                 <p>Xin chào! Tôi có thể giúp bạn phân tích tài chính.</p>
                 <div className="mt-4 flex flex-wrap gap-2 justify-center">
                   {(suggestions.length ? suggestions : [
@@ -45,9 +45,9 @@ const AiChatWidget: React.FC = () => {
                 </div>
               </div>
             )}
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${m.role === 'user'
+            {messages.map((m) => (
+              <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-chat-message px-3 py-2 rounded-xl text-sm ${m.role === 'user'
                   ? 'bg-brand-600 text-white rounded-br-sm'
                   : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-bl-sm'}`}>
                   {m.content}
@@ -57,7 +57,7 @@ const AiChatWidget: React.FC = () => {
             {isSending && (
               <div className="flex justify-start">
                 <div className="px-3 py-2 rounded-xl bg-gray-100 dark:bg-slate-800">
-                  <Loader2 size={16} className="animate-spin text-brand-400" />
+                  <Loader2  className="size-4 animate-spin text-brand-400" />
                 </div>
               </div>
             )}
@@ -75,7 +75,7 @@ const AiChatWidget: React.FC = () => {
               />
               <AppButton unstyled onClick={send} disabled={!input.trim() || isSending}
                 className="p-2 rounded-lg bg-brand-600 text-white disabled:opacity-50 hover:bg-brand-500">
-                <Send size={16} />
+                <Send className="size-4" />
               </AppButton>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { chartTheme } from '@/theme/charts';
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppCard from '@/components/common/AppCard/AppCard';
 import AppButton from '@/components/common/AppButton/AppButton';
@@ -80,10 +81,10 @@ const MonthlyBalancePage: React.FC = () => {
             onClick={() => setYear((y) => y - 1)}
             className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft className="size-4.5" />
           </AppButton>
           <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-            <Calendar size={17} className="text-blue-600" />
+            <Calendar  className="size-icon-nav text-blue-600" />
             Năm {year}
           </div>
           <AppButton unstyled
@@ -91,20 +92,20 @@ const MonthlyBalancePage: React.FC = () => {
             onClick={() => setYear((y) => y + 1)}
             className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
           >
-            <ChevronRight size={18} />
+            <ChevronRight className="size-4.5" />
           </AppButton>
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 size={32} className="animate-spin text-brand-500" />
+          <Loader2  className="size-8 animate-spin text-brand-500" />
         </div>
       ) : (
         <>
           {monthlyData.length === 0 ? (
             <AppCard padding="none" className="flex flex-col items-center justify-center py-20 text-center">
-              <WalletCards size={42} className="mb-3 text-slate-300 dark:text-slate-600" />
+              <WalletCards  className="size-icon-hero mb-3 text-slate-300 dark:text-slate-600" />
               <p className="text-base font-bold text-slate-900 dark:text-slate-100">Chưa có dữ liệu trong năm {year}</p>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Tài khoản được tạo từ {accountCreatedAt?.toLocaleDateString('vi-VN') || 'ngày đăng ký'}, nên các tháng trước đó không được tính.
@@ -113,30 +114,30 @@ const MonthlyBalancePage: React.FC = () => {
           ) : (
           <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+            <div className="rounded-2xl bg-white p-5 shadow-summary dark:bg-slate-900">
               <div className="mb-3 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/10">
-                  <TrendingUp size={18} className="text-emerald-500" />
+                  <TrendingUp  className="size-4.5 text-emerald-500" />
                 </div>
                 <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng thu nhập</p>
               </div>
               <p className="text-2xl font-extrabold text-emerald-500">{formatVND(totalIncome)}</p>
             </div>
 
-            <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+            <div className="rounded-2xl bg-white p-5 shadow-summary dark:bg-slate-900">
               <div className="mb-3 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-500/10">
-                  <TrendingDown size={18} className="text-rose-500" />
+                  <TrendingDown  className="size-4.5 text-rose-500" />
                 </div>
                 <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng chi tiêu</p>
               </div>
               <p className="text-2xl font-extrabold text-rose-500">{formatVND(totalExpense)}</p>
             </div>
 
-            <div className="rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+            <div className="rounded-2xl bg-white p-5 shadow-summary dark:bg-slate-900">
               <div className="mb-3 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-brand-500/10">
-                  <WalletCards size={18} className="text-brand-500" />
+                  <WalletCards  className="size-4.5 text-brand-500" />
                 </div>
                 <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiết kiệm trung bình</p>
               </div>
@@ -147,32 +148,32 @@ const MonthlyBalancePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+          <div className="rounded-2xl bg-white p-6 shadow-summary dark:bg-slate-900">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
               <div>
               <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</AppTitle>
               <p className="mt-1 text-slate-500 dark:text-slate-400">Tổng thu nhập bằng tổng tài sản cuối từng tháng, đồng bộ với biểu đồ Tổng quan; tháng hiện tại lấy tổng tài sản hiện tại. Tiết kiệm tháng = tổng thu nhập tháng - tổng chi tiêu tháng.</p>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={320}>
+            <ResponsiveContainer width="100%" height={chartTheme.height}>
               <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={formatChartValue} />
+                <CartesianGrid vertical={false} stroke={chartTheme.grid} />
+                <XAxis dataKey="label" tick={{ fill: chartTheme.muted, fontSize: chartTheme.tickSize }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: chartTheme.muted, fontSize: chartTheme.smallTickSize }} axisLine={false} tickLine={false} tickFormatter={formatChartValue} />
                 <Tooltip
                   formatter={(value: any) => formatVND(Number(value))}
-                  contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9', fontSize: '12px' }}
+                  contentStyle={chartTheme.tooltip}
                 />
                 <Bar dataKey="remaining" name="Tiết kiệm tháng" radius={[8, 8, 0, 0]}>
                   {monthlyData.map((item: any) => (
-                    <Cell key={item.month} fill={item.remaining >= 0 ? '#1475ff' : '#ef4444'} />
+                    <Cell key={item.month} fill={item.remaining >= 0 ? chartTheme.savings : chartTheme.expense} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:bg-slate-900">
+          <div className="overflow-hidden rounded-2xl bg-white shadow-summary dark:bg-slate-900">
             <div className="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
               <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Chi tiết từng tháng</AppTitle>
             </div>

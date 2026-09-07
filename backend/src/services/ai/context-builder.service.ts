@@ -17,8 +17,8 @@ export interface FinancialContext {
   year: number;
   categoryExpenses: Array<{ id: string; name: string; amount: number; color: string }>;
   trend: Array<{ month: number; year: number; income: number; expense: number }>;
-  budgets: Array<{ categoryName: string; limit: number; spent: number; percentage: number; status: string }>;
-  savingGoals: Array<{ title: string; progress: number; status: string; targetAmount: number; currentAmount: number }>;
+  budgets: Array<{ id: string; categoryName: string; limit: number; spent: number; percentage: number; status: string }>;
+  savingGoals: Array<{ id: string; title: string; progress: number; status: string; targetAmount: number; currentAmount: number }>;
   wallets: Array<{ name: string; balance: number; type: string }>;
   recurringCount: number;
   topExpenseCategory: { name: string; amount: number } | null;
@@ -82,6 +82,7 @@ export class ContextBuilderService {
       categoryExpenses,
       trend,
       budgets: budgets.map((b: any) => ({
+        id: b.id,
         categoryName: b.category?.name || 'Tổng chi tiêu',
         limit: b.amount,
         spent: b.spent,
@@ -89,6 +90,7 @@ export class ContextBuilderService {
         status: b.status,
       })),
       savingGoals: goals.map((g: any) => ({
+        id: g.id,
         title: g.title,
         progress: g.progress,
         status: g.status,

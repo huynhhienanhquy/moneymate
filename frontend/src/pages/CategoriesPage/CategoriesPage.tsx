@@ -1,3 +1,4 @@
+import { webTheme } from '@moneymate/design-tokens';
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppLabel from '@/components/common/AppLabel/AppLabel';
@@ -9,7 +10,7 @@ import api from '@/services/api/client';
 import AppModal from '@/components/common/AppModal/AppModal';
 import LoadingState from '@/components/common/LoadingState/LoadingState';
 
-const COLORS = ['#2a95ff','#10b981','#f59e0b','#ef4444','#a855f7','#06b6d4','#f97316','#8b5cf6','#ec4899','#14b8a6'];
+const COLORS = ['blue', 'income', 'warning', 'expense', 'purple', 'cyan', 'orange', 'violet', 'pink', 'teal'].map((name) => webTheme.chartColors[name as keyof typeof webTheme.chartColors]);
 const ICONS = ['tag','utensils','home','car','heart-pulse','graduation-cap','shopping-bag','gamepad-2','receipt','briefcase','gift','more-horizontal'];
 
 const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({ cat, typeFilter, onClose, onSave, loading }) => {
@@ -19,7 +20,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{cat ? 'Chỉnh sửa danh mục' : 'Thêm danh mục'}</AppTitle>
-          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X className="size-5" /></AppButton>
         </div>
 
         <div className="space-y-4">
@@ -107,7 +108,7 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
             disabled={loading || !form.name}
             className="app-primary-button flex-1"
           >
-            {loading && <Loader2 size={16} className="animate-spin" />}
+            {loading && <Loader2  className="size-4 animate-spin" />}
             {cat ? 'Lưu thay đổi' : 'Thêm'}
           </AppButton>
         </div>
@@ -149,11 +150,11 @@ const CategoriesPage: React.FC = () => {
     <div>
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <AppTitle unstyled level={1} className="text-[28px] font-extrabold leading-[1.3] tracking-normal text-black dark:text-slate-100">Danh mục</AppTitle>
+          <AppTitle unstyled level={1} className="text-page-title font-extrabold leading-heading tracking-normal text-black dark:text-slate-100">Danh mục</AppTitle>
           <p className="mt-1 text-slate-600 dark:text-slate-400">Quản lý danh mục thu nhập và chi tiêu</p>
         </div>
-        <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-md bg-[#00699b] px-4 font-bold text-white shadow-[0_3px_8px_rgba(0,105,155,0.24)] transition hover:bg-[#005b87]">
-          <Plus size={16} /><span>Thêm danh mục</span>
+        <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-md bg-action px-4 font-bold text-white shadow-action-button transition hover:bg-action-hover">
+          <Plus className="size-4" /><span>Thêm danh mục</span>
         </AppButton>
       </div>
 
@@ -168,7 +169,7 @@ const CategoriesPage: React.FC = () => {
               ? key === 'INCOME' ? 'bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-rose-100 text-rose-600 shadow-sm dark:bg-rose-500/15 dark:text-rose-300'
               : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
           >
-            <Icon size={15} />
+            <Icon className="size-icon-small" />
             {label}
           </AppButton>
         ))}
@@ -180,17 +181,17 @@ const CategoriesPage: React.FC = () => {
         <div className="mt-6 space-y-7">
           {userCats.length > 0 && (
             <div>
-              <AppTitle unstyled level={2} className="mb-3 text-[18px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục của bạn</AppTitle>
+              <AppTitle unstyled level={2} className="mb-3 text-lg font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục của bạn</AppTitle>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {userCats.map((cat: any) => (
-                  <div key={cat.id} className="group relative flex min-h-[138px] flex-col items-center justify-center gap-2 rounded-lg border border-white/80 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_9px_24px_rgba(15,23,42,0.09)] dark:border-slate-800 dark:bg-slate-900">
+                  <div key={cat.id} className="group relative flex min-h-category flex-col items-center justify-center gap-2 rounded-lg border border-white/80 bg-white p-4 shadow-category transition hover:-translate-y-0.5 hover:shadow-category-hover dark:border-slate-800 dark:bg-slate-900">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full font-bold" style={{ background: cat.color + '20', color: cat.color }}>
                       {cat.name[0].toUpperCase()}
                     </div>
-                    <p className="py-0.5 text-center font-semibold leading-[1.5] text-slate-950 dark:text-slate-100">{cat.name}</p>
+                    <p className="py-0.5 text-center font-semibold leading-normal text-slate-950 dark:text-slate-100">{cat.name}</p>
                     <div className="absolute right-2 top-2 flex gap-1 rounded-md bg-white/90 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900/90">
-                      <AppButton unstyled id={`edit-cat-${cat.id}`} aria-label={`Chỉnh sửa ${cat.name}`} onClick={() => setEditCat(cat)} className="rounded p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={14} /></AppButton>
-                      <AppButton unstyled id={`del-cat-${cat.id}`} aria-label={`Xóa ${cat.name}`} onClick={() => { if (confirm(`Xóa "${cat.name}"?`)) deleteMutation.mutate(cat.id); }} className="rounded p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"><Trash2 size={14} /></AppButton>
+                      <AppButton unstyled id={`edit-cat-${cat.id}`} aria-label={`Chỉnh sửa ${cat.name}`} onClick={() => setEditCat(cat)} className="rounded p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil className="size-3.5" /></AppButton>
+                      <AppButton unstyled id={`del-cat-${cat.id}`} aria-label={`Xóa ${cat.name}`} onClick={() => { if (confirm(`Xóa "${cat.name}"?`)) deleteMutation.mutate(cat.id); }} className="rounded p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"><Trash2 className="size-3.5" /></AppButton>
                     </div>
                   </div>
                 ))}
@@ -199,14 +200,14 @@ const CategoriesPage: React.FC = () => {
           )}
 
           <div>
-            <AppTitle unstyled level={2} className="mb-3 text-[18px] font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục mặc định</AppTitle>
+            <AppTitle unstyled level={2} className="mb-3 text-lg font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300">Danh mục mặc định</AppTitle>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {systemCats.map((cat: any) => (
-                <div key={cat.id} className="flex min-h-[150px] flex-col items-center justify-center gap-2 rounded-lg border border-white/80 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900">
+                <div key={cat.id} className="flex min-h-category-system flex-col items-center justify-center gap-2 rounded-lg border border-white/80 bg-white p-4 shadow-category-system dark:border-slate-800 dark:bg-slate-900">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full font-bold" style={{ background: cat.color + '20', color: cat.color }}>
                     {cat.name[0].toUpperCase()}
                   </div>
-                  <p className="py-0.5 text-center font-semibold leading-[1.5] text-slate-800 dark:text-slate-200">{cat.name}</p>
+                  <p className="py-0.5 text-center font-semibold leading-normal text-slate-800 dark:text-slate-200">{cat.name}</p>
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-500 dark:bg-slate-800 dark:text-slate-400">Mặc định</span>
                 </div>
               ))}

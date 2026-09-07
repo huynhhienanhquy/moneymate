@@ -35,8 +35,12 @@ describe('ContextBuilderService', () => {
         categoryExpenses: [],
       } as any);
     jest.spyOn(TransactionService.prototype, 'getMonthlyTrend').mockResolvedValue([]);
-    jest.spyOn(BudgetService.prototype, 'getBudgets').mockResolvedValue([]);
-    jest.spyOn(SavingGoalService.prototype, 'getGoals').mockResolvedValue([]);
+    jest.spyOn(BudgetService.prototype, 'getBudgets').mockResolvedValue([
+      { id: 'budget-1', category: { name: 'Ăn uống' }, amount: 100, spent: 90, percentage: 90, status: 'WARNING' },
+    ] as any);
+    jest.spyOn(SavingGoalService.prototype, 'getGoals').mockResolvedValue([
+      { id: 'goal-1', title: 'Du lịch', progress: 10, status: 'ACTIVE', targetAmount: 100, currentAmount: 10 },
+    ] as any);
     jest.spyOn(WalletRepository.prototype, 'findAllByUserId').mockResolvedValue([]);
     jest.spyOn(RecurringRepository.prototype, 'findAllByUserId').mockResolvedValue([]);
 
@@ -51,5 +55,7 @@ describe('ContextBuilderService', () => {
     });
     expect(result.previousMonthExpense).toBe(10_000_000);
     expect(result.expenseChangePercent).toBe(20);
+    expect(result.budgets[0].id).toBe('budget-1');
+    expect(result.savingGoals[0].id).toBe('goal-1');
   });
 });

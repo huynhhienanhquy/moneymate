@@ -68,7 +68,7 @@ const TransactionModal: React.FC<{
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{tx ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch'}</AppTitle>
-          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition"><X size={20} /></AppButton>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition"><X className="size-5" /></AppButton>
         </div>
 
         <div className="space-y-4">
@@ -120,7 +120,7 @@ const TransactionModal: React.FC<{
                 <option value="">-- Chọn ví --</option>
                 {wallets.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({formatVND(Number(w.initialBalance))})</option>)}
               </AppSelect>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <ChevronDown  className="size-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             </div>
           </div>
 
@@ -165,7 +165,7 @@ const TransactionModal: React.FC<{
                 Hóa đơn <span className="text-slate-400 dark:text-slate-600">(JPEG, PNG, PDF - max 5MB)</span>
               </AppLabel>
               <AppLabel className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 border-dashed rounded-xl cursor-pointer hover:border-brand-500/50 transition">
-                <Paperclip size={16} className="text-slate-500" />
+                <Paperclip  className="size-4 text-slate-500" />
                 <span className="text-sm text-slate-400 truncate">{receiptFile ? receiptFile.name : 'Chọn file...'}</span>
                 <AppInput unstyled type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden"
                   onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
@@ -182,7 +182,7 @@ const TransactionModal: React.FC<{
             disabled={loading || !form.walletId || !form.categoryId || !form.amount}
             className="app-primary-button flex-1"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+            {loading ? <Loader2  className="size-4 animate-spin" /> : null}
             {loading ? 'Đang xử lý...' : tx ? 'Lưu' : 'Thêm giao dịch'}
           </AppButton>
         </div>
@@ -277,15 +277,15 @@ const TransactionsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <AppTitle unstyled level={1} className="text-[28px] font-extrabold leading-none tracking-normal text-black dark:text-slate-100">Giao dịch</AppTitle>
-          <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Theo dõi toàn bộ thu chi của bạn</p>
+          <AppTitle unstyled level={1} className="text-page-title font-extrabold leading-none tracking-normal text-black dark:text-slate-100">Giao dịch</AppTitle>
+          <p className="mt-2 text-caption text-slate-600 dark:text-slate-400">Theo dõi toàn bộ thu chi của bạn</p>
         </div>
         <div className="flex gap-2">
-          <AppButton unstyled onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-[9px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-            <ScanLine size={12} /><span>Quét hóa đơn</span>
+          <AppButton unstyled onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-mini font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <ScanLine className="size-3" /><span>Quét hóa đơn</span>
           </AppButton>
-          <AppButton unstyled id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-[#08b8eb] px-3.5 text-[9px] font-bold text-slate-900 shadow-[0_3px_8px_rgba(8,184,235,0.25)] transition hover:bg-[#00a8d8]">
-            <Plus size={12} /><span>Thêm giao dịch</span>
+          <AppButton unstyled id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-accent px-3.5 text-mini font-bold text-slate-900 shadow-accent-button transition hover:bg-accent-hover">
+            <Plus className="size-3" /><span>Thêm giao dịch</span>
           </AppButton>
         </div>
       </div>
@@ -293,34 +293,34 @@ const TransactionsPage: React.FC = () => {
       {/* Filters */}
       <div className="mt-4 flex gap-2">
         <div className="relative flex-1 min-w-48">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search  className="size-icon-caption absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <AppInput unstyled
             id="tx-search"
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             placeholder="Tìm kiếm ghi chú..."
-            className="h-8 w-full rounded-md border-0 bg-white pl-8 pr-3 text-[10px] font-medium text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 dark:bg-slate-900 dark:text-slate-200 dark:focus:ring-blue-500/20"
+            className="h-8 w-full rounded-md border-0 bg-white pl-8 pr-3 text-badge font-medium text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 dark:bg-slate-900 dark:text-slate-200 dark:focus:ring-blue-500/20"
           />
         </div>
         <div className="relative">
-          <Filter size={12} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Filter  className="size-3 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <AppSelect unstyled
             id="tx-type-filter"
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
-            className="h-8 appearance-none rounded-md border-0 bg-white pl-8 pr-8 text-[9px] font-semibold text-slate-600 shadow-sm outline-none dark:bg-slate-900 dark:text-slate-300"
+            className="h-8 appearance-none rounded-md border-0 bg-white pl-8 pr-8 text-mini font-semibold text-slate-600 shadow-sm outline-none dark:bg-slate-900 dark:text-slate-300"
           >
             <option value="">Tất cả</option>
             <option value="INCOME">Thu nhập</option>
             <option value="EXPENSE">Chi tiêu</option>
           </AppSelect>
-          <ChevronDown size={11} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <ChevronDown  className="size-icon-tiny pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
         </div>
       </div>
 
       {/* Table */}
-      <div className="mt-3 overflow-hidden rounded-[10px] border border-white/80 bg-white shadow-[0_7px_20px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-3 overflow-hidden rounded-control border border-white/80 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
         {isLoading ? (
           <LoadingState className="items-center" />
         ) : isError ? (
@@ -331,19 +331,19 @@ const TransactionsPage: React.FC = () => {
           </div>
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-600">
-            <Search size={36} className="mb-3 opacity-30" />
+            <Search  className="size-9 mb-3 opacity-30" />
             <p className="text-sm">Không tìm thấy giao dịch nào</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[500px] table-fixed">
+              <table className="w-full min-w-table-compact table-fixed">
                 <thead>
                   <tr className="border-b border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900">
-                    <th className="w-[42%] px-3 py-2.5 text-left text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Giao dịch</th>
-                    <th className="w-[24%] px-2 py-2.5 text-left text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ví</th>
-                    <th className="w-[16%] px-2 py-2.5 text-left text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ngày</th>
-                    <th className="w-[18%] px-3 py-2.5 text-right text-[7px] font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Số tiền</th>
+                    <th className="w-transaction-description px-3 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Giao dịch</th>
+                    <th className="w-transaction-wallet px-2 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ví</th>
+                    <th className="w-transaction-date px-2 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ngày</th>
+                    <th className="w-transaction-amount px-3 py-2.5 text-right text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Số tiền</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -355,35 +355,35 @@ const TransactionsPage: React.FC = () => {
                         <td className="px-3 py-2.5">
                           <div className="flex items-center gap-2">
                             <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-100 dark:bg-rose-500/10'}`}>
-                              <TransactionIcon size={11} className={isIncome ? 'text-emerald-600' : 'text-rose-500'} />
+                              <TransactionIcon  className={"size-icon-tiny " + (isIncome ? 'text-emerald-600' : 'text-rose-500')} />
                             </div>
                             <div className="min-w-0">
                               {tx.type === 'TRANSFER' ? (
-                                <p className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 dark:text-slate-100">{tx.note || 'Chuyển tiền'}</p>
+                                <p className="block max-w-full truncate py-0.5 text-left text-mini font-bold leading-heading text-slate-950 dark:text-slate-100">{tx.note || 'Chuyển tiền'}</p>
                               ) : (
-                                <AppButton unstyled type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-[9px] font-bold leading-[1.3] text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</AppButton>
+                                <AppButton unstyled type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-mini font-bold leading-heading text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</AppButton>
                               )}
                               <div className="mt-0.5 flex items-center gap-1">
-                                <span className="inline-block h-1 w-1 rounded-full" style={{ background: tx.category?.color || '#64748b' }}></span>
-                                <p className="truncate text-[7px] leading-[1.4] text-slate-500">{tx.category?.name}</p>
+                                <span className="inline-block h-1 w-1 rounded-full" style={{ background: tx.category?.color || 'rgb(var(--ui-muted))' }}></span>
+                                <p className="truncate text-micro leading-section text-slate-500">{tx.category?.name}</p>
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-2 py-2.5">
-                          <span className="inline-flex max-w-full truncate rounded bg-slate-100 px-2 py-1 text-[7px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{tx.wallet?.name}</span>
+                          <span className="inline-flex max-w-full truncate rounded bg-slate-100 px-2 py-1 text-micro font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{tx.wallet?.name}</span>
                         </td>
                         <td className="px-2 py-2.5">
-                          <span className="whitespace-nowrap text-[8px] text-slate-600 dark:text-slate-400">{new Date(tx.transactionDate).toLocaleDateString('vi-VN')}</span>
+                          <span className="whitespace-nowrap text-tiny text-slate-600 dark:text-slate-400">{new Date(tx.transactionDate).toLocaleDateString('vi-VN')}</span>
                         </td>
                         <td className="relative px-3 py-2.5 text-right">
-                          <span className={`whitespace-nowrap text-[9px] font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          <span className={`whitespace-nowrap text-mini font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-500'}`}>
                             {isIncome ? '↑ +' : '↓ -'}{formatVND(Number(tx.amount))}
                           </span>
                           {tx.type !== 'TRANSFER' && <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 bg-white pl-2 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">
-                            <AppButton unstyled id={`edit-tx-${tx.id}`} aria-label="Chỉnh sửa giao dịch" onClick={() => setEditTx(tx)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil size={11} /></AppButton>
+                            <AppButton unstyled id={`edit-tx-${tx.id}`} aria-label="Chỉnh sửa giao dịch" onClick={() => setEditTx(tx)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil className="size-icon-tiny" /></AppButton>
                             <AppButton unstyled id={`del-tx-${tx.id}`} aria-label="Xóa giao dịch" onClick={() => { if (confirm('Xóa giao dịch này?')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10">
-                              {deletingId === tx.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+                              {deletingId === tx.id ? <Loader2  className="size-icon-tiny animate-spin" /> : <Trash2 className="size-icon-tiny" />}
                             </AppButton>
                           </div>}
                         </td>

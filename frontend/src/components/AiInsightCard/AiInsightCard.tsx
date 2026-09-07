@@ -26,7 +26,7 @@ export const AiInsightCard: React.FC<{
   const colors = COLOR_MAP[type] || COLOR_MAP.info;
   return (
     <div className={`flex gap-3 p-4 rounded-xl border ${colors}`}>
-      <Icon size={18} className="flex-shrink-0 mt-0.5" />
+      <Icon  className="size-4.5 flex-shrink-0 mt-0.5" />
       <div>
         <p className="text-sm font-semibold">{title}</p>
         <p className="text-xs mt-0.5 opacity-80">{message}</p>

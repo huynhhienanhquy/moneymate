@@ -3,6 +3,7 @@ import { LlmProvider } from './llm.provider';
 import { formatVND } from '../../config/ai';
 
 export interface AdvisorRecommendation {
+  id: string;
   priority: 'high' | 'medium' | 'low';
   title: string;
   description: string;
@@ -67,6 +68,7 @@ export class AdvisorService {
       const target = Math.round(ctx.summary.monthlyIncome * 0.2 - ctx.summary.monthlySavings);
       recs.push({
         priority: 'high',
+        id: 'increase-savings',
         title: 'Tăng tỷ lệ tiết kiệm',
         description: `Tỷ lệ tiết kiệm hiện tại ${ctx.summary.savingsRate}%. Mục tiêu nên đạt 20% thu nhập.`,
         action: 'Giảm chi tiêu không cần thiết hoặc tăng thu nhập phụ.',
@@ -78,6 +80,7 @@ export class AdvisorService {
       const reduce = Math.round(b.spent * 0.15);
       recs.push({
         priority: b.status === 'EXCEEDED' ? 'high' : 'medium',
+        id: `budget-${b.id}`,
         title: `Kiểm soát "${b.categoryName}"`,
         description: b.status === 'EXCEEDED'
           ? `Đã vượt ngân sách ${b.categoryName} (${b.percentage}%).`
@@ -93,6 +96,7 @@ export class AdvisorService {
         const saving = Math.round(ctx.topExpenseCategory.amount * 0.2);
         recs.push({
           priority: 'medium',
+          id: 'optimize-expenses',
           title: `Tối ưu chi tiêu ${ctx.topExpenseCategory.name}`,
           description: `${ctx.topExpenseCategory.name} chiếm ${pct}% tổng chi tiêu – quá cao so với mức khuyến nghị 30%.`,
           action: `Giảm 20% chi tiêu ${ctx.topExpenseCategory.name} để tiết kiệm ${formatVND(saving)}/tháng.`,
@@ -104,6 +108,7 @@ export class AdvisorService {
     ctx.savingGoals.filter(g => g.status === 'ACTIVE' && g.progress < 50).forEach(g => {
       recs.push({
         priority: 'low',
+        id: `goal-${g.id}`,
         title: `Đẩy nhanh mục tiêu "${g.title}"`,
         description: `Mục tiêu mới đạt ${g.progress}%. Cần nạp thêm ${formatVND(g.targetAmount - g.currentAmount)}.`,
         action: 'Thiết lập nạp tiền định kỳ vào mục tiêu tiết kiệm.',
@@ -113,6 +118,7 @@ export class AdvisorService {
     if (ctx.expenseChangePercent > 15) {
       recs.push({
         priority: 'high',
+        id: 'expense-spike',
         title: 'Chi tiêu tăng đột biến',
         description: `Chi tiêu tăng ${ctx.expenseChangePercent}% so với tháng trước.`,
         action: 'Xem lại giao dịch lớn và cắt giảm chi tiêu không cần thiết.',
@@ -122,6 +128,7 @@ export class AdvisorService {
     if (recs.length === 0) {
       recs.push({
         priority: 'low',
+        id: 'stable-finances',
         title: 'Tài chính ổn định',
         description: 'Tình hình tài chính của bạn đang được quản lý tốt. Tiếp tục duy trì thói quen!',
         action: 'Xem xét đặt thêm mục tiêu tiết kiệm dài hạn.',

@@ -25,9 +25,9 @@ const queryFixtures: Record<string, unknown> = {
     { month: 3, income: 7_000_000, expense: 2_000_000, savings: 5_000_000 },
   ] },
   profile: { id: 'user-1', fullName: 'Money Mate', email: 'user@moneymate.vn', avatarUrl: null, role: 'USER', createdAt: '2025-01-01' },
-  'ai-advisor': { recommendations: [{ title: 'Tiết kiệm', description: 'Giảm chi tiêu', priority: 'HIGH' }] },
-  'ai-analysis': { summary: 'Ổn định', insights: [{ title: 'Ăn uống', description: 'Chi tiêu tăng', severity: 'WARNING' }] },
-  'ai-analysis-dash': { summary: 'Ổn định', insights: [{ title: 'Ăn uống', description: 'Chi tiêu tăng', severity: 'WARNING' }] },
+  'ai-advisor': { recommendations: [{ id: 'recommendation-1', title: 'Tiết kiệm', description: 'Giảm chi tiêu', priority: 'HIGH' }] },
+  'ai-analysis': { summary: 'Ổn định', insights: [{ id: 'insight-1', title: 'Ăn uống', description: 'Chi tiêu tăng', severity: 'WARNING' }] },
+  'ai-analysis-dash': { summary: 'Ổn định', insights: [{ id: 'insight-1', title: 'Ăn uống', description: 'Chi tiêu tăng', severity: 'WARNING' }] },
   'ai-forecast': { forecasts: [{ categoryId: category.id, categoryName: category.name, predictedAmount: 2_500_000, severity: 'WARNING', message: 'Có thể vượt ngân sách' }] },
   'ai-status': { configured: true, provider: 'AI' },
 };

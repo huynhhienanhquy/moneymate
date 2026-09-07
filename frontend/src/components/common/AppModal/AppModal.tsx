@@ -52,7 +52,7 @@ const AppModal = ({ title, children, footer, onClose, className = '' }: AppModal
               className="min-h-0 p-2"
               onClick={onClose}
             >
-              <X size={20} />
+              <X className="size-5" />
             </AppButton>
           </header>
         )}

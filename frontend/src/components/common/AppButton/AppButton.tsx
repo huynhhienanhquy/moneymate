@@ -45,7 +45,7 @@ const AppButton = forwardRef<HTMLButtonElement, AppButtonProps>(({
     className={buttonClassName}
     {...props}
   >
-    {loading ? <Loader2 aria-label="Đang xử lý" className="animate-spin" size={16} /> : leadingIcon}
+    {loading ? <Loader2 aria-label="Đang xử lý" className="size-4 animate-spin"  /> : leadingIcon}
     {children}
     {!loading && trailingIcon}
   </button>

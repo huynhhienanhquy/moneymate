@@ -38,7 +38,7 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{item ? 'Sửa giao dịch định kỳ' : 'Thêm giao dịch định kỳ'}</AppTitle>
-          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X className="size-5" /></AppButton>
         </div>
         <div className="space-y-4">
           <div className="flex gap-2 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
@@ -80,7 +80,7 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
           <AppButton unstyled onClick={() => onSave({ ...form, amount: parseFloat(form.amount), startDate: new Date(form.startDate) })}
             disabled={loading || !form.walletId || !form.categoryId || !form.amount}
             className="app-primary-button flex-1">
-            {loading ? <Loader2 size={16} className="animate-spin" /> : 'Lưu'}
+            {loading ? <Loader2  className="size-4 animate-spin" /> : 'Lưu'}
           </AppButton>
         </div>
     </AppModal>
@@ -134,7 +134,7 @@ const RecurringPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description="Lương, hóa đơn, Netflix... tự động mỗi kỳ" actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus size={16} /><span>Thêm định kỳ</span></AppButton>} />
+      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description="Lương, hóa đơn, Netflix... tự động mỗi kỳ" actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /><span>Thêm định kỳ</span></AppButton>} />
 
       {isLoading ? (
         <LoadingState />
@@ -142,9 +142,9 @@ const RecurringPage: React.FC = () => {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <SummaryCard icon={<Repeat size={18} />} label="Tổng giao dịch" value={String(items.length)} tone="blue" />
-            <SummaryCard icon={<ArrowDownRight size={18} />} label="Thu nhập định kỳ" value={formatVND(incomeTotal)} tone="green" />
-            <SummaryCard icon={<ArrowUpRight size={18} />} label="Chi tiêu định kỳ" value={formatVND(expenseTotal)} tone="red" />
+            <SummaryCard icon={<Repeat className="size-4.5" />} label="Tổng giao dịch" value={String(items.length)} tone="blue" />
+            <SummaryCard icon={<ArrowDownRight className="size-4.5" />} label="Thu nhập định kỳ" value={formatVND(incomeTotal)} tone="green" />
+            <SummaryCard icon={<ArrowUpRight className="size-4.5" />} label="Chi tiêu định kỳ" value={formatVND(expenseTotal)} tone="red" />
           </div>
 
           <section className="mt-6">
@@ -153,11 +153,11 @@ const RecurringPage: React.FC = () => {
               <div className="flex gap-2">
                 <AppLabel className="relative min-w-0 flex-1 sm:w-72">
                   <span className="sr-only">Tìm kiếm giao dịch định kỳ</span>
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search  className="size-icon-small absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <AppInput unstyled value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm kiếm giao dịch..." className="h-10 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 outline-none focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900" />
                 </AppLabel>
                 <div className="relative">
-                  <Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Filter  className="size-3.5 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                   <AppSelect unstyled value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 appearance-none rounded-md border border-slate-200 bg-white pl-9 pr-4 font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"><option value="ALL">Lọc</option><option value="ACTIVE">Hoạt động</option><option value="PAUSED">Tạm dừng</option></AppSelect>
                 </div>
               </div>
@@ -165,16 +165,16 @@ const RecurringPage: React.FC = () => {
 
             <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
               {visibleItems.length === 0 ? (
-                <div className="flex flex-col items-center py-16 text-slate-500"><RefreshCw size={30} className="mb-3 opacity-40" /><p className="font-semibold">Không tìm thấy giao dịch định kỳ</p><AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button mt-4"><Plus size={16} /> Thêm định kỳ</AppButton></div>
-              ) : <div className="overflow-x-auto"><table className="w-full min-w-[760px] table-fixed text-left">
-                <thead className="border-b border-slate-100 dark:border-slate-800"><tr className="uppercase tracking-wide text-slate-500 dark:text-slate-400"><th className="w-[32%] px-4 py-3">Giao dịch</th><th className="w-[25%] px-3 py-3">Tần suất &amp; ví</th><th className="w-[20%] px-3 py-3">Ngày tiếp theo</th><th className="w-[17%] px-3 py-3 text-right">Số tiền</th><th className="w-[6%] px-2 py-3 text-center">Thao tác</th></tr></thead>
+                <div className="flex flex-col items-center py-16 text-slate-500"><RefreshCw  className="size-icon-title mb-3 opacity-40" /><p className="font-semibold">Không tìm thấy giao dịch định kỳ</p><AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button mt-4"><Plus className="size-4" /> Thêm định kỳ</AppButton></div>
+              ) : <div className="overflow-x-auto"><table className="w-full min-w-table table-fixed text-left">
+                <thead className="border-b border-slate-100 dark:border-slate-800"><tr className="uppercase tracking-wide text-slate-500 dark:text-slate-400"><th className="w-recurring-description px-4 py-3">Giao dịch</th><th className="w-recurring-frequency px-3 py-3">Tần suất &amp; ví</th><th className="w-recurring-date px-3 py-3">Ngày tiếp theo</th><th className="w-recurring-amount px-3 py-3 text-right">Số tiền</th><th className="w-recurring-actions px-2 py-3 text-center">Thao tác</th></tr></thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {visibleItems.map((item: any) => <tr key={item.id} className={`transition hover:bg-slate-50 dark:hover:bg-slate-800/40 ${!item.isActive ? 'opacity-55' : ''}`}>
-                    <td className="px-4 py-3"><div className="flex items-center gap-3"><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.type === 'INCOME' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-rose-100 text-rose-500 dark:bg-rose-500/15'}`}><RefreshCw size={16} /></span><div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-bold text-slate-950 dark:text-white">{item.note || item.category?.name}</p><span className={`shrink-0 rounded-full px-2 py-0.5 font-bold uppercase ${item.isActive ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>{item.isActive ? 'Hoạt động' : 'Tạm dừng'}</span></div><p className="mt-0.5 text-slate-500 dark:text-slate-400">{item.category?.name}</p></div></div></td>
+                    <td className="px-4 py-3"><div className="flex items-center gap-3"><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.type === 'INCOME' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-rose-100 text-rose-500 dark:bg-rose-500/15'}`}><RefreshCw className="size-4" /></span><div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-bold text-slate-950 dark:text-white">{item.note || item.category?.name}</p><span className={`shrink-0 rounded-full px-2 py-0.5 font-bold uppercase ${item.isActive ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>{item.isActive ? 'Hoạt động' : 'Tạm dừng'}</span></div><p className="mt-0.5 text-slate-500 dark:text-slate-400">{item.category?.name}</p></div></div></td>
                     <td className="px-3 py-3"><p className="font-semibold text-slate-700 dark:text-slate-300">{FREQ_LABELS[item.frequency]}</p><p className="mt-1 text-slate-500 dark:text-slate-400">Ví: {item.wallet?.name}</p></td>
                     <td className="px-3 py-3"><p className="font-bold text-slate-900 dark:text-white">{new Date(item.nextExecutionDate).toLocaleDateString('vi-VN')}</p><span className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 font-semibold text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">Còn lịch</span></td>
                     <td className={`whitespace-nowrap px-3 py-3 text-right font-extrabold ${item.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-500'}`}>{item.type === 'INCOME' ? '+' : '-'}{formatVND(Number(item.amount))}</td>
-                    <td className="relative px-2 py-3 text-center"><AppButton unstyled aria-label="Mở thao tác" onClick={() => setActionMenuId((id) => id === item.id ? null : item.id)} className="rounded-md p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical size={17} /></AppButton>{actionMenuId === item.id && <div className="absolute right-3 top-11 z-20 w-40 rounded-lg border border-slate-200 bg-white p-1 text-left shadow-xl dark:border-slate-700 dark:bg-slate-900"><AppButton unstyled onClick={() => { toggleMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">{item.isActive ? <Pause size={15} /> : <Play size={15} />}{item.isActive ? 'Tạm dừng' : 'Kích hoạt'}</AppButton><AppButton unstyled onClick={() => { setEditItem(item); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"><Pencil size={15} />Chỉnh sửa</AppButton><AppButton unstyled onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 size={15} />Xóa</AppButton></div>}</td>
+                    <td className="relative px-2 py-3 text-center"><AppButton unstyled aria-label="Mở thao tác" onClick={() => setActionMenuId((id) => id === item.id ? null : item.id)} className="rounded-md p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical className="size-icon-nav" /></AppButton>{actionMenuId === item.id && <div className="absolute right-3 top-11 z-20 w-40 rounded-lg border border-slate-200 bg-white p-1 text-left shadow-xl dark:border-slate-700 dark:bg-slate-900"><AppButton unstyled onClick={() => { toggleMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">{item.isActive ? <Pause className="size-icon-small" /> : <Play className="size-icon-small" />}{item.isActive ? 'Tạm dừng' : 'Kích hoạt'}</AppButton><AppButton unstyled onClick={() => { setEditItem(item); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"><Pencil className="size-icon-small" />Chỉnh sửa</AppButton><AppButton unstyled onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 className="size-icon-small" />Xóa</AppButton></div>}</td>
                   </tr>)}
                 </tbody>
               </table></div>}

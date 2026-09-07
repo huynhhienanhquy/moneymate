@@ -11,3 +11,4 @@ export const radius = { sm: 10, md: 16, lg: 24, xl: 30, pill: 999 } as const;
 export const typography = { caption: 11, bodySmall: 13, body: 15, title: 18, heading: 22, display: 30 } as const;
 export const motion = { fast: 120, normal: 200, slow: 300 } as const;
 export const touchTarget = 44;
+export { webTheme } from './web';

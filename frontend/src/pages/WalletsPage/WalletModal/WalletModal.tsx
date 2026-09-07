@@ -23,7 +23,7 @@ const WalletModal = ({ wallet, onClose, onSave, loading }: WalletModalProps) => 
       <div className="app-shell-card w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{wallet ? 'Chỉnh sửa ví' : 'Thêm ví mới'}</AppTitle>
-          <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X size={20} /></AppButton>
+          <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X className="size-5" /></AppButton>
         </div>
         <div className="space-y-4">
           <div>
@@ -38,7 +38,7 @@ const WalletModal = ({ wallet, onClose, onSave, loading }: WalletModalProps) => 
                 const selected = form.type === walletType.value;
                 return (
                   <AppButton unstyled key={walletType.value} type="button" id={`wallet-type-${walletType.value.toLowerCase()}`} onClick={() => setForm(p => ({ ...p, type: walletType.value }))} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-medium transition-all ${selected ? `${walletType.bg} ${walletType.color} border-current` : 'border-slate-700 text-slate-500 hover:border-slate-600 hover:text-slate-300'}`}>
-                    <Icon size={18} />
+                    <Icon className="size-4.5" />
                     {walletType.label}
                   </AppButton>
                 );
@@ -56,7 +56,7 @@ const WalletModal = ({ wallet, onClose, onSave, loading }: WalletModalProps) => 
         <div className="flex gap-3 mt-6">
           <AppButton unstyled onClick={onClose} className="app-secondary-button flex-1">Hủy</AppButton>
           <AppButton unstyled id="wallet-save" onClick={() => onSave(wallet ? { name: form.name, type: form.type } : form)} disabled={loading || !form.name} className="app-primary-button flex-1">
-            {loading && <Loader2 size={16} className="animate-spin" />}
+            {loading && <Loader2  className="size-4 animate-spin" />}
             {wallet ? 'Lưu thay đổi' : 'Tạo ví'}
           </AppButton>
         </div>

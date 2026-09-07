@@ -13,9 +13,9 @@ const NotificationBell: React.FC = () => {
         onClick={() => setOpen(!open)}
         className="relative p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 dark:hover:bg-slate-800 transition"
       >
-        <Bell size={20} />
+        <Bell className="size-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-badge font-bold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -32,13 +32,13 @@ const NotificationBell: React.FC = () => {
                 </AppButton>
               )}
               <AppButton unstyled onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300">
-                <X size={14} />
+                <X className="size-3.5" />
               </AppButton>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-brand-500" /></div>
+            <div className="flex justify-center py-8"><Loader2  className="size-5 animate-spin text-brand-500" /></div>
           ) : notifications.length === 0 ? (
             <p className="text-center text-sm text-slate-500 py-8">Không có thông báo</p>
           ) : (
@@ -49,18 +49,18 @@ const NotificationBell: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-gray-900 dark:text-slate-200">{n.title}</p>
                       <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{n.message}</p>
-                      <p className="text-[10px] text-slate-500 mt-1">
+                      <p className="text-badge text-slate-500 mt-1">
                         {new Date(n.createdAt).toLocaleString('vi-VN')}
                       </p>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
                       {!n.isRead && (
                         <AppButton unstyled onClick={() => markRead(n.id)} className="p-1 text-slate-500 hover:text-emerald-400">
-                          <Check size={12} />
+                          <Check className="size-3" />
                         </AppButton>
                       )}
                       <AppButton unstyled onClick={() => remove(n.id)} className="p-1 text-slate-500 hover:text-rose-400">
-                        <Trash2 size={12} />
+                        <Trash2 className="size-3" />
                       </AppButton>
                     </div>
                   </div>

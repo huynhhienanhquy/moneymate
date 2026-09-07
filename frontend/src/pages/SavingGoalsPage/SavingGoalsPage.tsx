@@ -24,7 +24,7 @@ const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) =>
     <AppModal onClose={onClose}>
         <div className="flex items-center justify-between mb-5">
           <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-900 dark:text-slate-100">{goal ? 'Sửa mục tiêu' : 'Tạo mục tiêu tiết kiệm'}</AppTitle>
-          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X size={20} /></AppButton>
+          <AppButton unstyled onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-300 transition"><X className="size-5" /></AppButton>
         </div>
         <div className="space-y-4">
           <div>
@@ -48,7 +48,7 @@ const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) =>
           <AppButton unstyled onClick={() => onSave({ title: form.title, targetAmount: parseFloat(form.targetAmount), targetDate: new Date(form.targetDate) })}
             disabled={loading || !form.title || !form.targetAmount || !form.targetDate}
             className="app-primary-button flex-1">
-            {loading ? <Loader2 size={16} className="animate-spin" /> : null}
+            {loading ? <Loader2  className="size-4 animate-spin" /> : null}
             {loading ? 'Đang xử lý...' : 'Lưu'}
           </AppButton>
         </div>
@@ -132,24 +132,24 @@ const SavingGoalsPage: React.FC = () => {
       <PageHeader eyebrow="Mục tiêu" title="Mục tiêu tiết kiệm" description="Theo dõi tiến độ tiết kiệm của bạn" />
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <SummaryCard icon={<Target size={18} />} label="Tổng mục tiêu" value={String(goals.length)} tone="blue" />
-        <SummaryCard icon={<TrendingUp size={18} />} label="Đã tiết kiệm" value={formatVND(totalSaved)} tone="cyan" />
-        <SummaryCard icon={<Trophy size={18} />} label="Hoàn thành" value={`${completedGoals}/${goals.length}`} tone="violet" />
+        <SummaryCard icon={<Target className="size-4.5" />} label="Tổng mục tiêu" value={String(goals.length)} tone="blue" />
+        <SummaryCard icon={<TrendingUp className="size-4.5" />} label="Đã tiết kiệm" value={formatVND(totalSaved)} tone="cyan" />
+        <SummaryCard icon={<Trophy className="size-4.5" />} label="Hoàn thành" value={`${completedGoals}/${goals.length}`} tone="violet" />
       </div>
 
       {isLoading ? <div className="mt-5"><LoadingState /></div> : (
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {goals.map((g: any) => (
-              <div key={g.id} className={`group relative flex min-h-[320px] flex-col rounded-xl border bg-white p-5 shadow-[0_7px_20px_rgba(15,23,42,0.06)] dark:bg-slate-900 ${g.status === 'COMPLETED' ? 'border-violet-200 dark:border-violet-500/25' : 'border-white/80 dark:border-slate-800'}`}>
+              <div key={g.id} className={`group relative flex min-h-goal flex-col rounded-xl border bg-white p-5 shadow-card dark:bg-slate-900 ${g.status === 'COMPLETED' ? 'border-violet-200 dark:border-violet-500/25' : 'border-white/80 dark:border-slate-800'}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {g.status === 'COMPLETED' ? (
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-500/15">
-                        <Trophy size={18} className="text-violet-600 dark:text-violet-400" />
+                        <Trophy  className="size-4.5 text-violet-600 dark:text-violet-400" />
                       </div>
                     ) : (
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
-                        <Target size={18} />
+                        <Target className="size-4.5" />
                       </div>
                     )}
                     <span className={`rounded-full px-2.5 py-1 font-bold uppercase tracking-wide ${g.status === 'COMPLETED' ? 'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300' : g.status === 'EXPIRED' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/15' : 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300'}`}>
@@ -157,14 +157,14 @@ const SavingGoalsPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <AppButton unstyled onClick={() => setEditGoal(g)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil size={13} /></AppButton>
-                    <AppButton unstyled onClick={() => { if (confirm('Xóa mục tiêu?')) deleteMutation.mutate(g.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 size={13} /></AppButton>
+                    <AppButton unstyled onClick={() => setEditGoal(g)} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition"><Pencil className="size-icon-caption" /></AppButton>
+                    <AppButton unstyled onClick={() => { if (confirm('Xóa mục tiêu?')) deleteMutation.mutate(g.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 className="size-icon-caption" /></AppButton>
                   </div>
                 </div>
                 <AppTitle unstyled level={2} className="mt-4 font-extrabold text-slate-950 dark:text-slate-100">{g.title}</AppTitle>
                 {g.status === 'COMPLETED' ? (
                   <>
-                    <p className="mt-2 flex items-center gap-2 text-slate-600 dark:text-slate-400"><Calendar size={14} /> Đạt được vào: {new Date(g.targetDate).toLocaleDateString('vi-VN')}</p>
+                    <p className="mt-2 flex items-center gap-2 text-slate-600 dark:text-slate-400"><Calendar className="size-3.5" /> Đạt được vào: {new Date(g.targetDate).toLocaleDateString('vi-VN')}</p>
                     <div className="mt-auto pt-8"><p className="text-slate-500 dark:text-slate-400">Tổng cộng</p><p className="mt-1 font-extrabold text-violet-600 dark:text-violet-400">{formatVND(g.currentAmount)}</p><div className="mt-3 h-2.5 overflow-hidden rounded-full bg-violet-100 dark:bg-violet-500/15"><div className="h-full w-full rounded-full bg-violet-600" /></div></div>
                   </>
                 ) : (
@@ -177,16 +177,16 @@ const SavingGoalsPage: React.FC = () => {
                     <div className="mb-2 flex justify-between"><span className="text-slate-500 dark:text-slate-400">Đã góp</span><span className="text-slate-500 dark:text-slate-400">Đích đến</span></div>
                     <div className="flex justify-between"><span className="font-extrabold text-blue-600 dark:text-blue-400">{formatVND(g.currentAmount)}</span><span className="font-bold text-slate-900 dark:text-white">{formatVND(g.targetAmount)}</span></div>
                     <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${Math.min(100, g.progress)}%` }} /></div>
-                    <div className="mt-2 flex items-center justify-between text-slate-500 dark:text-slate-400"><span className="flex items-center gap-1.5"><Calendar size={14} />{new Date(g.targetDate).toLocaleDateString('vi-VN')}</span><span className="font-bold text-blue-600 dark:text-blue-400">{g.progress}%</span></div>
+                    <div className="mt-2 flex items-center justify-between text-slate-500 dark:text-slate-400"><span className="flex items-center gap-1.5"><Calendar className="size-3.5" />{new Date(g.targetDate).toLocaleDateString('vi-VN')}</span><span className="font-bold text-blue-600 dark:text-blue-400">{g.progress}%</span></div>
                   </div>
                   <div className="mt-auto flex gap-2 pt-4">
                     <AppButton unstyled onClick={() => setAction({ goal: g, type: 'deposit' })}
-                      className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#0873c9] font-semibold text-white transition hover:bg-[#0666b4]">
-                      <ArrowDownToLine size={13} /> Nạp
+                      className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary font-semibold text-white transition hover:bg-primary-hover">
+                      <ArrowDownToLine className="size-icon-caption" /> Nạp
                     </AppButton>
                     <AppButton unstyled onClick={() => setAction({ goal: g, type: 'withdraw' })}
                       className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-100 font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">
-                      <ArrowUpFromLine size={13} /> Rút
+                      <ArrowUpFromLine className="size-icon-caption" /> Rút
                     </AppButton>
                   </div>
                   </>
@@ -195,9 +195,9 @@ const SavingGoalsPage: React.FC = () => {
             ))}
             {/* Add new goal card */}
             <AppButton unstyled onClick={() => setShowModal(true)}
-              className="group flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/35 p-5 text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-[0_5px_18px_rgba(15,23,42,0.10)] transition group-hover:scale-105 dark:bg-slate-800 dark:text-blue-400">
-                <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+              className="group flex min-h-goal flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/35 p-5 text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-icon-tile transition group-hover:scale-105 dark:bg-slate-800 dark:text-blue-400">
+                <Plus  className="size-6 group-hover:rotate-90 transition-transform duration-slow" />
               </div>
               <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-white">Thêm mục tiêu mới</AppTitle>
               <p className="max-w-52 text-center text-slate-500 dark:text-slate-400">Bắt đầu lên kế hoạch cho mục tiêu tiếp theo của bạn</p>

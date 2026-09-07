@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import api from '@/services/api/client';
 
 export interface ChatMessage {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
 }
@@ -15,10 +16,11 @@ export const useAiChat = () => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const chatMutation = useMutation({
-    mutationFn: (payload: { message: string; history: ChatMessage[] }) =>
+    mutationFn: (payload: { message: string; history: Omit<ChatMessage, 'id'>[] }) =>
       api.post('/ai/chat', payload).then((response) => response.data.data),
     onSuccess: (data) => {
-      setMessages((previous) => [...previous, { role: 'assistant', content: data.reply }]);
+      const reply: ChatMessage = { id: crypto.randomUUID(), role: 'assistant', content: data.reply };
+      setMessages((previous) => [...previous, reply]);
       if (data.suggestions) setSuggestions(data.suggestions);
     },
   });
@@ -29,9 +31,9 @@ export const useAiChat = () => {
 
   const send = () => {
     if (!input.trim() || chatMutation.isPending) return;
-    const userMessage: ChatMessage = { role: 'user', content: input.trim() };
+    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: input.trim() };
     setMessages((previous) => [...previous, userMessage]);
-    chatMutation.mutate({ message: userMessage.content, history: messages });
+    chatMutation.mutate({ message: userMessage.content, history: messages.map(({ role, content }) => ({ role, content })) });
     setInput('');
   };
 
