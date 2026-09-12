@@ -5,6 +5,12 @@ shadows, layout dimensions and chart geometry. `frontend/tailwind.config.js`
 extends Tailwind's built-in theme with these tokens. Rebuild the package after
 editing it: `npm run build --workspace=@moneymate/design-tokens`.
 
+The shared package emits CommonJS for Node and mobile consumers. Vite explicitly
+pre-bundles it through `optimizeDeps.include` so browser modules can use named
+imports such as `webTheme`. After rebuilding tokens during development, restart
+Vite with `npm run dev --workspace=moneymate-frontend -- --force` and reload the
+page to refresh the optimized dependency cache.
+
 Use named utilities such as `bg-primary`, `shadow-summary`, `w-sidebar`,
 `text-page-title`, `size-icon-nav` and `duration-normal`. Sidebar width and the
 page's left margin intentionally use the same `sidebar` spacing token.

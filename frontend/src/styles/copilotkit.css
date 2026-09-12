@@ -25,11 +25,243 @@
   --ring: theme('colors.cyan.400');
 }
 
-.moneymate-copilot [data-popup-chat] {
-  /* Override the library's inline defaults; dimensions are owned by Tailwind. */
-  width: theme('spacing.copilot-width') !important;
-  height: theme('spacing.copilot-height') !important;
-  @apply max-w-chat-viewport max-h-copilot-viewport border border-ui-border/80 shadow-copilot dark:shadow-copilot-dark;
+.moneymate-copilot__launcher {
+  @apply fixed bottom-6 right-6 z-40 flex size-14 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-br from-brand-600 to-cyan-500 text-white shadow-copilot outline-none transition duration-normal hover:-translate-y-1 hover:shadow-copilot focus-visible:ring-4 focus-visible:ring-brand-400/30 active:translate-y-0 dark:border-white/10 dark:shadow-copilot-dark;
+}
+
+.moneymate-copilot__launcher::before {
+  content: '';
+  @apply pointer-events-none absolute inset-0 rounded-inherit bg-gradient-to-br from-white/20 to-transparent;
+}
+
+.moneymate-copilot__launcher > svg {
+  @apply relative z-10;
+}
+
+.moneymate-copilot__launcher > span {
+  @apply absolute right-0.5 top-0.5 z-10 size-3 rounded-full border-2 border-white bg-emerald-400 shadow-sm dark:border-slate-900;
+}
+
+.moneymate-copilot__panel {
+  @apply fixed bottom-24 right-6 z-50 flex h-copilot-height max-h-copilot-viewport w-copilot-width max-w-chat-viewport origin-bottom-right flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white/95 shadow-copilot backdrop-blur-xl dark:border-slate-700/80 dark:bg-slate-900/95 dark:shadow-copilot-dark;
+  animation: scaleIn 0.25s ease-out;
+}
+
+.moneymate-copilot__header {
+  @apply flex shrink-0 items-center gap-3 border-b border-brand-100/80 bg-gradient-to-r from-brand-50 via-blue-50 to-cyan-50 px-4 py-3.5 dark:border-slate-700/80 dark:from-slate-800 dark:via-slate-800 dark:to-cyan-950/40;
+}
+
+.moneymate-copilot__brand-mark {
+  @apply flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-cyan-500 text-white shadow-md shadow-brand-500/20 ring-1 ring-white/60;
+}
+
+.moneymate-copilot__heading {
+  @apply min-w-0 flex-1;
+}
+
+.moneymate-copilot__heading > span {
+  @apply block text-sm font-extrabold tracking-tight text-slate-900 dark:text-white;
+}
+
+.moneymate-copilot__heading small {
+  @apply mt-0.5 flex items-center gap-1.5 truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400;
+}
+
+.moneymate-copilot__heading i {
+  @apply size-1.5 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.55)];
+}
+
+.moneymate-copilot__close {
+  @apply flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-400 outline-none transition hover:bg-white/80 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-brand-400/50 dark:hover:bg-slate-700 dark:hover:text-white;
+}
+
+.moneymate-copilot__chat {
+  --secondary: rgb(239 246 255);
+  --muted: rgb(239 246 255);
+  min-height: 0;
+  background: transparent;
+}
+
+.dark .moneymate-copilot__chat {
+  --secondary: rgb(30 41 59);
+  --muted: rgb(30 41 59);
+}
+
+.moneymate-copilot__chat [data-testid='copilot-welcome-screen'] {
+  @apply justify-start bg-[radial-gradient(circle_at_top,rgba(42,149,255,0.09),transparent_48%)] px-5 pt-9;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-welcome-screen'] > div::before {
+  content: '✦';
+  @apply mb-4 flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-cyan-500 text-xl text-white shadow-lg shadow-brand-500/20 ring-4 ring-brand-50 dark:ring-slate-800;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-welcome-screen'] > div > div:first-child {
+  @apply mb-5;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-welcome-screen'] h1 {
+  @apply max-w-xs text-[15px] font-semibold leading-6 tracking-tight text-slate-700 dark:text-slate-200;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-chat-input'] {
+  @apply rounded-2xl border border-slate-200/90 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-500/10 dark:border-slate-700 dark:bg-slate-800 dark:shadow-black/20;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-chat-textarea'] {
+  @apply text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-add-menu-button']:disabled {
+  display: none;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-send-button'] {
+  @apply bg-gradient-to-br from-brand-600 to-cyan-500 text-white shadow-md shadow-brand-500/20 hover:from-brand-500 hover:to-cyan-400;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-suggestion'] {
+  @apply rounded-xl border-brand-100 bg-brand-50/80 text-brand-700 transition hover:-translate-y-0.5 hover:border-brand-300 hover:bg-brand-100 dark:border-slate-700 dark:bg-slate-800 dark:text-cyan-300;
+}
+
+.moneymate-copilot__chat [data-testid='copilot-welcome-screen'] [data-copilotkit]:has([data-testid='copilot-chat-input']) > div:last-child {
+  @apply px-2 pb-0 pt-3 text-[10px] leading-4 text-slate-400 dark:text-slate-500;
+}
+
+.moneymate-expense-confirmation {
+  @apply my-3 w-full overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3.5 text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.08)] dark:border-slate-700/80 dark:bg-slate-900 dark:text-slate-100 dark:shadow-black/25;
+}
+
+.moneymate-expense-confirmation__summary {
+  @apply mb-4 flex items-center gap-3 rounded-xl border border-brand-100/80 bg-gradient-to-r from-brand-50 to-cyan-50/70 p-3 dark:border-brand-900/60 dark:from-brand-950/70 dark:to-cyan-950/40;
+}
+
+.moneymate-expense-confirmation__summary-icon {
+  @apply flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-cyan-500 text-white shadow-md shadow-brand-500/20;
+}
+
+.moneymate-expense-confirmation__summary > span:last-child {
+  @apply flex min-w-0 flex-1 flex-col;
+}
+
+.moneymate-expense-confirmation__summary small {
+  @apply text-[9px] font-extrabold uppercase tracking-wider text-brand-600 dark:text-cyan-300;
+}
+
+.moneymate-expense-confirmation__summary strong {
+  @apply mt-0.5 truncate text-xl font-extrabold tracking-tight text-slate-900 dark:text-white;
+}
+
+.moneymate-expense-confirmation__summary > span:last-child > span {
+  @apply mt-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400;
+}
+
+.moneymate-expense-confirmation__fields {
+  @apply grid grid-cols-2 gap-x-2.5 gap-y-3;
+}
+
+.moneymate-expense-confirmation__fields:disabled {
+  @apply opacity-70;
+}
+
+.moneymate-expense-confirmation__fields label {
+  @apply block;
+}
+
+.moneymate-expense-confirmation__field--full {
+  @apply col-span-2;
+}
+
+.moneymate-expense-confirmation__fields label > span:first-child {
+  @apply mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300;
+}
+
+.moneymate-expense-confirmation__fields label > span:first-child svg {
+  @apply text-brand-500 dark:text-cyan-400;
+}
+
+.moneymate-expense-confirmation__control-wrap {
+  @apply relative block;
+}
+
+.moneymate-expense-confirmation__control {
+  @apply block h-10 w-full rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 text-[13px] text-slate-800 shadow-sm outline-none transition duration-normal placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-brand-400 dark:focus:bg-slate-800;
+}
+
+.moneymate-expense-confirmation__control--amount {
+  @apply pr-9 font-bold;
+}
+
+.moneymate-expense-confirmation__control-wrap > i {
+  @apply pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-bold not-italic text-slate-400 dark:text-slate-500;
+}
+
+.moneymate-expense-confirmation__alert {
+  @apply mt-3 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-semibold leading-4 text-rose-600 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300;
+}
+
+.moneymate-expense-confirmation__alert svg {
+  @apply mt-px shrink-0;
+}
+
+.moneymate-expense-confirmation__actions {
+  @apply mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2;
+}
+
+.moneymate-expense-confirmation__actions button {
+  @apply inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold outline-none transition duration-normal focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.moneymate-expense-confirmation__submit {
+  @apply bg-gradient-to-r from-brand-600 to-cyan-500 text-white shadow-md shadow-brand-500/20 hover:-translate-y-0.5 hover:from-brand-500 hover:to-cyan-400 focus-visible:ring-brand-500/20 active:translate-y-0;
+}
+
+.moneymate-expense-confirmation__cancel {
+  @apply border border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 focus-visible:ring-slate-400/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white;
+}
+
+.moneymate-expense-confirmation__safety {
+  @apply mt-3 flex items-center justify-center gap-1.5 text-center text-[9px] font-medium text-slate-400 dark:text-slate-500;
+}
+
+.moneymate-expense-confirmation__safety svg {
+  @apply text-emerald-500;
+}
+
+.moneymate-expense-state {
+  @apply my-3 flex w-full flex-wrap items-center gap-3 rounded-2xl border border-brand-100 bg-brand-50/70 p-3.5 text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200;
+}
+
+.moneymate-expense-state--error {
+  @apply border-rose-200 bg-rose-50 dark:border-rose-900/70 dark:bg-rose-950/40;
+}
+
+.moneymate-expense-state__icon {
+  @apply flex size-9 shrink-0 items-center justify-center rounded-xl bg-white text-brand-600 shadow-sm dark:bg-slate-900 dark:text-cyan-400;
+}
+
+.moneymate-expense-state--error .moneymate-expense-state__icon {
+  @apply text-rose-500;
+}
+
+.moneymate-expense-state > span:nth-child(2) {
+  @apply flex min-w-0 flex-1 flex-col;
+}
+
+.moneymate-expense-state strong {
+  @apply text-xs font-extrabold;
+}
+
+.moneymate-expense-state small {
+  @apply mt-0.5 text-[10px] text-slate-500 dark:text-slate-400;
+}
+
+.moneymate-expense-state__actions {
+  @apply flex w-full gap-2;
+}
+
+.moneymate-expense-state__actions button {
+  @apply inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-600 shadow-sm transition hover:border-brand-300 hover:text-brand-600 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300;
 }
 
 .moneymate-copilot__error {
@@ -37,11 +269,24 @@
 }
 
 @media (max-width: theme('screens.sm')) {
-  .moneymate-copilot [data-popup-chat] {
-    width: calc(100vw - theme('spacing.4')) !important;
-    height: calc(100dvh - theme('spacing.20') - theme('spacing.2')) !important;
+  .moneymate-copilot__launcher {
+    right: theme('spacing.4');
+    bottom: calc(theme('spacing.4') + env(safe-area-inset-bottom));
+  }
+
+  .moneymate-copilot__panel {
+    left: theme('spacing.2');
+    right: theme('spacing.2');
+    bottom: calc(theme('spacing.2') + env(safe-area-inset-bottom));
+    width: auto;
+    height: calc(100dvh - theme('spacing.4') - env(safe-area-inset-bottom));
     max-width: none;
     max-height: none;
+    @apply rounded-2xl;
+  }
+
+  .moneymate-copilot__chat [data-testid='copilot-welcome-screen'] {
+    @apply px-4 pt-8;
   }
 
   .moneymate-copilot__error {

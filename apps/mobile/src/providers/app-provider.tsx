@@ -7,12 +7,13 @@ import NetInfo from '@react-native-community/netinfo';
 import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import Storage from 'expo-sqlite/kv-store';
 import * as ScreenCapture from 'expo-screen-capture';
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { useRouter, useSegments } from 'expo-router';
 import { apiRequest, setSessionExpiredHandler } from '@/lib/api';
 import { applyTransactionDelta, getPendingMutations, getSyncCursor, markMutationFailed, markMutationSynced, migrateDatabase, type TransactionDelta } from '@/storage/database';
 import { useAuthStore } from '@/stores/auth.store';
 import { theme } from '@/theme';
+import { MobileChatbotProvider } from '@/components/mobile-chatbot';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } }
@@ -58,11 +59,18 @@ function SessionBootstrap({ children }: PropsWithChildren) {
 function NotificationNavigation() {
   const router = useRouter();
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const path = response.notification.request.content.data?.path;
-      if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) router.push(path as never);
-    });
-    return () => subscription.remove();
+    if (Constants.executionEnvironment === 'storeClient') return;
+    let subscription: { remove: () => void } | null = null;
+    try {
+      const Notifications = require('expo-notifications');
+      subscription = Notifications.addNotificationResponseReceivedListener((response: any) => {
+        const path = response.notification.request.content.data?.path;
+        if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) router.push(path as never);
+      });
+    } catch {
+      // expo-notifications not available
+    }
+    return () => subscription?.remove();
   }, [router]);
   return null;
 }
@@ -135,10 +143,12 @@ export function AppProvider({ children }: PropsWithChildren) {
     <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: 24 * 60 * 60 * 1000, buster: 'v1' }}>
       <SQLiteProvider databaseName="moneymate.db" onInit={migrateDatabase}>
         <SessionBootstrap>
-          <OutboxSync />
-          <AuthNavigation />
-          <NotificationNavigation />
-          {children}
+          <MobileChatbotProvider>
+            <OutboxSync />
+            <AuthNavigation />
+            <NotificationNavigation />
+            {children}
+          </MobileChatbotProvider>
         </SessionBootstrap>
       </SQLiteProvider>
     </PersistQueryClientProvider>

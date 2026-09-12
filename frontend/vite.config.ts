@@ -14,6 +14,11 @@ export default defineConfig(({ mode }) => {
 
   return {
   plugins: [react()],
+  // Workspace packages bypass automatic dependency pre-bundling. This package
+  // emits CommonJS, so convert it to browser ESM before serving named imports.
+  optimizeDeps: {
+    include: ['@moneymate/design-tokens'],
+  },
   publicDir: path.resolve(import.meta.dirname, '../assets/images'),
   resolve: {
     dedupe: ['react', 'react-dom'],

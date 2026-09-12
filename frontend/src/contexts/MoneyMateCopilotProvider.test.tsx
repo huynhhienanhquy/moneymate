@@ -125,6 +125,8 @@ describe('MoneyMateCopilotProvider', () => {
     expect(props.runtimeUrl).toBe('/api/copilotkit');
     expect(props.credentials).toBe('include');
     expect(props.useSingleEndpoint).toBe(true);
+    expect(props.showDevConsole).toBe(false);
+    expect(props.enableInspector).toBe(false);
     expect((props.headers as () => Record<string, string>)()).toEqual({
       Authorization: 'Bearer token-a',
     });

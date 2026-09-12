@@ -1,17 +1,33 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
 import { apiRequest, mobilePlatform } from '@/lib/api';
 import { sessionStorage } from '@/storage/session';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: true })
-});
+let _Notifications: typeof import('expo-notifications') | null = null;
+let _initialized = false;
+
+function isExpoGo(): boolean {
+  return Constants.executionEnvironment === 'storeClient';
+}
+
+function getNotifications(): typeof import('expo-notifications') {
+  if (_Notifications) return _Notifications;
+  if (isExpoGo()) throw new Error('expo-notifications không hỗ trợ trên Expo Go. Hãy dùng development build.');
+  _Notifications = require('expo-notifications');
+  if (!_initialized) {
+    _initialized = true;
+    _Notifications.setNotificationHandler({
+      handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: true })
+    });
+  }
+  return _Notifications;
+}
 
 export async function registerForPushNotifications() {
   if (Platform.OS === 'web') {
     throw new Error('Thông báo đẩy chưa được hỗ trợ trên phiên bản web');
   }
+  const Notifications = getNotifications();
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('money-alerts', {
       name: 'Cảnh báo tài chính',

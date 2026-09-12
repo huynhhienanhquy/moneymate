@@ -113,7 +113,7 @@ cp frontend/.env.example frontend/.env
 
 Cập nhật `DATABASE_URL` và hai JWT secret trong `backend/.env`. `OPENAI_API_KEY` là tùy chọn; khi bỏ trống, các chức năng cần OpenAI sẽ không hoạt động.
 
-CopilotKit Runtime, năm financial tool chỉ-đọc, công cụ giao diện `recordExpense` và popup frontend đã được cài đặt nhưng tắt mặc định. Để thử end-to-end trong môi trường phát triển, đặt `COPILOTKIT_ENABLED=true`, `VITE_COPILOTKIT_ENABLED=true` và cấu hình `OPENAI_API_KEY` có credit API, rồi khởi động lại backend/Vite (build lại frontend khi triển khai). Endpoint single-route là `POST /api/copilotkit` và yêu cầu access token qua `Authorization: Bearer <token>`. Runtime kiểm tra ownership của thread đang hoạt động, giới hạn lưu lượng/input/output/tool steps, timeout model và hủy run khi client ngắt kết nối. Khi flag frontend tắt, MoneyMate tự động dùng chatbot cũ.
+CopilotKit Runtime, năm financial tool chỉ-đọc, công cụ giao diện `recordExpense` và chatbot frontend đã được cài đặt nhưng tắt mặc định. Để thử end-to-end trong môi trường phát triển, đặt `COPILOTKIT_ENABLED=true`, `VITE_COPILOTKIT_ENABLED=true` và cấu hình `OPENAI_API_KEY` có credit API, rồi khởi động lại backend/Vite (build lại frontend khi triển khai). Endpoint single-route là `POST /api/copilotkit` và yêu cầu access token qua `Authorization: Bearer <token>`. Runtime kiểm tra ownership của thread đang hoạt động, giới hạn lưu lượng/input/output/tool steps, timeout model và hủy run khi client ngắt kết nối. Khi flag frontend tắt, MoneyMate tự động dùng chatbot cũ.
 
 Nhập “hôm nay ăn uống hết 12 đ” để mở biểu mẫu khoản chi: kiểm tra số tiền (12 đ là 12 VND; 12k là 12000 VND), chọn ví/danh mục, rồi bấm **Xác nhận lưu**. Công cụ chỉ gọi API giao dịch khi người dùng xác nhận; hủy không ghi dữ liệu. Yêu cầu lưu có `Idempotency-Key`, khóa nội dung khi kết quả mạng chưa rõ và cập nhật các trang tài chính sau khi lưu thành công. AI chưa có chức năng sửa/xóa giao dịch. Luồng xác nhận dùng [useHumanInTheLoop của CopilotKit v2](https://docs.copilotkit.ai/reference/v2/hooks/useHumanInTheLoop).
 
@@ -203,7 +203,7 @@ Sao chép `apps/mobile/.env.example` thành `apps/mobile/.env` và đặt `EXPO_
 | Biến | Bắt buộc | Mô tả |
 | --- | --- | --- |
 | `VITE_API_URL` | Có | Base URL của API, mặc định local là `http://localhost:5000/api` |
-| `VITE_COPILOTKIT_ENABLED` | Không | Bật popup CopilotKit frontend; mặc định `false` và cần build lại sau khi đổi |
+| `VITE_COPILOTKIT_ENABLED` | Không | Bật CopilotKit trong chatbot frontend; mặc định `false` và cần build lại sau khi đổi |
 
 ## Kiểm thử và build
 

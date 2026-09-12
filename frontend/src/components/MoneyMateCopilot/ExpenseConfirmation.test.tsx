@@ -29,6 +29,9 @@ describe('ExpenseConfirmation', () => {
 
   it('requires confirmation and a wallet, saves exactly 12 VND and refreshes financial queries', async () => {
     const respond = show();
+    expect(screen.getByRole('form', { name: 'Xác nhận khoản chi' })).toBeInTheDocument();
+    expect(screen.getByText('Kiểm tra khoản chi')).toBeInTheDocument();
+    expect(screen.getByText('Bạn luôn có quyền kiểm tra trước khi lưu.')).toBeInTheDocument();
     expect(mocks.post).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Ví')).toHaveValue('');
     expect(screen.getByLabelText('Danh mục')).toHaveValue('food');

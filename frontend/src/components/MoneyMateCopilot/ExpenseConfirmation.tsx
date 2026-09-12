@@ -1,5 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  AlertCircle,
+  CalendarDays,
+  Check,
+  CircleDollarSign,
+  FileText,
+  Loader2,
+  ReceiptText,
+  RefreshCw,
+  ShieldCheck,
+  Tag,
+  Wallet,
+  X,
+} from 'lucide-react';
 import api from '@/services/api/client';
 import { useWallets, useCategories } from '@/hooks/useReferenceData';
 import { formatVND } from '@/utils/formatCurrency';
@@ -125,36 +139,112 @@ export function ExpenseConfirmation({ draft, toolCallId, respond }: {
     finally { busyRef.current = false; setBusy(false); }
   };
 
-  if (walletsQuery.isLoading || categoriesQuery.isLoading) return <p role="status">Đang tải ví và danh mục...</p>;
-  if (!locked && (walletsQuery.isError || categoriesQuery.isError)) return <div role="alert">
-    Không thể tải ví hoặc danh mục.
-    <button type="button" onClick={() => { void walletsQuery.refetch(); void categoriesQuery.refetch(); }}>Thử tải lại</button>
-    <button type="button" disabled={busy} onClick={() => { void cancel(); }}>Hủy</button>
-    {error && <p>{error}</p>}
-  </div>;
-
-  return <form className="space-y-3 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-    onSubmit={event => { event.preventDefault(); void save(); }}>
-    <p className="font-bold">Kiểm tra khoản chi</p>
-    <p>{amount && Number(amount) > 0 ? formatVND(Number(amount)) : 'Nhập số tiền'} · Chỉ lưu khi bạn xác nhận.</p>
-    <fieldset disabled={locked || busy} className="space-y-3">
-      <label className="block">Số tiền (đ)<input aria-label="Số tiền (đ)" className="app-input" type="number" min="0.01" step="0.01" required value={amount} onChange={event => setAmount(event.target.value)} /></label>
-      <label className="block">Ví<select aria-label="Ví" className="app-select" required value={walletId} onChange={event => setWalletId(event.target.value)}>
-        <option value="">Chọn ví</option>{wallets.map(wallet => <option key={wallet.id} value={wallet.id}>{wallet.name}</option>)}
-      </select></label>
-      <label className="block">Danh mục<select aria-label="Danh mục" className="app-select" required value={categoryId} onChange={event => setCategoryId(event.target.value)}>
-        <option value="">Chọn danh mục</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
-      </select></label>
-      <label className="block">Ngày<input aria-label="Ngày" className="app-input" type="date" required max={toLocalDateInputValue()} value={date} onChange={event => setDate(event.target.value)} /></label>
-      <label className="block">Ghi chú<input aria-label="Ghi chú" className="app-input" maxLength={500} value={note} onChange={event => setNote(event.target.value)} /></label>
-    </fieldset>
-    {(!wallets.length || !categories.length) && <p role="alert">Bạn cần tạo ví và danh mục chi tiêu trước khi lưu khoản chi.</p>}
-    {error && <p role="alert" className="text-rose-600">{error}</p>}
-    <div className="flex gap-2">
-      <button className="app-primary-button" type="submit" disabled={busy || (!locked && (!wallets.length || !categories.length))}>
-        {busy ? 'Đang xử lý...' : submission?.receipt ? 'Hoàn tất' : locked ? 'Thử lại' : 'Xác nhận lưu'}
-      </button>
-      <button type="button" disabled={busy || locked} onClick={() => { void cancel(); }}>Hủy</button>
+  if (walletsQuery.isLoading || categoriesQuery.isLoading) return (
+    <div className="moneymate-expense-state" role="status">
+      <span className="moneymate-expense-state__icon"><Loader2 className="size-5 animate-spin" /></span>
+      <span><strong>Đang chuẩn bị giao dịch</strong><small>Đang tải ví và danh mục...</small></span>
     </div>
-  </form>;
+  );
+
+  if (!locked && (walletsQuery.isError || categoriesQuery.isError)) return (
+    <div className="moneymate-expense-state moneymate-expense-state--error" role="alert">
+      <span className="moneymate-expense-state__icon"><AlertCircle className="size-5" /></span>
+      <span><strong>Không thể tải thông tin</strong><small>Vui lòng thử tải lại ví và danh mục.</small></span>
+      <div className="moneymate-expense-state__actions">
+        <button type="button" onClick={() => { void walletsQuery.refetch(); void categoriesQuery.refetch(); }}>
+          <RefreshCw className="size-3.5" /> Thử tải lại
+        </button>
+        <button type="button" disabled={busy} onClick={() => { void cancel(); }}>Hủy</button>
+      </div>
+      {error && <p>{error}</p>}
+    </div>
+  );
+
+  const formattedAmount = amount && Number(amount) > 0 ? formatVND(Number(amount)) : 'Chưa nhập số tiền';
+  const actionLabel = busy ? 'Đang xử lý...' : submission?.receipt ? 'Hoàn tất' : locked ? 'Thử lại' : 'Xác nhận lưu';
+
+  return (
+    <form
+      className="moneymate-expense-confirmation"
+      aria-label="Xác nhận khoản chi"
+      onSubmit={event => { event.preventDefault(); void save(); }}
+    >
+      <div className="moneymate-expense-confirmation__summary">
+        <span className="moneymate-expense-confirmation__summary-icon" aria-hidden="true">
+          <ReceiptText className="size-5" />
+        </span>
+        <span className="min-w-0">
+          <small>Kiểm tra khoản chi</small>
+          <strong>{formattedAmount}</strong>
+          <span>Chỉ lưu sau khi bạn xác nhận</span>
+        </span>
+      </div>
+
+      <fieldset disabled={locked || busy} className="moneymate-expense-confirmation__fields">
+        <label className="moneymate-expense-confirmation__field--full">
+          <span><CircleDollarSign className="size-3.5" /> Số tiền</span>
+          <span className="moneymate-expense-confirmation__control-wrap">
+            <input
+              aria-label="Số tiền (đ)"
+              className="moneymate-expense-confirmation__control moneymate-expense-confirmation__control--amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              required
+              value={amount}
+              onChange={event => setAmount(event.target.value)}
+            />
+            <i>đ</i>
+          </span>
+        </label>
+
+        <label>
+          <span><Wallet className="size-3.5" /> Ví thanh toán</span>
+          <select aria-label="Ví" className="moneymate-expense-confirmation__control" required value={walletId} onChange={event => setWalletId(event.target.value)}>
+            <option value="">Chọn ví</option>
+            {wallets.map(wallet => <option key={wallet.id} value={wallet.id}>{wallet.name}</option>)}
+          </select>
+        </label>
+
+        <label>
+          <span><Tag className="size-3.5" /> Danh mục</span>
+          <select aria-label="Danh mục" className="moneymate-expense-confirmation__control" required value={categoryId} onChange={event => setCategoryId(event.target.value)}>
+            <option value="">Chọn danh mục</option>
+            {categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+        </label>
+
+        <label className="moneymate-expense-confirmation__field--full">
+          <span><CalendarDays className="size-3.5" /> Ngày giao dịch</span>
+          <input aria-label="Ngày" className="moneymate-expense-confirmation__control" type="date" required max={toLocalDateInputValue()} value={date} onChange={event => setDate(event.target.value)} />
+        </label>
+
+        <label className="moneymate-expense-confirmation__field--full">
+          <span><FileText className="size-3.5" /> Ghi chú</span>
+          <input aria-label="Ghi chú" className="moneymate-expense-confirmation__control" maxLength={500} placeholder="Ví dụ: Ăn trưa cùng bạn bè" value={note} onChange={event => setNote(event.target.value)} />
+        </label>
+      </fieldset>
+
+      {(!wallets.length || !categories.length) && (
+        <p role="alert" className="moneymate-expense-confirmation__alert">
+          <AlertCircle className="size-4" /> Bạn cần tạo ví và danh mục chi tiêu trước khi lưu khoản chi.
+        </p>
+      )}
+      {error && <p role="alert" className="moneymate-expense-confirmation__alert"><AlertCircle className="size-4" /> {error}</p>}
+
+      <div className="moneymate-expense-confirmation__actions">
+        <button className="moneymate-expense-confirmation__submit" type="submit" disabled={busy || (!locked && (!wallets.length || !categories.length))}>
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+          {actionLabel}
+        </button>
+        <button className="moneymate-expense-confirmation__cancel" type="button" disabled={busy || locked} onClick={() => { void cancel(); }}>
+          <X className="size-4" /> Hủy
+        </button>
+      </div>
+
+      <p className="moneymate-expense-confirmation__safety">
+        <ShieldCheck className="size-3.5" /> Bạn luôn có quyền kiểm tra trước khi lưu.
+      </p>
+    </form>
+  );
 }

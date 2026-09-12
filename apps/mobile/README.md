@@ -8,6 +8,7 @@ Expo SDK 54 application for iOS and Android, compatible with the current Expo Go
 copy .env.example .env
 npm run start
 ```
+npx expo start --clear
 
 During local Expo development, leave `EXPO_PUBLIC_API_URL` empty so the app can
 derive the backend host from Metro. Set it to a device-reachable HTTPS URL for

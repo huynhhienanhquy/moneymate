@@ -182,7 +182,7 @@ export const MoneyMateCopilotProvider = ({
         credentials="include"
         useSingleEndpoint
         showDevConsole={false}
-        enableInspector={import.meta.env.DEV}
+        enableInspector={false}
         onError={handleError}
       >
         <MoneyMateCopilotBindings />
