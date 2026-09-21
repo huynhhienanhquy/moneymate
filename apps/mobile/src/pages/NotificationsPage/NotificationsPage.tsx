@@ -1,14 +1,16 @@
 import { Alert, Pressable, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Badge, Button, EmptyState, Screen, SectionTitle, StateMessage, ui } from '@/components/ui';
+import { Badge, Button, EmptyState, Screen, SectionTitle, StateMessage, useUiStyles } from '@/components/ui';
 import { EntityCard, IconTile } from '@/components/finance';
 import { apiRequest } from '@/lib/api';
-import { theme } from '@/theme';
+import { useAppTheme } from '@/theme';
 
 interface NotificationItem { id: string; title: string; message: string; type: string; isRead: boolean; createdAt: string }
 
 export default function NotificationsPage() {
+  const ui = useUiStyles();
+  const { theme } = useAppTheme();
   const client = useQueryClient();
   const query = useQuery({ queryKey: ['notifications'], queryFn: () => apiRequest<{ notifications: NotificationItem[] }>('/notifications?take=50') });
   const read = useMutation({ mutationFn: (id: string) => apiRequest(`/notifications/${id}/read`, { method: 'PATCH' }), onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }) });

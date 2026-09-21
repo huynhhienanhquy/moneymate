@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Badge, Button, ChoiceChips, EmptyState, Field, Screen, SectionTitle, Sheet, StateMessage, ui } from '@/components/ui';
+import { Badge, Button, ChoiceChips, EmptyState, Field, Screen, SectionTitle, Sheet, StateMessage, useUiStyles } from '@/components/ui';
 import { ActionLink, EntityCard, IconTile, money } from '@/components/finance';
 import { apiRequest } from '@/lib/api';
 import type { Wallet } from '@/types/api';
-import { theme } from '@/theme';
+import { useAppTheme } from '@/theme';
 
 const walletTypes = [{ label: 'Tiền mặt', value: 'CASH' }, { label: 'Ngân hàng', value: 'BANK' }, { label: 'Ví điện tử', value: 'E_WALLET' }];
 
 export default function WalletsPage() {
+  const ui = useUiStyles();
+  const { theme } = useAppTheme();
   const client = useQueryClient();
   const [editing, setEditing] = useState<Wallet | null>(null);
   const [open, setOpen] = useState(false);

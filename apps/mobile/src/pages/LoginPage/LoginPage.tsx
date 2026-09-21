@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Text } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import { AuthButton, AuthCard, AuthError, AuthField, AuthFooter, AuthShell, authStyles } from '@/components/auth';
+import { AuthButton, AuthCard, AuthError, AuthField, AuthFooter, AuthShell, useAuthTextStyles } from '@/components/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function LoginPage() {
+  const authStyles = useAuthTextStyles();
   const router = useRouter();
   const { login, loading, error } = useAuthStore();
   const [email, setEmail] = useState('');

@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as LocalAuthentication from 'expo-local-authentication';
-import Storage from 'expo-sqlite/kv-store';
 import type { LoginResponse, UserDto } from '@moneymate/contracts';
 import { ApiError, apiRequest, mobilePlatform, setAccessToken } from '@/lib/api';
 import { sessionStorage } from '@/storage/session';
+import { keyValueStorage } from '@/storage/key-value';
 
 interface AuthState {
   user: UserDto | null;
@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: cached.user });
     } catch {
       await sessionStorage.clear().catch(() => undefined);
-      await Storage.removeItem('moneymate-query-cache').catch(() => undefined);
+      await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
       setAccessToken(null);
       set({ user: null, initialized: true });
       return;
@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         await sessionStorage.clear().catch(() => undefined);
-        await Storage.removeItem('moneymate-query-cache').catch(() => undefined);
+        await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
         setAccessToken(null);
         set({ user: null, initialized: true });
         return;
@@ -111,7 +111,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Logout must always work offline: remove local credentials and update UI
     // first, then revoke the server session as a best-effort background task.
     await sessionStorage.clear().catch(() => undefined);
-    await Storage.removeItem('moneymate-query-cache').catch(() => undefined);
+    await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
     setAccessToken(null);
     set({ user: null, loading: false, error: null });
     if (refreshToken || mobilePlatform === 'web') void apiRequest('/auth/logout', {
@@ -122,7 +122,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   deleteAccount: async (password) => {
     await apiRequest('/users/profile', { method: 'DELETE', body: JSON.stringify({ password }) });
     await sessionStorage.clear();
-    await Storage.removeItem('moneymate-query-cache');
+    await keyValueStorage.removeItem('moneymate-query-cache');
     setAccessToken(null);
     set({ user: null });
   },
@@ -142,7 +142,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   expireSession: async () => {
     await sessionStorage.clear().catch(() => undefined);
-    await Storage.removeItem('moneymate-query-cache').catch(() => undefined);
+    await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
     setAccessToken(null);
     set({ user: null, initialized: true, loading: false, error: 'Phiên đăng nhập đã hết hạn' });
   },

@@ -1,10 +1,11 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Badge, Card, ProgressBar, Screen, SectionTitle, StateMessage, ui } from '@/components/ui';
+import { Badge, Card, ProgressBar, Screen, SectionTitle, StateMessage, useUiStyles } from '@/components/ui';
 import { useMobileChatbot } from '@/components/mobile-chatbot';
 import { apiRequest } from '@/lib/api';
-import { theme } from '@/theme';
+import { useAppTheme, type AppTheme } from '@/theme';
 
 interface Advisor {
   healthScore?: number;
@@ -31,6 +32,9 @@ interface Forecast {
 }
 
 export default function AiAdvisorPage() {
+  const ui = useUiStyles();
+  const { theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { openChatbot } = useMobileChatbot();
   const advisor = useQuery({
     queryKey: ['ai-advisor'],
@@ -56,7 +60,7 @@ export default function AiAdvisorPage() {
         style={({ pressed }) => [styles.chatCta, pressed && styles.pressed]}
       >
         <View style={styles.chatIcon}>
-          <MaterialCommunityIcons name="message-processing" size={27} color="#fff" />
+          <MaterialCommunityIcons name="message-processing" size={27} color={theme.colors.onBrand} />
         </View>
         <View style={styles.chatCopy}>
           <Text style={styles.chatTitle}>Chatbot MoneyMate</Text>
@@ -149,7 +153,7 @@ export default function AiAdvisorPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   flex: { flex: 1 },
   pressed: { opacity: 0.7 },
   chatCta: {
@@ -159,9 +163,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     borderRadius: theme.radius.lg,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: '#C7E5FF',
+    borderColor: theme.colors.primaryBorder,
     shadowColor: theme.colors.primary,
     shadowOpacity: 0.13,
     shadowRadius: 14,

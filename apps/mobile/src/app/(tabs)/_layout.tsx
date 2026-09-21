@@ -1,8 +1,9 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { theme } from '@/theme';
+import { useAppTheme } from '@/theme';
 
 export default function TabsLayout() {
+  const { theme } = useAppTheme();
   return (
     <Tabs screenOptions={{
       headerShown: false,

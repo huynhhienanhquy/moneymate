@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
   type PropsWithChildren,
@@ -23,7 +24,7 @@ import * as Crypto from 'expo-crypto';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiRequest } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
-import { theme } from '@/theme';
+import { useAppTheme, type AppTheme } from '@/theme';
 
 interface ChatMessage {
   id: string;
@@ -84,6 +85,8 @@ function MobileChatbot({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const [input, setInput] = useState('');
@@ -146,7 +149,7 @@ function MobileChatbot({
           pressed && styles.pressed,
         ]}
       >
-        <MaterialCommunityIcons name="message-processing" size={27} color="#fff" />
+        <MaterialCommunityIcons name="message-processing" size={27} color={theme.colors.onBrand} />
       </Pressable>
 
       <Modal
@@ -162,7 +165,7 @@ function MobileChatbot({
           >
             <View style={styles.header}>
               <View style={styles.assistantIcon}>
-                <MaterialCommunityIcons name="creation" size={22} color="#fff" />
+                <MaterialCommunityIcons name="creation" size={22} color={theme.colors.onBrand} />
               </View>
               <View style={styles.headerCopy}>
                 <Text style={styles.title}>MoneyMate AI</Text>
@@ -270,8 +273,8 @@ function MobileChatbot({
                   ]}
                 >
                   {sending
-                    ? <ActivityIndicator size="small" color="#fff" />
-                    : <MaterialCommunityIcons name="send" size={20} color="#fff" />}
+                    ? <ActivityIndicator size="small" color={theme.colors.onBrand} />
+                    : <MaterialCommunityIcons name="send" size={20} color={theme.colors.onBrand} />}
                 </Pressable>
               </View>
               <Text style={styles.disclaimer}>
@@ -285,12 +288,12 @@ function MobileChatbot({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   flex: { flex: 1 },
   safe: { flex: 1, backgroundColor: theme.colors.background },
   fab: {
     position: 'absolute',
-    right: 20,
+    right: theme.spacing.md + theme.spacing.xs,
     zIndex: 100,
     width: 58,
     height: 58,
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: theme.colors.primaryStrong,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: theme.colors.surface,
     shadowColor: theme.colors.primaryStrong,
     shadowOpacity: 0.34,
     shadowRadius: 12,
@@ -309,11 +312,11 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.68 },
   header: {
     minHeight: 74,
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#fff',
+    gap: theme.spacing.sm + theme.spacing.xs,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
@@ -353,12 +356,12 @@ const styles = StyleSheet.create({
   userBubble: { alignSelf: 'flex-end', backgroundColor: theme.colors.primaryStrong, borderBottomRightRadius: 6 },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderBottomLeftRadius: 6,
   },
-  userMessage: { color: '#fff', fontSize: 15, lineHeight: 21 },
+  userMessage: { color: theme.colors.onBrand, fontSize: theme.typography.body, lineHeight: 21 },
   assistantMessage: { color: theme.colors.text, fontSize: 15, lineHeight: 21 },
   typing: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   typingText: { color: theme.colors.muted, fontSize: 13 },
@@ -367,7 +370,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingBottom: 8,
     gap: 9,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     backgroundColor: theme.colors.primarySoft,
     borderWidth: 1,
-    borderColor: '#C7E5FF',
+    borderColor: theme.colors.primaryBorder,
   },
   suggestionText: { color: theme.colors.primaryStrong, fontSize: 12, fontWeight: '700' },
   errorText: { color: theme.colors.danger, fontSize: 12, lineHeight: 17 },

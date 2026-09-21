@@ -3,3 +3,4 @@ export interface Category { id: string; name: string; type: 'INCOME' | 'EXPENSE'
 export interface Transaction { id: string; version: number; walletId?: string; categoryId?: string; amount: string | number; type: 'INCOME' | 'EXPENSE' | 'TRANSFER'; note?: string; transactionDate: string; wallet?: { id?: string; name: string }; category?: { id?: string; name: string; color: string } }
 export interface Dashboard { netWorth: number; monthlyIncome: number; monthlyExpense: number; monthlySavings: number; recentTransactions: Transaction[] }
 export interface Budget { id: string; amount: string | number; spent?: number; percentage?: number; category?: Category }
+export interface AdminUser { id: string; fullName: string; email: string; role: 'USER' | 'ADMIN'; createdAt: string; _count: { transactions: number; wallets: number } }

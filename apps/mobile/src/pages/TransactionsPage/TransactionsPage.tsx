@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSQLiteContext } from 'expo-sqlite';
 import { Link, useRouter, type Href } from 'expo-router';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button, Card, ChoiceChips, EmptyState, Field, Screen, StateMessage, ui } from '@/components/ui';
+import { Button, Card, ChoiceChips, EmptyState, Field, Screen, StateMessage, useUiStyles } from '@/components/ui';
 import { apiRequest } from '@/lib/api';
 import type { Transaction } from '@/types/api';
-import { theme } from '@/theme';
-import { getFailedMutationCount } from '@/storage/database';
+import { useAppTheme } from '@/theme';
+import { useOfflineStorage } from '@/storage/offline';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function TransactionsPage() {
-  const db = useSQLiteContext(); const router = useRouter(); const queryClient = useQueryClient();
+  const ui = useUiStyles();
+  const { theme } = useAppTheme();
+  const offlineStorage = useOfflineStorage(); const router = useRouter(); const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.user?.id);
   const [failedCount, setFailedCount] = useState(0); const [search, setSearch] = useState(''); const [type, setType] = useState('ALL');
   const query = useQuery({ queryKey: ['transactions'], queryFn: () => apiRequest<{ transactions: Transaction[] }>('/transactions?take=50&order=desc') });
@@ -20,11 +21,11 @@ export default function TransactionsPage() {
   useEffect(() => {
     if (!userId) return;
     let active = true;
-    void getFailedMutationCount(db, userId).then((count) => {
+    void offlineStorage.getFailedCount(userId).then((count) => {
       if (active) setFailedCount(count);
     });
     return () => { active = false; };
-  }, [db, query.dataUpdatedAt, userId]);
+  }, [offlineStorage, query.dataUpdatedAt, userId]);
   const filtered = (query.data?.transactions || []).filter((item) => (type === 'ALL' || item.type === type) && `${item.category?.name || ''} ${item.note || ''} ${item.wallet?.name || ''}`.toLowerCase().includes(search.toLowerCase()));
   return <Screen title="Giao dịch" action={<Link href="/add-transaction" asChild><Pressable accessibilityRole="button"><MaterialCommunityIcons name="plus-circle" size={30} color={theme.colors.primary} /></Pressable></Link>}>
     <View style={ui.row}><View style={{ flex: 1 }}><Link href="/scan-receipt" asChild><Pressable><Card><MaterialCommunityIcons name="line-scan" size={25} color={theme.colors.primary} /><Text style={ui.text}>Quét hóa đơn</Text></Card></Pressable></Link></View><View style={{ flex: 1 }}><Link href={'/transfer' as Href} asChild><Pressable><Card><MaterialCommunityIcons name="swap-horizontal" size={25} color={theme.colors.cyan} /><Text style={ui.text}>Chuyển tiền</Text></Card></Pressable></Link></View></View>

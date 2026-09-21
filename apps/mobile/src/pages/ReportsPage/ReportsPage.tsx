@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Card, ChoiceChips, EmptyState, Screen, SectionTitle, StateMessage, ui } from '@/components/ui';
+import { Badge, Card, ChoiceChips, EmptyState, Screen, SectionTitle, StateMessage, useUiStyles } from '@/components/ui';
 import { IconTile, money } from '@/components/finance';
 import { BarChart } from '@/components/charts';
 import { apiRequest } from '@/lib/api';
@@ -10,6 +10,7 @@ interface Trend { month: number; year: number; label: string; income: number; ex
 interface MonthlyReport { summary: { totalIncome: number; totalExpense: number; netSavings: number }; categoryExpenses: { id: string; name: string; color: string; amount: number }[] }
 
 export default function ReportsPage() {
+  const ui = useUiStyles();
   const now = new Date(); const [period, setPeriod] = useState('6');
   const trend = useQuery({ queryKey: ['trend', period], queryFn: () => apiRequest<Trend[]>(`/transactions/trend?months=${period}`) });
   const report = useQuery({ queryKey: ['monthly-report', now.getMonth(), now.getFullYear()], queryFn: () => apiRequest<MonthlyReport>(`/transactions/report?month=${now.getMonth() + 1}&year=${now.getFullYear()}`) });

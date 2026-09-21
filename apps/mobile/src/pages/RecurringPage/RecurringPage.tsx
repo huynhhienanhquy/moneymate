@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Badge, Button, ChoiceChips, EmptyState, Field, Screen, SectionTitle, Sheet, StateMessage, ui } from '@/components/ui';
+import { Badge, Button, ChoiceChips, EmptyState, Field, Screen, SectionTitle, Sheet, StateMessage, useUiStyles } from '@/components/ui';
 import { ActionLink, EntityCard, IconTile, money } from '@/components/finance';
 import { apiRequest } from '@/lib/api';
 import type { Category, Wallet } from '@/types/api';
-import { theme } from '@/theme';
+import { useAppTheme } from '@/theme';
 
 interface Recurring { id: string; amount: string | number; type: 'INCOME' | 'EXPENSE'; frequency: string; note?: string; isActive: boolean; nextExecutionDate: string; wallet: Wallet; category: Category }
 
 export default function RecurringPage() {
+  const ui = useUiStyles();
+  const { theme } = useAppTheme();
   const client = useQueryClient(); const [open, setOpen] = useState(false); const [type, setType] = useState('EXPENSE'); const [frequency, setFrequency] = useState('MONTHLY'); const [amount, setAmount] = useState(''); const [note, setNote] = useState(''); const [walletId, setWalletId] = useState(''); const [categoryId, setCategoryId] = useState('');
   const query = useQuery({ queryKey: ['recurring'], queryFn: () => apiRequest<Recurring[]>('/recurring-transactions') }); const wallets = useQuery({ queryKey: ['wallets'], queryFn: () => apiRequest<Wallet[]>('/wallets') }); const categories = useQuery({ queryKey: ['categories'], queryFn: () => apiRequest<Category[]>('/categories') });
   const create = useMutation({ mutationFn: () => apiRequest('/recurring-transactions', { method: 'POST', body: JSON.stringify({ walletId, categoryId, amount: Number(amount), type, frequency, note, startDate: new Date().toISOString() }) }), onSuccess: () => { client.invalidateQueries({ queryKey: ['recurring'] }); setOpen(false); } });

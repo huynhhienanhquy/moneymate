@@ -1,14 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSQLiteContext } from 'expo-sqlite';
 import * as Crypto from 'expo-crypto';
-import { Button, Card, Field, Screen, StateMessage, ui } from '@/components/ui';
+import { Button, Card, Field, Screen, StateMessage, useUiStyles } from '@/components/ui';
 import { ApiError, apiRequest } from '@/lib/api';
-import { enqueueMutation } from '@/storage/database';
+import { useOfflineStorage } from '@/storage/offline';
 import type { Category, Transaction, Wallet } from '@/types/api';
-import { theme } from '@/theme';
+import { useAppTheme, type AppTheme } from '@/theme';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function AddTransactionPage() {
@@ -27,8 +26,11 @@ export default function AddTransactionPage() {
 }
 
 function TransactionEditor({ id, requestedType, existing }: { id?: string; requestedType?: 'EXPENSE' | 'INCOME'; existing?: Transaction }) {
+  const ui = useUiStyles();
+  const { theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
-  const db = useSQLiteContext();
+  const offlineStorage = useOfflineStorage();
   const userId = useAuthStore((state) => state.user?.id);
   const queryClient = useQueryClient();
   const wallets = useQuery({ queryKey: ['wallets'], queryFn: () => apiRequest<Wallet[]>('/wallets') });
@@ -50,7 +52,7 @@ function TransactionEditor({ id, requestedType, existing }: { id?: string; reque
       } catch (error) {
         if (error instanceof ApiError && error.status < 500) throw error;
         if (!userId) throw error;
-        await enqueueMutation(db, userId, { id: idempotencyKey, method, path, body });
+        await offlineStorage.enqueue(userId, { id: idempotencyKey, method, path, body });
         setQueued(true);
         return null;
       }
@@ -74,11 +76,11 @@ function TransactionEditor({ id, requestedType, existing }: { id?: string; reque
   </Screen>;
 }
 
-const styles = StyleSheet.create({
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  pill: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
+  pill: { paddingHorizontal: theme.spacing.md - 2, paddingVertical: theme.spacing.sm + 2, borderRadius: theme.radius.lg - 4, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   pillActive: { borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceRaised },
-  choice: { flex: 1, padding: 14, alignItems: 'center', borderRadius: theme.radius.md, backgroundColor: theme.colors.surface },
+  choice: { flex: 1, padding: theme.spacing.md - 2, alignItems: 'center', borderRadius: theme.radius.md, backgroundColor: theme.colors.surface },
   choiceActive: { backgroundColor: theme.colors.primaryStrong },
   choiceText: { fontWeight: '700' }
 });

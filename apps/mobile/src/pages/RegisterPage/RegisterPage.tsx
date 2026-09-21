@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Text } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import { AuthButton, AuthCard, AuthError, AuthField, AuthFooter, AuthShell, authStyles } from '@/components/auth';
+import { AuthButton, AuthCard, AuthError, AuthField, AuthFooter, AuthShell, useAuthTextStyles } from '@/components/auth';
 import { apiRequest } from '@/lib/api';
 
 export default function RegisterPage() {
+  const authStyles = useAuthTextStyles();
   const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');

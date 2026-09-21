@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Badge, Button, ChoiceChips, EmptyState, Field, ProgressBar, Screen, SectionTitle, Sheet, StateMessage, ui } from '@/components/ui';
+import { Badge, Button, ChoiceChips, EmptyState, Field, ProgressBar, Screen, SectionTitle, Sheet, StateMessage, useUiStyles } from '@/components/ui';
 import { ActionLink, EntityCard, IconTile, money } from '@/components/finance';
 import { apiRequest } from '@/lib/api';
 import type { Budget, Category } from '@/types/api';
-import { theme } from '@/theme';
+import { useAppTheme } from '@/theme';
 
 export default function BudgetsPage() {
+  const ui = useUiStyles();
+  const { theme } = useAppTheme();
   const now = new Date(); const client = useQueryClient(); const [open, setOpen] = useState(false); const [editing, setEditing] = useState<Budget | null>(null); const [amount, setAmount] = useState(''); const [categoryId, setCategoryId] = useState('');
   const query = useQuery({ queryKey: ['budgets', now.getMonth(), now.getFullYear()], queryFn: () => apiRequest<Budget[]>(`/budgets?month=${now.getMonth() + 1}&year=${now.getFullYear()}`) });
   const categories = useQuery({ queryKey: ['categories'], queryFn: () => apiRequest<Category[]>('/categories') });

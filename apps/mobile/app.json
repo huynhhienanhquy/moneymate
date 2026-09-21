@@ -72,15 +72,11 @@
         }
       ],
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Cho phép MoneyMate dùng camera để quét hóa đơn."
-        }
-      ],
-      [
         "expo-image-picker",
         {
-          "photosPermission": "Cho phép MoneyMate chọn ảnh hóa đơn."
+          "photosPermission": "Cho phép MoneyMate chọn ảnh hóa đơn.",
+          "cameraPermission": "Cho phép MoneyMate dùng camera để quét hóa đơn.",
+          "microphonePermission": false
         }
       ],
       "expo-notifications",
@@ -94,7 +90,8 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-image"
     ],
     "experiments": {
       "autolinkingModuleResolution": true,

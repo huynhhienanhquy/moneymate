@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Text } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, Card, Field, Screen, ui } from '@/components/ui';
+import { Button, Card, Field, Screen, useUiStyles } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth.store';
 import { registerForPushNotifications } from '@/lib/notifications';
 import { apiRequest } from '@/lib/api';
@@ -9,6 +9,7 @@ import { apiRequest } from '@/lib/api';
 interface Session { id: string; deviceName?: string; platform: string; appVersion?: string; lastSeenAt: string; expiresAt: string }
 
 export default function ProfilePage() {
+  const ui = useUiStyles();
   const { user, logout, deleteAccount, unlockWithBiometrics, updateCachedUser } = useAuthStore();
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');

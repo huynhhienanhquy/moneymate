@@ -3,11 +3,12 @@ import { Text } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
-import { Button, ChoiceChips, Field, Screen, StateMessage, ui } from '@/components/ui';
+import { Button, ChoiceChips, Field, Screen, StateMessage, useUiStyles } from '@/components/ui';
 import { apiRequest } from '@/lib/api';
 import type { Wallet } from '@/types/api';
 
 export default function TransferPage() {
+  const ui = useUiStyles();
   const router = useRouter(); const client = useQueryClient(); const [sourceWalletId, setSource] = useState(''); const [destinationWalletId, setDestination] = useState(''); const [amount, setAmount] = useState(''); const [note, setNote] = useState('');
   const wallets = useQuery({ queryKey: ['wallets'], queryFn: () => apiRequest<Wallet[]>('/wallets') });
   const transfer = useMutation({ mutationFn: () => apiRequest('/transactions/transfer', { method: 'POST', headers: { 'Idempotency-Key': Crypto.randomUUID() }, body: JSON.stringify({ sourceWalletId, destinationWalletId, amount: Number(amount), note: note || undefined, transferDate: new Date().toISOString() }) }), onSuccess: async () => { await Promise.all([client.invalidateQueries({ queryKey: ['wallets'] }), client.invalidateQueries({ queryKey: ['transactions'] })]); router.back(); } });
