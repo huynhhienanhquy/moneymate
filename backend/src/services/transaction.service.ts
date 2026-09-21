@@ -85,6 +85,21 @@ export class TransactionService {
     // 4. Run database transaction to record transaction and update wallet balance
     const amountDec = new Prisma.Decimal(data.amount);
     const transaction = await prisma.$transaction(async (tx) => {
+      // Debit conditionally so concurrent expense requests cannot overdraw the wallet.
+      if (data.type === TransactionType.EXPENSE) {
+        const debitResult = await tx.wallet.updateMany({
+          where: {
+            id: data.walletId,
+            userId,
+            initialBalance: { gte: amountDec },
+          },
+          data: { initialBalance: { decrement: amountDec } },
+        });
+        if (debitResult.count !== 1) {
+          throw new AppError('Số dư không đủ', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
+        }
+      }
+
       const transaction = await tx.transaction.create({
         data: {
           userId,
@@ -106,11 +121,6 @@ export class TransactionService {
         await tx.wallet.update({
           where: { id: data.walletId },
           data: { initialBalance: { increment: amountDec } }
-        });
-      } else if (data.type === TransactionType.EXPENSE) {
-        await tx.wallet.update({
-          where: { id: data.walletId },
-          data: { initialBalance: { decrement: amountDec } }
         });
       }
 

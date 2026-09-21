@@ -84,12 +84,16 @@ describe('WalletService', () => {
       expect(result.name).toBe('Updated Name');
     });
 
-    it('rejects direct balance changes so adjustments remain auditable', async () => {
+    it('should update the current wallet balance when authorized', async () => {
       mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
-      await expect(walletService.updateWallet('user-uuid-1', 'wallet-uuid-1', {
+      mockWalletRepo.update.mockResolvedValue({ ...MOCK_WALLET, initialBalance: 9_000_000 as any });
+
+      const result = await walletService.updateWallet('user-uuid-1', 'wallet-uuid-1', {
         initialBalance: 9_000_000,
-      })).rejects.toThrow('Wallet balance must be changed through a transaction');
-      expect(mockWalletRepo.update).not.toHaveBeenCalled();
+      });
+
+      expect(mockWalletRepo.update).toHaveBeenCalledWith('wallet-uuid-1', { initialBalance: 9_000_000 });
+      expect(Number(result.initialBalance)).toBe(9_000_000);
     });
   });
 

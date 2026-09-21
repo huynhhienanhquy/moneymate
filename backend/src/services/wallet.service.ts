@@ -38,12 +38,10 @@ export class WalletService {
 
   async updateWallet(userId: string, walletId: string, data: { name?: string; type?: WalletType; initialBalance?: number }) {
     const wallet = await this.getWallet(userId, walletId);
-    if (data.initialBalance !== undefined) {
-      throw new AppError('Wallet balance must be changed through a transaction', 400);
-    }
-    const update: { name?: string; type?: WalletType } = {};
+    const update: { name?: string; type?: WalletType; initialBalance?: number } = {};
     if (data.name !== undefined) update.name = data.name;
     if (data.type !== undefined) update.type = data.type;
+    if (data.initialBalance !== undefined) update.initialBalance = data.initialBalance;
     return this.walletRepository.update(wallet.id, update);
   }
 

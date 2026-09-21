@@ -152,7 +152,10 @@ describe('TransactionService', () => {
       mockPrisma.$transaction.mockImplementation(async (cb: any) => {
         const txClient = {
           transaction: { create: jest.fn().mockResolvedValue(mockCreatedTx) },
-          wallet: { update: jest.fn().mockResolvedValue(MOCK_WALLET) },
+          wallet: {
+            update: jest.fn().mockResolvedValue(MOCK_WALLET),
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
         };
         return cb(txClient);
       });
@@ -168,6 +171,33 @@ describe('TransactionService', () => {
 
       expect(mockPrisma.$transaction).toHaveBeenCalled();
       expect(result.id).toBe('tx-1');
+    });
+
+    it('should reject an expense when the wallet balance is insufficient', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
+      mockCategoryRepo.findById.mockResolvedValue(MOCK_EXPENSE_CATEGORY);
+      const create = jest.fn();
+      const updateMany = jest.fn().mockResolvedValue({ count: 0 });
+      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb({
+        transaction: { create },
+        wallet: { updateMany },
+      }));
+
+      const error = await txService.createTransaction('user-1', {
+        walletId: 'wallet-1',
+        categoryId: 'cat-expense-1',
+        amount: 6000000,
+        type: TransactionType.EXPENSE,
+        transactionDate: new Date(),
+      }).catch((caught) => caught);
+
+      expect(error).toBeInstanceOf(AppError);
+      expect(error).toMatchObject({
+        message: 'Số dư không đủ',
+        statusCode: 400,
+        code: 'INSUFFICIENT_WALLET_BALANCE',
+      });
+      expect(create).not.toHaveBeenCalled();
     });
 
     it('invalidates a closed-month snapshot in the same transaction', async () => {

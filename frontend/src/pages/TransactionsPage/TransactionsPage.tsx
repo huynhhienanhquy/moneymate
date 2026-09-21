@@ -16,7 +16,7 @@ import { toLocalDateInputValue } from '@/utils/dateInput';
 
 const TransactionModal: React.FC<{
   tx?: any; prefill?: any; wallets: any[]; categories: any[];
-  onClose: () => void; onSave: (d: any, file?: File) => void; loading: boolean;
+  onClose: () => void; onSave: (d: any, file?: File) => Promise<unknown>; loading: boolean;
 }> = ({ tx, prefill, wallets, categories, onClose, onSave, loading }) => {
   const getInitialForm = () => {
     if (tx) return {
@@ -51,16 +51,22 @@ const TransactionModal: React.FC<{
 
   const filteredCats = categories.filter((c: any) => c.type === form.type);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.walletId || !form.categoryId || !form.amount) {
       setSaveError(!form.walletId ? 'Vui lòng chọn ví' : !form.categoryId ? 'Vui lòng nhập đúng tên danh mục' : 'Vui lòng nhập số tiền');
       return;
     }
+    const amount = Number(form.amount);
+    const selectedWallet = wallets.find((wallet: any) => wallet.id === form.walletId);
+    if (!tx && form.type === 'EXPENSE' && selectedWallet && amount > Number(selectedWallet.initialBalance)) {
+      setSaveError('Số dư không đủ');
+      return;
+    }
     setSaveError('');
     try {
-      onSave({ ...form, amount: parseFloat(form.amount), transactionDate: new Date(form.transactionDate) }, receiptFile || undefined);
+      await onSave({ ...form, amount, transactionDate: new Date(form.transactionDate) }, receiptFile || undefined);
     } catch (e: any) {
-      setSaveError(e?.message || 'Thêm giao dịch thất bại');
+      setSaveError(e?.response?.data?.message || e?.message || 'Thêm giao dịch thất bại');
     }
   };
 
@@ -127,7 +133,7 @@ const TransactionModal: React.FC<{
           {/* Category */}
           <div>
   <AppLabel className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Danh mục</AppLabel>
-  <AppSelect unstyled value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
+  <AppSelect unstyled id="tx-category" value={form.categoryId} onChange={(e) => setForm(p => ({ ...p, categoryId: e.target.value }))}
             className="app-select">
             <option value="">-- Chọn danh mục --</option>
             {filteredCats.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -186,7 +192,7 @@ const TransactionModal: React.FC<{
             {loading ? 'Đang xử lý...' : tx ? 'Lưu' : 'Thêm giao dịch'}
           </AppButton>
         </div>
-        {saveError && <p className="text-xs text-rose-400 text-center mt-2">{saveError}</p>}
+        {saveError && <p role="alert" className="text-xs text-rose-400 text-center mt-2">{saveError}</p>}
         {!loading && !saveError && (!form.walletId || !form.categoryId || !form.amount) && (
           <p className="text-xs text-amber-400 text-center mt-2">
             {!form.walletId ? 'Vui lòng chọn ví' : !form.categoryId ? 'Vui lòng chọn danh mục' : 'Vui lòng nhập số tiền'}
@@ -408,9 +414,9 @@ const TransactionsPage: React.FC = () => {
         )}
       </div>
 
-      {showModal && <TransactionModal prefill={prefill} wallets={wallets} categories={categories} onClose={() => { setShowModal(false); setPrefill(null); }} onSave={(d, f) => createMutation.mutate({ data: d, file: f })} loading={createMutation.isPending} />}
+      {showModal && <TransactionModal prefill={prefill} wallets={wallets} categories={categories} onClose={() => { setShowModal(false); setPrefill(null); }} onSave={(d, f) => createMutation.mutateAsync({ data: d, file: f })} loading={createMutation.isPending} />}
       {showScan && <ReceiptScanModal onClose={() => setShowScan(false)} onApply={handleScanApply} />}
-      {editTx && <TransactionModal tx={editTx} wallets={wallets} categories={categories} onClose={() => setEditTx(null)} onSave={(d) => updateMutation.mutate({ id: editTx.id, data: d })} loading={updateMutation.isPending} />}
+      {editTx && <TransactionModal tx={editTx} wallets={wallets} categories={categories} onClose={() => setEditTx(null)} onSave={(d) => updateMutation.mutateAsync({ id: editTx.id, data: d })} loading={updateMutation.isPending} />}
     </div>
   );
 };

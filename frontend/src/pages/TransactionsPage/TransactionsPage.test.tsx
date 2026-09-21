@@ -22,6 +22,20 @@ describe('TransactionsPage', () => {
     expect(screen.getByText('Không tìm thấy giao dịch nào')).toBeInTheDocument();
   });
 
+  it('shows an insufficient balance message before creating an oversized expense', async () => {
+    renderPage(TransactionsPage);
+    act(() => fireEvent.click(screen.getByRole('button', { name: /Thêm giao dịch/ })));
+
+    act(() => {
+      fireEvent.change(document.getElementById('tx-amount')!, { target: { value: '6000000' } });
+      fireEvent.change(document.getElementById('tx-wallet')!, { target: { value: 'wallet-1' } });
+      fireEvent.change(document.getElementById('tx-category')!, { target: { value: 'category-1' } });
+      fireEvent.click(document.getElementById('tx-save')!);
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Số dư không đủ');
+  });
+
   it('distinguishes an API error from an empty transaction list', () => {
     renderPage(TransactionsPage, 'error');
     expect(screen.getByRole('alert')).toHaveTextContent('Không thể tải danh sách giao dịch');
