@@ -99,7 +99,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   glowOne: { position: 'absolute', width: 260, height: 260, borderRadius: theme.radius.pill, backgroundColor: theme.colors.glowPrimary, top: -180, right: 0, opacity: 0.75 },
   glowTwo: { position: 'absolute', width: 220, height: 220, borderRadius: theme.radius.pill, backgroundColor: theme.colors.glowSecondary, bottom: 40, left: 0, opacity: 0.55 },
   content: { paddingHorizontal: theme.sizes.screenGutter, paddingTop: theme.spacing.xxs, paddingBottom: theme.spacing.xxl, gap: theme.spacing.sm + theme.spacing.xs },
-  pageAction: { position: 'absolute', right: theme.spacing.lg, top: 92, zIndex: 5 },
+  pageAction: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: theme.sizes.screenGutter, marginTop: theme.spacing.xs, marginBottom: theme.spacing.sm },
   card: { backgroundColor: theme.colors.glass, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, padding: theme.spacing.md + 1, gap: theme.spacing.sm + theme.spacing.xs, shadowColor: theme.colors.shadow, shadowOpacity: theme.dark ? 0.22 : 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 2 },
   field: { gap: theme.spacing.sm - 1 }, label: { color: theme.colors.muted, fontSize: theme.typography.bodySmall, fontWeight: '600' },
   input: { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.md - 1, paddingVertical: theme.spacing.sm + 5, fontSize: theme.typography.body + 1, shadowColor: theme.colors.shadow, shadowOpacity: 0.04, shadowRadius: 6 },

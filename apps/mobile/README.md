@@ -18,6 +18,13 @@ derive the backend host from Metro. Set it to a device-reachable HTTPS URL for
 preview and production builds. Set `EXPO_PUBLIC_EAS_PROJECT_ID` before
 registering push notifications.
 
+For a physical Android device, open **Expo Go > Scan QR code** and scan the QR
+shown by `npm run start`. The default Android camera may not open an `exp://`
+development link. Keep the computer and phone on the same Wi-Fi network. If
+the phone cannot reach Metro over LAN, restart with `npx expo start --tunnel`
+and scan the new QR code. The tunnel only forwards Metro; in that mode, set
+`EXPO_PUBLIC_API_URL` to an API URL reachable from the phone and restart Expo.
+
 ## Checks
 
 ```bash

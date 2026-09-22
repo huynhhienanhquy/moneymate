@@ -153,7 +153,7 @@ Mobile chạy bằng:
 npm run dev:mobile
 ```
 
-Sao chép `apps/mobile/.env.example` thành `apps/mobile/.env` và đặt `EXPO_PUBLIC_API_URL` thành địa chỉ backend mà thiết bị/emulator truy cập được. Android emulator thường dùng `http://10.0.2.2:5000/api`; thiết bị thật cần IP LAN hoặc HTTPS staging.
+Sao chép `apps/mobile/.env.example` thành `apps/mobile/.env`. Khi chạy Expo trên thiết bị thật trong cùng Wi-Fi, để trống `EXPO_PUBLIC_API_URL` để app lấy IP backend từ Metro, rồi mở Expo Go trên Android và dùng **Scan QR code**. iOS có thể quét bằng Camera mặc định. Android emulator dùng `http://10.0.2.2:5000/api` nếu cần cấu hình API riêng. Nếu không kết nối được Metro qua LAN, chạy `npx expo start --tunnel` trong `apps/mobile`; lúc đó phải đặt `EXPO_PUBLIC_API_URL` thành địa chỉ backend mà điện thoại truy cập được và khởi động lại Expo. Với preview/production, dùng URL HTTPS của backend.
 
 ## Scripts
 
