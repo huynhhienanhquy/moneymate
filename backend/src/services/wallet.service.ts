@@ -5,15 +5,6 @@ import { WalletType } from '@prisma/client';
 export class WalletService {
   private walletRepository = new WalletRepository();
 
-  private walletInUseError() {
-    return new AppError(
-      'Wallet cannot be deleted because it is used by financial records',
-      409,
-      [],
-      'WALLET_IN_USE',
-    );
-  }
-
   async createWallet(userId: string, data: { name: string; type: WalletType; currency?: string; initialBalance: number }) {
     return this.walletRepository.create({
       userId,
@@ -47,18 +38,9 @@ export class WalletService {
 
   async deleteWallet(userId: string, walletId: string) {
     const wallet = await this.getWallet(userId, walletId);
-    if (await this.walletRepository.countReferences(wallet.id) > 0) {
-      throw this.walletInUseError();
+    if (!await this.walletRepository.archive(wallet.id, userId)) {
+      throw new AppError('Wallet not found', 404);
     }
-    try {
-      return await this.walletRepository.delete(wallet.id);
-    } catch (error) {
-      // The pre-check gives a useful response in the common case; the FK mapping
-      // closes the race where a reference is created immediately before delete.
-      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2003') {
-        throw this.walletInUseError();
-      }
-      throw error;
-    }
+    return true;
   }
 }

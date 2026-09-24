@@ -188,7 +188,7 @@ describe('RecurringService', () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback: any) => callback({
         recurringTransaction: { updateMany: advance },
         transaction: { create },
-        wallet: { findFirst: jest.fn().mockResolvedValue({ id: 'wallet-1' }), updateMany: jest.fn() },
+        wallet: { findFirst: jest.fn().mockResolvedValue({ id: 'wallet-1' }), updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
         category: { findFirst: jest.fn().mockResolvedValue({ id: 'category-1' }) },
       }));
 
@@ -211,6 +211,17 @@ describe('RecurringService', () => {
     await service.toggleActive('user-1', 'recurring-1');
 
     expect(recurringRepo.update).toHaveBeenCalledWith('recurring-1', { isActive: false });
+  });
+
+  it('does not restart a schedule whose wallet was deleted', async () => {
+    const service = new RecurringService();
+    const recurringRepo = MockRecurringRepo.mock.instances[0] as jest.Mocked<RecurringRepository>;
+    const walletRepo = MockWalletRepo.mock.instances[0] as jest.Mocked<WalletRepository>;
+    recurringRepo.findById.mockResolvedValue({ ...currentRecurring, isActive: false } as any);
+    walletRepo.findById.mockResolvedValue(null);
+
+    await expect(service.toggleActive('user-1', 'recurring-1')).rejects.toMatchObject({ statusCode: 404 });
+    expect(recurringRepo.update).not.toHaveBeenCalled();
   });
 
   it('does not restart a schedule that is already active when updating its status', async () => {
@@ -238,12 +249,13 @@ describe('RecurringService', () => {
       nextExecutionDate: executionDate,
       category: { name: 'Internet' },
     } as any]);
+    const walletUpdateMany = jest.fn();
     (prisma.$transaction as jest.Mock).mockImplementation(async (callback: any) => callback({
       recurringTransaction: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
       transaction: { create: jest.fn().mockResolvedValue({}) },
       wallet: {
         findFirst: jest.fn().mockResolvedValue({ id: 'wallet-1' }),
-        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        updateMany: walletUpdateMany,
       },
       category: { findFirst: jest.fn().mockResolvedValue({ id: 'category-1' }) },
       monthlySavingsSnapshot: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
@@ -252,6 +264,7 @@ describe('RecurringService', () => {
     await expect(service.processDueTransactions()).resolves.toBe(1);
     expect(budgetService.checkBudgetAlerts)
       .toHaveBeenCalledWith('user-1', 'category-1', executionDate);
+    expect(walletUpdateMany).not.toHaveBeenCalled();
   });
 
   it('rejects a private category owned by another user', async () => {

@@ -24,4 +24,16 @@ describe('theme store', () => {
     expect(useThemeStore.getState().theme).toBe('dark');
     expect(document.documentElement).toHaveClass('dark');
   });
+
+  it('sets an explicit theme and persists it for app controls', () => {
+    useThemeStore.getState().setTheme('light');
+    expect(useThemeStore.getState().theme).toBe('light');
+    expect(localStorage.getItem('mm_theme')).toBe('light');
+    expect(document.documentElement).not.toHaveClass('dark');
+
+    useThemeStore.getState().setTheme('dark');
+    expect(useThemeStore.getState().theme).toBe('dark');
+    expect(localStorage.getItem('mm_theme')).toBe('dark');
+    expect(document.documentElement).toHaveClass('dark');
+  });
 });

@@ -1,100 +1,155 @@
-# Software Requirement Specification (SRS) - MoneyMate
+# MoneyMate Software Requirements Specification
 
-## 1. Introduction
+> Version 3.0 — implementation-aligned baseline, 2026-09-24.
 
-### 1.1 Document Purpose
-This Software Requirement Specification (SRS) document details the requirements, architecture, and specifications for **MoneyMate**, a Smart Personal Finance Management System. It serves as a blueprint for the developers, designers, and testers involved in building the application.
+## 1. Purpose
 
-### 1.2 Project Scope
-MoneyMate is a comprehensive web-based application designed to help users track and optimize their personal finances. The platform covers income/expense tracking, multi-wallet management, budget setting, saving goal milestones, automatic recurring transaction execution, graphical reports, and intelligent AI-driven financial insights.
+This specification defines the current scope, architecture, external interfaces, constraints, and verification expectations for MoneyMate. Detailed requirement identifiers live in [requirements.md](./requirements.md), while domain invariants live in [business_rules.md](./business_rules.md).
 
-### 1.3 Intended Audience
-- **Developers**: To build Frontend, Backend, and AI systems matching specifications.
-- **Q/A & Testers**: To write unit, integration, and end-to-end test cases.
-- **Product Owners / Users**: To verify business rules and functional behavior.
+## 2. Product scope
 
----
+MoneyMate is a Vietnamese-oriented personal finance system delivered through a React web application and an Expo iOS/Android application backed by one Express/MySQL API.
 
-## 2. Overall Description
+The product supports:
 
-### 2.1 Product Perspective
-MoneyMate is developed as a modular web application implementing a strict **Clean Architecture** pattern to ensure decoupling, high maintainability, and scalability.
+- accounts, rotating multi-device sessions, profiles, and administration;
+- wallets, categories, income/expense records, and atomic wallet transfers;
+- budgets, savings goals, recurring transactions, notifications, and attachments;
+- dashboards, monthly/yearly analytics, trend data, and Excel/PDF exports;
+- mobile offline replay and transaction delta synchronization;
+- receipt OCR, AI analysis/advice, and an authenticated financial Copilot;
+- light/dark themes and Copilot-driven application navigation.
 
+## 3. Users
+
+### 3.1 Standard user
+
+Manages only their own financial data, sessions, devices, profile, exports, AI requests, and application preferences.
+
+### 3.2 Administrator
+
+Uses a protected administration area to list, inspect, update, or delete users. Administrator access does not remove the need for authentication and route authorization.
+
+### 3.3 Operations team
+
+Maintains infrastructure, secrets, database migrations/backups, attachment storage, optional AI/push integrations, monitoring, and release processes. Operations access is outside the end-user product UI.
+
+## 4. System architecture
+
+```text
+React web ──────┐
+                ├── Express API ── Prisma ── MySQL
+Expo mobile ────┘        │
+                         ├── Object storage
+                         ├── OpenAI/CopilotKit (optional)
+                         └── Expo push service (optional)
 ```
-       [ Presentation Layer (React SPA / Controllers) ]
-                             │
-                             ▼
-                 [ Service Layer (Use Cases) ]
-                             │
-                             ▼
-         [ Repository Layer (Database Access / Prisma) ]
-                             │
-                             ▼
-                 [ Database Layer (MySQL) ]
-```
 
-### 2.2 Product Functions
-MoneyMate features are split into three developmental phases:
-- **Phase 1 (MVP)**: Secure authentication, profile management, multi-wallet accounts, custom category classification, simple transaction CRUD (income/expense), and a responsive dashboard highlighting monthly summary reports.
-- **Phase 2 (Advanced)**: Budgets with threshold alerts, saving goals with deposit transactions, automated recurring transaction engine, inter-wallet transfers, receipt attachment uploads, PDF/Excel export, and dark mode UI.
-- **Phase 3 (AI Features)**: AI expense analyzer, budget predictive warnings, OCR receipt scanner, financial conversational chatbot, and personalized financial advisors.
+The API is the authorization and business-rule boundary. Web and mobile clients share contracts and selected domain/design packages but retain platform-specific UI and storage adapters.
 
-### 2.3 User Classes and Characteristics
-- **General User**: Individuals wanting to manage their cash flow, track expenses, and plan their future saving goals.
-- **System Administrator (Future scope)**: For monitoring platform health, user analytics, and system-wide category configuration.
+See [architecture.md](./architecture.md) and [erd.md](./erd.md) for details.
 
-### 2.4 Design and Implementation Constraints
-- **Tech Stack**:
-  - **Frontend**: React + TypeScript + Vite + Tailwind CSS + Shadcn UI + Recharts
-  - **Backend**: Node.js + Express.js + TypeScript + Prisma ORM
-  - **Database**: MySQL (hosted on Railway or local)
-- **Deployment**: Vercel (Frontend), Render (Backend).
-- **Coding Standard**: CamelCase for variables/keys, PascalCase for components/classes, Kebab-case for folders/files. Linting via ESLint and formatting via Prettier.
+## 5. Functional overview
 
----
+### 5.1 Identity and sessions
 
-## 3. System Features & Modules
+Registration creates a standard user. Login returns a 15-minute JWT access token and a seven-day rotating refresh session. Web uses an HttpOnly refresh cookie; mobile uses SecureStore with a response-body refresh token. Users can inspect and revoke sessions. Account deletion requires password confirmation.
 
-### 3.1 Authentication & User Management
-- **Register**: Users register using name, email, and password. Data is validated on both ends.
-- **Login**: Issue short-lived JSON Web Token (JWT) Access Token and long-lived Refresh Token.
-- **Logout**: Invalidate the Refresh Token in the database.
-- **Forgot Password**: Password reset sequence via token.
-- **Profile Management**: Update user metadata, email, and upload profile avatar.
+Password reset by email is not implemented in the current baseline.
 
-### 3.2 Wallet Management
-- **Multi-Wallet Support**: Users can manage multiple wallets (e.g., Cash, Bank accounts, Credit Cards, E-wallets, Savings).
-- **Transfer**: Inter-wallet transfers (Phase 2 feature) with automatic double entry bookkeeping logs.
-- **CRUD Operations**: Users can add, edit, or delete wallets. Deleting a wallet handles cascade operations or archival.
+### 5.2 Financial records
 
-### 3.3 Category Management
-- **System Default Categories**: Built-in standard categories for Income (e.g., Salary, Investment) and Expense (e.g., Food, Rent, Entertainment).
-- **Custom Categories**: Users can create their own sub-categories or custom categories with distinct colors and icons.
+Users manage wallets and system/custom categories, record income and expenses, and transfer between owned wallets. Transaction lists support search, filtering, sorting, and pagination. Mobile sync consumes versioned updates and deletion tombstones. Transfers use a dedicated immutable workflow.
 
-### 3.4 Transactions Module
-- **CRUD Operations**: Support creating, viewing, editing, and deleting transactions.
-- **Types**: Income, Expense, Transfer (inter-wallet).
-- **Features**: Notes, receipt image attachments, date select, search, sorting, and advanced multi-filter (by wallet, category, type, and date range).
+### 5.3 Planning and automation
 
-### 3.5 Budgeting Module (Phase 2)
-- Set monthly budget limits per category or overall.
-- Real-time tracking and visual progress bars.
-- Warnings triggers when spending reaches 80% and 100% thresholds.
+Budgets track global or category spending by month and issue threshold notifications. Savings goals accept atomic wallet deposits/withdrawals and expose derived progress/status. Recurring schedules support daily, weekly, monthly, and yearly generation with bounded catch-up.
 
-### 3.6 Saving Goals (Phase 2)
-- Target savings setting with target completion date.
-- Dedicated deposit functionality linked directly to a wallet.
-- Goal completion milestones and progression status calculation.
+### 5.4 Reporting
 
-### 3.7 Recurring Transactions (Phase 2)
-- Set up automatic logs for recurring payments (e.g., rent, Netflix, insurance, salary).
-- Cron jobs evaluate and generate transactions automatically on the specified frequency.
+The dashboard provides current summary values and recent transactions. Monthly, yearly, category, and trend endpoints power web/mobile visualizations. Authenticated monthly exports are available as PDF and Excel. Closed-period snapshots support repeatable historical reporting.
 
-### 3.8 Reports & Analytics
-- **Dashboard**: High-level view of current net worth, monthly income, monthly expenses, and recent transactions.
-- **Visual Analytics**: Interactive Recharts (Pie Chart for category breakdown, Bar Chart for monthly comparison, Line Chart for spending trend over time).
+### 5.5 Files and notifications
 
-### 3.9 AI Features (Phase 3)
-- **OCR Receipt Parsing**: Upload receipts to auto-populate transaction details (date, merchant, total, items).
-- **Predictive Budgeting**: Highlight categories likely to exceed their budgets based on daily run rate.
-- **Conversational Chatbot**: Chat interface supporting general natural language financial queries.
+Users can manage transaction attachments. Uploads are limited by MIME type and size and may be stored locally or in S3-compatible storage. In-app notifications support read/delete workflows; mobile devices can register Expo push tokens.
+
+### 5.6 AI and Copilot
+
+Optional AI endpoints provide analysis, forecasting, advisor insights, chat, and receipt OCR. The Copilot runtime supplies five read-only aggregate financial tools. Browser tools prepare an expense with human confirmation, apply a theme, or navigate to an allowlisted route.
+
+AI output is advisory. The model must call a user-scoped tool before presenting personal financial numbers and must never receive server secrets.
+
+## 6. External interfaces
+
+### 6.1 HTTP API
+
+- JSON APIs are rooted at `/api`.
+- OpenAPI/Swagger UI is served at `/api-docs`.
+- A health endpoint is served at `/health`.
+- Authenticated requests use `Authorization: Bearer <access-token>`.
+- Browser refresh uses credentials/cookies.
+- Errors use a consistent safe response envelope and may include stable error codes.
+
+### 6.2 Web interface
+
+The React SPA provides public login/register pages, authenticated finance pages, a protected admin area, responsive navigation, light/dark themes, receipt scanning, and an optional Copilot popup. Route-level screens are lazy loaded.
+
+### 6.3 Mobile interface
+
+The Expo application provides corresponding finance screens plus SecureStore sessions, SQLite offline support, camera/OCR, biometrics, screenshot protection, notifications, and deep links. Native features require a compatible development or production build.
+
+### 6.4 Third-party services
+
+- MySQL stores relational data.
+- S3-compatible storage is optional for attachments.
+- OpenAI is optional for AI and Copilot.
+- Expo/Apple/Google services are optional for mobile builds and notifications.
+
+## 7. Data and consistency
+
+- User data is isolated by authenticated ownership.
+- Financial amounts use decimal database fields and VND is the default currency.
+- Wallet and transaction soft deletion preserves historical/sync behavior.
+- Normal transaction updates/deletes use optimistic versions.
+- Supported mutation replay is guarded by user-scoped idempotency records.
+- Multi-record financial writes use database transactions.
+- Report snapshots are invalidated after relevant backdated changes.
+
+## 8. Security and privacy
+
+- Production requires HTTPS, strong JWT secrets, and exact configured browser origins.
+- Passwords use bcrypt; refresh tokens are stored as hashes and rotated.
+- Rate limits protect authentication and Copilot endpoints.
+- Request size, message length, upload, pagination, tool-step, output, and timeout limits reduce abuse risk.
+- Logs and model context must exclude credentials and unnecessary financial detail.
+- Account deletion and provider/backups retention require operational procedures documented in the privacy policy.
+
+## 9. Quality attributes
+
+- **Reliability:** atomic financial operations, idempotent replay, optimistic conflicts, graceful shutdown, and verified migrations.
+- **Maintainability:** strict TypeScript, layered backend, adjacent tests, and shared workspace packages.
+- **Usability:** responsive screens, explicit loading/error/offline states, Vietnamese currency/date behavior, and safe confirmations.
+- **Accessibility:** semantic controls, keyboard support, visible focus, reduced motion, and WCAG 2.1 AA intent.
+- **Portability:** browser plus iOS/Android clients using one authenticated API.
+- **Observability:** request IDs, safe structured error logging, health checks, and release monitoring.
+
+## 10. Constraints and known limits
+
+- CopilotKit and OpenAI features are disabled unless configured.
+- Copilot thread ownership is in memory and follows the current runtime process lifetime; Rich Threads are not enabled.
+- The recurring scheduler uses process startup plus a 24-hour interval, not an external distributed scheduler.
+- Local attachment storage is not durable across ephemeral container replacement.
+- Push, biometrics, camera, and deep-link behavior require physical-device validation.
+- Performance must be measured in the target deployment; no fixed production latency is guaranteed by this repository.
+- The Copilot can prepare an expense but cannot edit or delete transactions.
+
+## 11. Verification
+
+Acceptance requires proportionate checks across:
+
+- backend unit tests and MySQL-backed integration tests;
+- frontend Vitest, lint, type-check, and production build;
+- mobile type-check, lint, Expo doctor/export, and physical-device smoke tests;
+- migration rehearsal and restore testing;
+- security checks for ownership, role boundaries, session replay, CORS/HTTPS, upload validation, and secret handling;
+- end-to-end verification of optional OpenAI, storage, and push providers in staging.

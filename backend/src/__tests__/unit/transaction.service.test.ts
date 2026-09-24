@@ -4,7 +4,6 @@ import { WalletRepository } from '../../repositories/wallet.repository';
 import { CategoryRepository } from '../../repositories/category.repository';
 import { TransactionRepository } from '../../repositories/transaction.repository';
 import { BudgetService } from '../../services/budget.service';
-import { AppError } from '../../common/app-error';
 import { TransactionType, CategoryType, WalletType } from '@prisma/client';
 import prisma from '../../config/db';
 
@@ -25,6 +24,7 @@ const MOCK_WALLET = {
   initialBalance: '5000000' as any,
   createdAt: new Date(),
   updatedAt: new Date(),
+  deletedAt: null,
 };
 
 const MOCK_EXPENSE_CATEGORY = {
@@ -148,13 +148,15 @@ describe('TransactionService', () => {
         category: { name: 'Ăn uống', color: '#FF5722' },
       };
 
+      const updateWallet = jest.fn();
+      const updateWalletMany = jest.fn().mockResolvedValue({ count: 1 });
       // Mock the prisma.$transaction to call the callback and return the result
       mockPrisma.$transaction.mockImplementation(async (cb: any) => {
         const txClient = {
           transaction: { create: jest.fn().mockResolvedValue(mockCreatedTx) },
           wallet: {
-            update: jest.fn().mockResolvedValue(MOCK_WALLET),
-            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+            update: updateWallet,
+            updateMany: updateWalletMany,
           },
         };
         return cb(txClient);
@@ -171,33 +173,52 @@ describe('TransactionService', () => {
 
       expect(mockPrisma.$transaction).toHaveBeenCalled();
       expect(result.id).toBe('tx-1');
+      expect(updateWallet).not.toHaveBeenCalled();
+      expect(updateWalletMany).not.toHaveBeenCalled();
     });
 
-    it('should reject an expense when the wallet balance is insufficient', async () => {
+    it('records an expense larger than the wallet amount without changing that amount', async () => {
       mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
       mockCategoryRepo.findById.mockResolvedValue(MOCK_EXPENSE_CATEGORY);
-      const create = jest.fn();
-      const updateMany = jest.fn().mockResolvedValue({ count: 0 });
+      const create = jest.fn().mockResolvedValue({ id: 'tx-large-expense' });
+      const updateMany = jest.fn();
       mockPrisma.$transaction.mockImplementation(async (cb: any) => cb({
         transaction: { create },
         wallet: { updateMany },
       }));
 
-      const error = await txService.createTransaction('user-1', {
+      await expect(txService.createTransaction('user-1', {
         walletId: 'wallet-1',
         categoryId: 'cat-expense-1',
         amount: 6000000,
         type: TransactionType.EXPENSE,
         transactionDate: new Date(),
-      }).catch((caught) => caught);
+      })).resolves.toEqual({ id: 'tx-large-expense' });
+      expect(create).toHaveBeenCalled();
+      expect(updateMany).not.toHaveBeenCalled();
+    });
 
-      expect(error).toBeInstanceOf(AppError);
-      expect(error).toMatchObject({
-        message: 'Số dư không đủ',
-        statusCode: 400,
-        code: 'INSUFFICIENT_WALLET_BALANCE',
+    it('adds an income transaction amount to its wallet', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
+      mockCategoryRepo.findById.mockResolvedValue(MOCK_INCOME_CATEGORY);
+      const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb({
+        transaction: { create: jest.fn().mockResolvedValue({ id: 'tx-income' }) },
+        wallet: { updateMany },
+      }));
+
+      await expect(txService.createTransaction('user-1', {
+        walletId: 'wallet-1',
+        categoryId: 'cat-income-1',
+        amount: 750000,
+        type: TransactionType.INCOME,
+        transactionDate: new Date(),
+      })).resolves.toEqual({ id: 'tx-income' });
+
+      expect(updateMany).toHaveBeenCalledWith({
+        where: { id: 'wallet-1', userId: 'user-1', deletedAt: null },
+        data: { initialBalance: { increment: expect.anything() } },
       });
-      expect(create).not.toHaveBeenCalled();
     });
 
     it('invalidates a closed-month snapshot in the same transaction', async () => {
@@ -206,7 +227,7 @@ describe('TransactionService', () => {
       const deleteMany = jest.fn().mockResolvedValue({ count: 1 });
       mockPrisma.$transaction.mockImplementation(async (cb: any) => cb({
         transaction: { create: jest.fn().mockResolvedValue({ id: 'tx-backdated' }) },
-        wallet: { update: jest.fn().mockResolvedValue(MOCK_WALLET) },
+        wallet: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
         monthlySavingsSnapshot: { deleteMany },
       }));
 
@@ -249,6 +270,59 @@ describe('TransactionService', () => {
 
   // ─── DELETE TRANSACTION ───────────────────────────────────────────────────────
   describe('deleteTransaction()', () => {
+    it('does not change the wallet amount when deleting an expense', async () => {
+      mockTransactionRepo.findById.mockResolvedValue({
+        id: 'tx-1', userId: 'user-1', walletId: 'wallet-1', categoryId: 'cat-1',
+        amount: '100000' as any, type: TransactionType.EXPENSE, version: 1,
+        note: null, transactionDate: new Date(), createdAt: new Date(), updatedAt: new Date(),
+      } as any);
+      const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+      const updateWallet = jest.fn();
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => callback({
+        transaction: { updateMany },
+        wallet: { update: updateWallet },
+      }));
+
+      await expect(txService.deleteTransaction('user-1', 'tx-1', 1)).resolves.toBe(true);
+      expect(updateWallet).not.toHaveBeenCalled();
+    });
+
+    it('reverses an income credit when deleting it', async () => {
+      mockTransactionRepo.findById.mockResolvedValue({
+        id: 'tx-1', userId: 'user-1', walletId: 'wallet-1', categoryId: 'cat-1',
+        amount: '100000' as any, type: TransactionType.INCOME, version: 1,
+        note: null, transactionDate: new Date(), createdAt: new Date(), updatedAt: new Date(),
+      } as any);
+      const updateWallet = jest.fn();
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => callback({
+        transaction: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+        wallet: { update: updateWallet },
+      }));
+
+      await expect(txService.deleteTransaction('user-1', 'tx-1', 1)).resolves.toBe(true);
+      expect(updateWallet).toHaveBeenCalledWith({
+        where: { id: 'wallet-1' },
+        data: { initialBalance: { decrement: expect.anything() } },
+      });
+    });
+
+    it('does not refund when the transaction was already deleted or changed', async () => {
+      mockTransactionRepo.findById.mockResolvedValue({
+        id: 'tx-1', userId: 'user-1', walletId: 'wallet-1', categoryId: 'cat-1',
+        amount: '100000' as any, type: TransactionType.EXPENSE, version: 1,
+        note: null, transactionDate: new Date(), createdAt: new Date(), updatedAt: new Date(),
+      } as any);
+      const updateWallet = jest.fn();
+      mockPrisma.$transaction.mockImplementation(async (callback: any) => callback({
+        transaction: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+        wallet: { update: updateWallet },
+      }));
+
+      await expect(txService.deleteTransaction('user-1', 'tx-1', 1))
+        .rejects.toMatchObject({ statusCode: 409 });
+      expect(updateWallet).not.toHaveBeenCalled();
+    });
+
     it('should throw AppError when trying to delete another user transaction', async () => {
       const mockTxRepo = MockTransactionRepo.mock.instances[0] as jest.Mocked<TransactionRepository>;
       mockTxRepo.findById.mockResolvedValue({
@@ -282,6 +356,7 @@ describe('TransactionService', () => {
 
   describe('updateTransaction()', () => {
     it('should validate the category against the resulting transaction type', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
       mockTransactionRepo.findById.mockResolvedValue({
         id: 'tx-1', userId: 'user-1', walletId: 'wallet-1', categoryId: 'cat-expense-1',
         amount: '100000' as any, type: TransactionType.EXPENSE, version: 1,
@@ -294,6 +369,7 @@ describe('TransactionService', () => {
     });
 
     it('checks budget alerts after an expense update commits', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
       const transactionDate = new Date();
       mockTransactionRepo.findById.mockResolvedValue({
         id: 'tx-1', userId: 'user-1', walletId: 'wallet-1', categoryId: 'cat-expense-1',
@@ -302,8 +378,10 @@ describe('TransactionService', () => {
       } as any);
       mockCategoryRepo.findById.mockResolvedValue(MOCK_EXPENSE_CATEGORY);
       const updated = { id: 'tx-1', transactionDate, type: TransactionType.EXPENSE };
+      const updateWallet = jest.fn();
+      const updateWalletMany = jest.fn();
       mockPrisma.$transaction.mockImplementation(async (callback: any) => callback({
-        wallet: { update: jest.fn().mockResolvedValue(MOCK_WALLET) },
+        wallet: { update: updateWallet, updateMany: updateWalletMany },
         transaction: {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           findUniqueOrThrow: jest.fn().mockResolvedValue(updated),
@@ -314,6 +392,8 @@ describe('TransactionService', () => {
       await expect(txService.updateTransaction('user-1', 'tx-1', { amount: 200000 }))
         .resolves.toBe(updated);
       expect(alertSpy).toHaveBeenCalledWith('user-1', 'cat-expense-1', transactionDate);
+      expect(updateWallet).not.toHaveBeenCalled();
+      expect(updateWalletMany).not.toHaveBeenCalled();
     });
   });
 
@@ -356,7 +436,7 @@ describe('TransactionService', () => {
   });
 
   describe('getDashboardSummary()', () => {
-    it('uses the same asset total as monthly savings and subtracts monthly expense', async () => {
+    it('uses the sum of wallet amounts as total assets', async () => {
       mockTransactionRepo.getWalletBalanceTotal.mockResolvedValue(5_000_000);
       mockTransactionRepo.getMonthlySummary.mockResolvedValue({
         totalIncome: 10_000_000,
@@ -384,8 +464,8 @@ describe('TransactionService', () => {
   });
 
   describe('getMonthlyReport()', () => {
-    it.each([5_000_000, 0, -1_000_000])('uses dashboard assets of %s for report income and savings', async (assets) => {
-      mockTransactionRepo.getWalletBalanceTotal.mockResolvedValue(assets);
+    it('matches monthly balance income using the requested month wallet balance', async () => {
+      mockTransactionRepo.getWalletBalanceTotal.mockResolvedValue(5_000_000);
       mockTransactionRepo.getMonthlySummary.mockResolvedValue({
         totalIncome: 10_000_000,
         actualIncome: 9_000_000,
@@ -402,15 +482,49 @@ describe('TransactionService', () => {
       mockTransactionRepo.getCategoryBreakdown.mockResolvedValue([]);
       mockTransactionRepo.findAll.mockResolvedValue([]);
 
-      const dashboard = await txService.getDashboardSummary('user-1');
       const report = await txService.getMonthlyReport('user-1', 8, 2026);
 
-      expect(report.summary.totalIncome).toBe(dashboard.netWorth);
-      expect(report.summary.netSavings).toBe(assets - 4_000_000);
+      expect(report.summary.totalIncome).toBe(11_000_000);
+      expect(report.summary.totalExpense).toBe(4_000_000);
+      expect(report.summary.netSavings).toBe(7_000_000);
       expect(report.summary.remainingAmount).toBe(report.summary.netSavings);
       expect(report.summary.actualIncome).toBe(9_000_000);
       expect(report.summary.recurringIncome).toBe(1_000_000);
       expect(mockTransactionRepo.getMonthlySummary).toHaveBeenCalledWith('user-1', 8, 2026);
+      expect(mockTransactionRepo.getWalletBalanceTotal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getYearlyReport()', () => {
+    it('sums the same monthly wallet balances shown on the monthly savings page', async () => {
+      jest.useFakeTimers().setSystemTime(new Date(2026, 8, 15));
+      try {
+        mockPrisma.user.findUnique.mockResolvedValue({ createdAt: new Date(2026, 2, 10) });
+        mockTransactionRepo.getWalletBalanceTotal.mockResolvedValue(20_000_000);
+        mockTransactionRepo.getCategoryBreakdown.mockResolvedValue([]);
+        mockTransactionRepo.getYearlySummary.mockResolvedValue({
+          year: 2026,
+          totalIncome: 999,
+          totalExpense: 999,
+          netSavings: 0,
+          monthlyData: [
+            { month: 1, walletBalance: 1_000_000, expense: 500_000 },
+            { month: 3, walletBalance: 3_000_000, expense: 1_000_000 },
+            { month: 4, walletBalance: 4_000_000, expense: 2_000_000 },
+            { month: 9, walletBalance: 9_000_000, expense: 3_000_000 },
+            { month: 10, walletBalance: 10_000_000, expense: 4_000_000 },
+          ],
+        } as any);
+
+        const report = await txService.getYearlyReport('user-1', 2026);
+
+        expect(report.totalIncome).toBe(16_000_000);
+        expect(report.totalExpense).toBe(6_000_000);
+        expect(report.netSavings).toBe(10_000_000);
+        expect(report.walletBalanceTotal).toBe(20_000_000);
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 

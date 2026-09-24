@@ -6,10 +6,11 @@ import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, PiggyBank, Pencil, Trash2, Loader2, X, ChevronLeft, ChevronRight, AlertTriangle, TrendingDown, CalendarDays, CircleDollarSign, WalletCards } from 'lucide-react';
+import { Plus, PiggyBank, Pencil, Trash2, Loader2, X, ChevronLeft, ChevronRight, AlertTriangle, TrendingDown, CalendarDays, WalletCards } from 'lucide-react';
 import api from '@/services/api/client';
 import AppModal from '@/components/common/AppModal/AppModal';
 import LoadingState from '@/components/common/LoadingState/LoadingState';
+import PageHeader from '@/components/common/PageHeader/PageHeader';
 import { formatVND } from '@/utils/formatCurrency';
 import { useCategories } from '@/hooks/useReferenceData';
 
@@ -126,18 +127,15 @@ const BudgetsPage: React.FC = () => {
 
   return (
     <div>
-      <section className="relative overflow-hidden rounded-xl bg-gradient-to-r from-hero-start to-hero-end px-5 py-5 text-white shadow-hero sm:px-7">
-        <div className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full bg-cyan-300/15 blur-2xl" />
-        <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <p className="flex items-center gap-2 font-bold uppercase tracking-wide text-blue-100"><CircleDollarSign className="size-4" /> Quản lý ngân sách</p>
-            <AppTitle unstyled level={1} className="mt-2 font-extrabold tracking-normal text-white">Ngân sách</AppTitle>
-          </div>
-          <AppButton unstyled onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-white px-4 font-bold text-hero-ink shadow-md transition hover:bg-blue-50">
+      <PageHeader
+        eyebrow="Quản lý chi tiêu"
+        title="Ngân sách"
+        actions={(
+          <AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button">
             <Plus className="size-4" /> Thêm Ngân sách
           </AppButton>
-        </div>
-      </section>
+        )}
+      />
 
       {/* Period Navigator */}
       <div className="mt-5 flex items-center justify-center gap-3">

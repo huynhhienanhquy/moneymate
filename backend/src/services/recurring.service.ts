@@ -108,6 +108,10 @@ export class RecurringService {
   async toggleActive(userId: string, id: string) {
     const item = await this.getRecurring(userId, id);
     const resumedAt = !item.isActive ? new Date() : null;
+    if (resumedAt) {
+      const wallet = await this.walletRepository.findById(item.walletId);
+      if (!wallet || wallet.userId !== userId) throw new AppError('Wallet not found', 404);
+    }
     return this.recurringRepository.update(id, {
       isActive: !item.isActive,
       // Restart both the execution cursor and recurrence anchor to skip the pause.
@@ -150,7 +154,7 @@ export class RecurringService {
 
           const [ownedWallet, accessibleCategory] = await Promise.all([
             tx.wallet.findFirst({
-              where: { id: item.walletId, userId: item.userId },
+              where: { id: item.walletId, userId: item.userId, deletedAt: null },
               select: { id: true },
             }),
             tx.category.findFirst({
@@ -181,15 +185,11 @@ export class RecurringService {
             });
 
             if (txType === TransactionType.INCOME) {
-              await tx.wallet.updateMany({
-                where: { id: item.walletId, userId: item.userId },
+              const result = await tx.wallet.updateMany({
+                where: { id: item.walletId, userId: item.userId, deletedAt: null },
                 data: { initialBalance: { increment: amountDec } },
               });
-            } else {
-              await tx.wallet.updateMany({
-                where: { id: item.walletId, userId: item.userId },
-                data: { initialBalance: { decrement: amountDec } },
-              });
+              if (result.count !== 1) throw new AppError('Wallet not found', 404);
             }
           }
 

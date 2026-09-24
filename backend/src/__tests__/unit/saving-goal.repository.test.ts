@@ -87,7 +87,7 @@ describe('SavingGoalRepository atomic balance guards', () => {
       where: expect.objectContaining({ id: 'goal-1', userId: 'user-1' }),
     }));
     expect(tx.wallet.updateMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'wallet-1', userId: 'user-1' },
+      where: { id: 'wallet-1', userId: 'user-1', deletedAt: null },
     }));
     expect(tx.goalTransaction.create).toHaveBeenCalledTimes(1);
   });

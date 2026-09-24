@@ -302,10 +302,10 @@ export class TransactionRepository {
         where: { id: data.destinationWalletId }
       });
 
-      if (!srcWallet || srcWallet.userId !== data.userId) {
+      if (!srcWallet || srcWallet.userId !== data.userId || srcWallet.deletedAt) {
         throw new AppError('Source wallet not found or unauthorized', 404);
       }
-      if (!destWallet || destWallet.userId !== data.userId) {
+      if (!destWallet || destWallet.userId !== data.userId || destWallet.deletedAt) {
         throw new AppError('Destination wallet not found or unauthorized', 404);
       }
       if (Number(srcWallet.initialBalance) < Number(data.amount)) {
@@ -317,6 +317,7 @@ export class TransactionRepository {
         where: {
           id: data.sourceWalletId,
           userId: data.userId,
+          deletedAt: null,
           initialBalance: { gte: amountDec },
         },
         data: { initialBalance: { decrement: amountDec } }
@@ -327,7 +328,7 @@ export class TransactionRepository {
 
       // Credit Destination Wallet
       const destinationCredit = await tx.wallet.updateMany({
-        where: { id: data.destinationWalletId, userId: data.userId },
+        where: { id: data.destinationWalletId, userId: data.userId, deletedAt: null },
         data: { initialBalance: { increment: amountDec } }
       });
       if (destinationCredit.count !== 1) {
@@ -454,29 +455,23 @@ export class TransactionRepository {
   async getWalletBalancesAtDate(userId: string, endDate: Date): Promise<number> {
     if (endDate >= new Date()) return this.getWalletBalanceTotal(userId);
 
-    const wallets = await prisma.wallet.findMany({ where: { userId, createdAt: { lte: endDate } } });
+    const wallets = await prisma.wallet.findMany({ where: {
+      userId,
+      createdAt: { lte: endDate },
+      OR: [{ deletedAt: null }, { deletedAt: { gt: endDate } }],
+    } });
     if (wallets.length === 0) return 0;
     const walletIds = wallets.map((wallet) => wallet.id);
     const walletIdSet = new Set(walletIds);
     const currentBalance = wallets.reduce((sum, wallet) => sum + Number(wallet.initialBalance), 0);
 
-    const [incomeAgg, expenseAgg, transfers, goalTransactions] = await Promise.all([
+    const [incomeAgg, transfers, goalTransactions] = await Promise.all([
       prisma.transaction.aggregate({
         where: {
           userId,
           deletedAt: null,
           walletId: { in: walletIds },
           type: TransactionType.INCOME,
-          transactionDate: { gt: endDate },
-        },
-        _sum: { amount: true },
-      }),
-      prisma.transaction.aggregate({
-        where: {
-          userId,
-          deletedAt: null,
-          walletId: { in: walletIds },
-          type: TransactionType.EXPENSE,
           transactionDate: { gt: endDate },
         },
         _sum: { amount: true },
@@ -494,13 +489,12 @@ export class TransactionRepository {
     ]);
 
     const totalIncome = Number(incomeAgg._sum.amount ?? 0);
-    const totalExpense = Number(expenseAgg._sum.amount ?? 0);
     const transferAdjustment = transfers.reduce((sum, transfer) => sum
       + (walletIdSet.has(transfer.sourceWalletId) ? Number(transfer.amount) : 0)
       - (walletIdSet.has(transfer.destinationWalletId) ? Number(transfer.amount) : 0), 0);
     const goalAdjustment = goalTransactions.reduce((sum, transaction) => sum
       + (transaction.type === 'DEPOSIT' ? Number(transaction.amount) : -Number(transaction.amount)), 0);
-    return currentBalance - totalIncome + totalExpense + transferAdjustment + goalAdjustment;
+    return currentBalance - totalIncome + transferAdjustment + goalAdjustment;
   }
 
 
@@ -579,12 +573,12 @@ export class TransactionRepository {
   }
 
   async getWalletBalanceTotal(userId: string): Promise<number> {
-    const wallets = await prisma.wallet.findMany({ where: { userId } });
+    const wallets = await prisma.wallet.findMany({ where: { userId, deletedAt: null } });
     return wallets.reduce((sum, wallet) => sum + Number(wallet.initialBalance), 0);
   }
 
   async getYearlySummary(userId: string, year: number) {
-    const currentFormulaVersion = 8;
+    const currentFormulaVersion = 9;
     const monthlyData = [];
     let totalIncome = 0;
     let totalExpense = 0;
@@ -593,10 +587,12 @@ export class TransactionRepository {
       const now = new Date();
       const isClosedMonth = new Date(year, month - 1, 1) < new Date(now.getFullYear(), now.getMonth(), 1);
       // Recompute from the same history as the dashboard trend. A backdated
-      // transaction can change assets in subsequent months as well as its own.
+      // transaction changes the income/expense totals of its own month.
       const calculated = await this.getMonthlySummary(userId, month, year);
       const lockedWalletBalance = calculated.walletBalance;
-      const lockedSavings = lockedWalletBalance - calculated.totalExpense;
+      const monthlyIncome = calculated.salaryIncome + calculated.otherIncome;
+      const monthlyExpense = calculated.totalExpense;
+      const monthlySavings = monthlyIncome - monthlyExpense;
 
       if (isClosedMonth) {
         await prisma.monthlySavingsSnapshot.upsert({
@@ -604,8 +600,8 @@ export class TransactionRepository {
           update: {
             salaryIncome: calculated.salaryIncome,
             otherIncome: calculated.otherIncome,
-            expense: calculated.totalExpense,
-            savings: lockedSavings,
+            expense: monthlyExpense,
+            savings: monthlySavings,
             walletBalance: lockedWalletBalance,
             formulaVersion: currentFormulaVersion,
           },
@@ -615,30 +611,26 @@ export class TransactionRepository {
             year,
             salaryIncome: calculated.salaryIncome,
             otherIncome: calculated.otherIncome,
-            expense: calculated.totalExpense,
-            savings: lockedSavings,
+            expense: monthlyExpense,
+            savings: monthlySavings,
             walletBalance: lockedWalletBalance,
             formulaVersion: currentFormulaVersion,
           },
         });
       }
 
-      const summary = {
-        ...calculated,
-        totalIncome: lockedWalletBalance,
-        netSavings: lockedSavings,
-        remainingAmount: lockedSavings,
-      };
-      totalIncome += summary.totalIncome;
-      totalExpense += summary.totalExpense;
+      totalIncome += monthlyIncome;
+      totalExpense += monthlyExpense;
       monthlyData.push({
         month,
         label: `T${month}`,
-        income: summary.totalIncome,
-        salaryIncome: summary.salaryIncome,
-        expense: summary.totalExpense,
-        savings: summary.netSavings,
-        remaining: summary.remainingAmount,
+        income: monthlyIncome,
+        salaryIncome: calculated.salaryIncome,
+        otherIncome: calculated.otherIncome,
+        walletBalance: lockedWalletBalance,
+        expense: monthlyExpense,
+        savings: monthlySavings,
+        remaining: monthlySavings,
       });
     }
 

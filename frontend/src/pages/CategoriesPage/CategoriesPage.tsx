@@ -9,6 +9,7 @@ import { Plus, Pencil, Trash2, Loader2, X, TrendingUp, TrendingDown } from 'luci
 import api from '@/services/api/client';
 import AppModal from '@/components/common/AppModal/AppModal';
 import LoadingState from '@/components/common/LoadingState/LoadingState';
+import PageHeader from '@/components/common/PageHeader/PageHeader';
 
 const COLORS = ['blue', 'income', 'warning', 'expense', 'purple', 'cyan', 'orange', 'violet', 'pink', 'teal'].map((name) => webTheme.chartColors[name as keyof typeof webTheme.chartColors]);
 const ICONS = ['tag','utensils','home','car','heart-pulse','graduation-cap','shopping-bag','gamepad-2','receipt','briefcase','gift','more-horizontal'];
@@ -148,15 +149,15 @@ const CategoriesPage: React.FC = () => {
 
   return (
     <div>
-      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <AppTitle unstyled level={1} className="text-page-title font-extrabold leading-heading tracking-normal text-black dark:text-slate-100">Danh mục</AppTitle>
-          <p className="mt-1 text-slate-600 dark:text-slate-400">Quản lý danh mục thu nhập và chi tiêu</p>
-        </div>
-        <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-md bg-action px-4 font-bold text-white shadow-action-button transition hover:bg-action-hover">
-          <Plus className="size-4" /><span>Thêm danh mục</span>
-        </AppButton>
-      </div>
+      <PageHeader
+        eyebrow="Phân loại"
+        title="Danh mục"
+        actions={(
+          <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="inline-flex h-10 items-center gap-2 rounded-md bg-action px-4 font-bold text-white shadow-action-button transition hover:bg-action-hover">
+            <Plus className="size-4" /><span>Thêm danh mục</span>
+          </AppButton>
+        )}
+      />
 
       {/* Tabs */}
       <div className="mt-5 flex w-fit gap-1 rounded-full border border-slate-200 bg-slate-100 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
