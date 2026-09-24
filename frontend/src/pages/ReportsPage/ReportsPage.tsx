@@ -11,7 +11,6 @@ import { Calendar, TrendingUp, TrendingDown, Sparkles, Loader2, ChevronLeft, Che
 import api from '@/services/api/client';
 import { formatChartValue, formatVND } from '@/utils/formatCurrency';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
-import PageHeader from '@/components/common/PageHeader/PageHeader';
 
 const downloadFile = async (url: string, filename: string) => {
   const [path, query] = url.split('?');
@@ -29,48 +28,14 @@ const CATEGORY_COLORS = chartTheme.palette;
 
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 
-export const isFutureReportPeriod = (
-  reportType: 'monthly' | 'yearly',
-  month: number,
-  year: number,
-  now = new Date(),
-) => year > now.getFullYear()
-  || (reportType === 'monthly' && year === now.getFullYear() && month > now.getMonth() + 1);
-
-export const buildYearlyChartData = (
-  items: any[],
-  year: number,
-  accountCreatedAt?: string | Date | null,
-  now = new Date(),
-) => {
-  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const createdAt = accountCreatedAt ? new Date(accountCreatedAt) : null;
-  const accountCreatedMonth = createdAt && !Number.isNaN(createdAt.getTime())
-    ? new Date(createdAt.getFullYear(), createdAt.getMonth(), 1)
-    : null;
-
-  return items
-    .filter((item) => {
-      const itemMonth = new Date(year, item.month - 1, 1);
-      return itemMonth <= currentMonth && (!accountCreatedMonth || itemMonth >= accountCreatedMonth);
-    })
-    .map((item) => ({
-      ...item,
-      income: Number(item.walletBalance ?? item.income ?? 0),
-      expense: Number(item.expense ?? 0),
-    }));
-};
-
 const ReportsPage: React.FC = () => {
   const now = new Date();
   const [reportType, setReportType] = useState<'monthly' | 'yearly'>('monthly');
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
-  const isFuturePeriod = isFutureReportPeriod(reportType, month, year, now);
 
   const handleExport = async (type: 'pdf' | 'excel') => {
-    if (isFuturePeriod) return;
     setExporting(type);
     try {
       const ext = type === 'pdf' ? 'pdf' : 'xlsx';
@@ -86,18 +51,18 @@ const ReportsPage: React.FC = () => {
   const { data: monthlyReport, isLoading: monthlyLoading } = useQuery({
     queryKey: ['monthly-report', month, year],
     queryFn: () => api.get('/transactions/report', { params: { month, year } }).then(r => r.data.data),
-    enabled: reportType === 'monthly' && !isFuturePeriod,
+    enabled: reportType === 'monthly',
     staleTime: 60_000,
   });
 
   const { data: yearlyReport, isLoading: yearlyLoading } = useQuery({
     queryKey: ['yearly-report', year],
     queryFn: () => api.get('/transactions/report/yearly', { params: { year } }).then(r => r.data.data),
-    enabled: reportType === 'yearly' && !isFuturePeriod,
+    enabled: reportType === 'yearly',
     staleTime: 60_000,
   });
 
-  const isLoading = !isFuturePeriod && (reportType === 'monthly' ? monthlyLoading : yearlyLoading);
+  const isLoading = reportType === 'monthly' ? monthlyLoading : yearlyLoading;
 
   const prevPeriod = () => {
     if (reportType === 'monthly') {
@@ -120,9 +85,9 @@ const ReportsPage: React.FC = () => {
   const summary = reportType === 'monthly'
     ? monthlyReport?.summary
     : {
-        totalIncome: yearlyReport?.totalIncome ?? 0,
+        totalIncome: yearlyReport?.walletBalanceTotal ?? 0,
         totalExpense: yearlyReport?.totalExpense ?? 0,
-        netSavings: yearlyReport?.netSavings ?? 0,
+        netSavings: (yearlyReport?.walletBalanceTotal ?? 0) - (yearlyReport?.totalExpense ?? 0),
       };
 
   const categoryExpenses = reportType === 'monthly'
@@ -130,7 +95,7 @@ const ReportsPage: React.FC = () => {
     : yearlyReport?.categoryExpenses || [];
 
   const chartData = reportType === 'yearly'
-    ? buildYearlyChartData(yearlyReport?.monthlyData || [], year, yearlyReport?.accountCreatedAt)
+    ? (yearlyReport?.monthlyData || [])
     : [{ name: MONTHS[month - 1], income: summary?.totalIncome || 0, expense: summary?.totalExpense || 0 }];
 
   const savingsRate = summary?.totalIncome > 0
@@ -139,35 +104,36 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Thống kê"
-        title="Báo cáo tài chính"
-        actions={(
-          <div className="flex flex-wrap items-stretch gap-3">
-            <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-              {(['monthly', 'yearly'] as const).map((t) => (
-                <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-20 rounded-lg px-4 py-2 font-semibold transition ${reportType === t ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300'}`}>
-                  {t === 'monthly' ? 'Theo tháng' : 'Theo năm'}
-                </AppButton>
-              ))}
-            </div>
-            {reportType === 'monthly' && (
-              <>
-                <AppButton unstyled onClick={() => handleExport('pdf')} disabled={!!exporting || isFuturePeriod}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                  {exporting === 'pdf' ? <Loader2  className="size-icon-small animate-spin" /> : <FileText className="size-icon-small" />}
-                  <span>Xuất<br />PDF</span>
-                </AppButton>
-                <AppButton unstyled onClick={() => handleExport('excel')} disabled={!!exporting || isFuturePeriod}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                  {exporting === 'excel' ? <Loader2  className="size-icon-small animate-spin" /> : <FileSpreadsheet className="size-icon-small" />}
-                  <span>Xuất<br />Excel</span>
-                </AppButton>
-              </>
-            )}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <AppTitle unstyled level={1} className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Báo cáo tài chính</AppTitle>
+          <p className="mt-1 max-w-sm text-slate-500 dark:text-slate-400">Phân tích chuyên sâu thu chi và xu hướng tài sản</p>
+        </div>
+
+        <div className="flex flex-wrap items-stretch gap-3">
+          <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            {(['monthly', 'yearly'] as const).map((t) => (
+              <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-20 rounded-lg px-4 py-2 font-semibold transition ${reportType === t ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300'}`}>
+                {t === 'monthly' ? 'Theo tháng' : 'Theo năm'}
+              </AppButton>
+            ))}
           </div>
-        )}
-      />
+          {reportType === 'monthly' && (
+            <>
+              <AppButton unstyled onClick={() => handleExport('pdf')} disabled={!!exporting}
+                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                {exporting === 'pdf' ? <Loader2  className="size-icon-small animate-spin" /> : <FileText className="size-icon-small" />}
+                <span>Xuất<br />PDF</span>
+              </AppButton>
+              <AppButton unstyled onClick={() => handleExport('excel')} disabled={!!exporting}
+                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                {exporting === 'excel' ? <Loader2  className="size-icon-small animate-spin" /> : <FileSpreadsheet className="size-icon-small" />}
+                <span>Xuất<br />Excel</span>
+              </AppButton>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Period Navigator */}
       <div className="flex items-center justify-center gap-3">
@@ -183,19 +149,7 @@ const ReportsPage: React.FC = () => {
         </AppButton>
       </div>
 
-      {isFuturePeriod ? (
-        <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 text-center shadow-summary dark:border-slate-700 dark:bg-slate-900/70">
-          <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-            <Calendar className="size-7" />
-          </span>
-          <AppTitle unstyled level={2} className="text-xl font-extrabold text-slate-950 dark:text-slate-100">
-            Không có dữ liệu
-          </AppTitle>
-          <p className="mt-2 max-w-md text-slate-500 dark:text-slate-400">
-            Kỳ báo cáo này chưa diễn ra. Hãy chọn tháng hoặc năm hiện tại hay trước đó.
-          </p>
-        </div>
-      ) : isLoading ? (
+      {isLoading ? (
         <div className="flex items-center justify-center py-24">
           <Loader2  className="size-8 animate-spin text-brand-500" />
         </div>
@@ -203,10 +157,13 @@ const ReportsPage: React.FC = () => {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <SummaryCard icon={<TrendingUp className="size-4.5" />} label={reportType === 'monthly' ? 'Tổng thu nhập tháng này' : 'Tổng thu nhập năm này'} value={formatVND(summary?.totalIncome || 0)} tone="green" />
+            <SummaryCard icon={<TrendingUp className="size-4.5" />} label="Tổng thu nhập" value={formatVND(summary?.totalIncome || 0)} tone="green" />
             <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Tổng chi tiêu" value={formatVND(summary?.totalExpense || 0)} tone="red" />
             <SummaryCard icon={<Sparkles className="size-4.5" />} label="Tiết kiệm" badge={`${savingsRate}%`} value={formatVND(summary?.netSavings || 0)} tone={(summary?.netSavings || 0) >= 0 ? 'blue' : 'red'} />
           </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Tổng thu nhập bằng tổng tài sản hiện tại ở trang Tổng quan. Tiết kiệm = tổng thu nhập − chi tiêu trong kỳ đã chọn.
+          </p>
 
           {/* Charts */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-overview">

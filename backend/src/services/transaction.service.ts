@@ -82,10 +82,24 @@ export class TransactionService {
       throw new AppError('Transaction type must match category type', 400);
     }
 
-    // 4. Record the transaction. Expenses are reporting records and do not
-    // mutate the amount configured in the wallet.
+    // 4. Run database transaction to record transaction and update wallet balance
     const amountDec = new Prisma.Decimal(data.amount);
     const transaction = await prisma.$transaction(async (tx) => {
+      // Debit conditionally so concurrent expense requests cannot overdraw the wallet.
+      if (data.type === TransactionType.EXPENSE) {
+        const debitResult = await tx.wallet.updateMany({
+          where: {
+            id: data.walletId,
+            userId,
+            initialBalance: { gte: amountDec },
+          },
+          data: { initialBalance: { decrement: amountDec } },
+        });
+        if (debitResult.count !== 1) {
+          throw new AppError('Số dư không đủ', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
+        }
+      }
+
       const transaction = await tx.transaction.create({
         data: {
           userId,
@@ -104,11 +118,10 @@ export class TransactionService {
 
       // Update wallet balance
       if (data.type === TransactionType.INCOME) {
-        const creditResult = await tx.wallet.updateMany({
-          where: { id: data.walletId, userId, deletedAt: null },
+        await tx.wallet.update({
+          where: { id: data.walletId },
           data: { initialBalance: { increment: amountDec } }
         });
-        if (creditResult.count !== 1) throw new AppError('Wallet not found', 404);
       }
 
       await this.invalidateClosedSnapshots(tx, userId, [data.transactionDate]);
@@ -216,8 +229,8 @@ export class TransactionService {
       throw new AppError('Transfers must be changed through the transfer workflow', 400);
     }
 
-    {
-      const wallet = await this.walletRepository.findById(targetWalletId);
+    if (data.walletId && data.walletId !== oldTx.walletId) {
+      const wallet = await this.walletRepository.findById(data.walletId);
       if (!wallet || wallet.userId !== userId) {
         throw new AppError('Target wallet not found or unauthorized', 404);
       }
@@ -239,11 +252,16 @@ export class TransactionService {
     const oldType = oldTx.type;
 
     const updatedTransaction = await prisma.$transaction(async (tx) => {
-      // 1. Reverse an old income credit. Expenses never mutate wallet amounts.
+      // 1. Reverse the old transaction balance change on the old wallet
       if (oldType === TransactionType.INCOME) {
         await tx.wallet.update({
           where: { id: oldTx.walletId },
           data: { initialBalance: { decrement: oldAmount } }
+        });
+      } else if (oldType === TransactionType.EXPENSE) {
+        await tx.wallet.update({
+          where: { id: oldTx.walletId },
+          data: { initialBalance: { increment: oldAmount } }
         });
       }
 
@@ -271,13 +289,17 @@ export class TransactionService {
         }
       });
 
-      // 3. Apply a new income credit. Expenses remain reporting-only records.
+      // 3. Apply the new transaction balance change on the new wallet
       if (newType === TransactionType.INCOME) {
-        const creditResult = await tx.wallet.updateMany({
-          where: { id: targetWalletId, userId, deletedAt: null },
+        await tx.wallet.update({
+          where: { id: targetWalletId },
           data: { initialBalance: { increment: newAmount } }
         });
-        if (creditResult.count !== 1) throw new AppError('Target wallet not found', 404);
+      } else if (newType === TransactionType.EXPENSE) {
+        await tx.wallet.update({
+          where: { id: targetWalletId },
+          data: { initialBalance: { decrement: newAmount } }
+        });
       }
 
 
@@ -308,6 +330,8 @@ export class TransactionService {
     if (version !== undefined && version !== txVal.version) {
       throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
     }
+    const amountDec = new Prisma.Decimal(txVal.amount);
+
     return prisma.$transaction(async (tx) => {
       const deleteResult = await tx.transaction.updateMany({
         where: { id, version: txVal.version, deletedAt: null },
@@ -317,12 +341,16 @@ export class TransactionService {
         throw new AppError('Transaction was changed on another device', 409, [], 'VERSION_CONFLICT');
       }
 
-      // Reverse income credits only. Expenses never changed the wallet amount.
+      // Reverse balance change on wallet
       if (txVal.type === TransactionType.INCOME) {
-        const amountDec = new Prisma.Decimal(txVal.amount);
         await tx.wallet.update({
           where: { id: txVal.walletId },
           data: { initialBalance: { decrement: amountDec } }
+        });
+      } else if (txVal.type === TransactionType.EXPENSE) {
+        await tx.wallet.update({
+          where: { id: txVal.walletId },
+          data: { initialBalance: { increment: amountDec } }
         });
       }
 
@@ -401,18 +429,14 @@ export class TransactionService {
   async getMonthlyReport(userId: string, month: number, year: number) {
     const stats = await this.transactionRepository.getMonthlySummary(userId, month, year);
     const categoryBreakdown = await this.transactionRepository.getCategoryBreakdown(userId, month, year);
-    const totalIncome = stats.walletBalance;
+    // Report income follows the dashboard's current assets, including opening balances.
+    const totalIncome = await this.transactionRepository.getWalletBalanceTotal(userId);
     const netSavings = totalIncome - stats.totalExpense;
 
     return {
       month,
       year,
-      summary: {
-        ...stats,
-        totalIncome,
-        netSavings,
-        remainingAmount: netSavings,
-      },
+      summary: { ...stats, totalIncome, netSavings, remainingAmount: netSavings },
       categoryExpenses: categoryBreakdown
     };
   }
@@ -429,18 +453,6 @@ export class TransactionService {
       select: { createdAt: true },
     });
     const walletBalanceTotal = await this.transactionRepository.getWalletBalanceTotal(userId);
-    const now = new Date();
-    const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const accountCreatedMonth = user?.createdAt
-      ? new Date(user.createdAt.getFullYear(), user.createdAt.getMonth(), 1)
-      : null;
-    const includedMonths = summary.monthlyData.filter((item) => {
-      const itemMonth = new Date(year, item.month - 1, 1);
-      return itemMonth <= currentMonth && (!accountCreatedMonth || itemMonth >= accountCreatedMonth);
-    });
-    const totalIncome = includedMonths.reduce((sum, item) => sum + Number(item.walletBalance), 0);
-    const totalExpense = includedMonths.reduce((sum, item) => sum + Number(item.expense), 0);
-    const netSavings = totalIncome - totalExpense;
 
     const yearlyCategories: Record<string, { id: string; name: string; color: string; amount: number }> = {};
     for (let month = 1; month <= 12; month++) {
@@ -456,9 +468,6 @@ export class TransactionService {
 
     return {
       ...summary,
-      totalIncome,
-      totalExpense,
-      netSavings,
       accountCreatedAt: user?.createdAt,
       walletBalanceTotal,
       categoryExpenses: Object.values(yearlyCategories).sort((a, b) => b.amount - a.amount),

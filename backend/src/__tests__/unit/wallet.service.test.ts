@@ -17,7 +17,6 @@ const MOCK_WALLET = {
   initialBalance: '2000000' as any,
   createdAt: new Date(),
   updatedAt: new Date(),
-  deletedAt: null,
 };
 
 describe('WalletService', () => {
@@ -28,6 +27,7 @@ describe('WalletService', () => {
     MockWalletRepository.mockClear();
     walletService = new WalletService();
     mockWalletRepo = MockWalletRepository.mock.instances[0] as jest.Mocked<WalletRepository>;
+    mockWalletRepo.countReferences.mockResolvedValue(0);
   });
 
   // ─── CREATE ───────────────────────────────────────────────────────────────────
@@ -99,12 +99,12 @@ describe('WalletService', () => {
 
   // ─── DELETE ───────────────────────────────────────────────────────────────────
   describe('deleteWallet()', () => {
-    it('archives an owned wallet, including one with financial history', async () => {
+    it('should delete wallet when authorized', async () => {
       mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
-      mockWalletRepo.archive.mockResolvedValue(true);
+      mockWalletRepo.delete.mockResolvedValue(MOCK_WALLET);
 
-      await expect(walletService.deleteWallet('user-uuid-1', 'wallet-uuid-1')).resolves.toBe(true);
-      expect(mockWalletRepo.archive).toHaveBeenCalledWith('wallet-uuid-1', 'user-uuid-1');
+      await walletService.deleteWallet('user-uuid-1', 'wallet-uuid-1');
+      expect(mockWalletRepo.delete).toHaveBeenCalledWith('wallet-uuid-1');
     });
 
     it('should throw AppError when trying to delete another user wallet', async () => {
@@ -114,12 +114,21 @@ describe('WalletService', () => {
         .rejects.toThrow(AppError);
     });
 
-    it('returns 404 if another request archived the wallet first', async () => {
+    it('returns a stable conflict when the wallet is used by financial records', async () => {
       mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
-      mockWalletRepo.archive.mockResolvedValue(false);
+      mockWalletRepo.countReferences.mockResolvedValue(1);
 
       await expect(walletService.deleteWallet('user-uuid-1', 'wallet-uuid-1'))
-        .rejects.toMatchObject({ statusCode: 404 });
+        .rejects.toMatchObject({ statusCode: 409, code: 'WALLET_IN_USE' });
+      expect(mockWalletRepo.delete).not.toHaveBeenCalled();
+    });
+
+    it('maps a foreign-key race during delete to the same domain conflict', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
+      mockWalletRepo.delete.mockRejectedValue({ code: 'P2003' });
+
+      await expect(walletService.deleteWallet('user-uuid-1', 'wallet-uuid-1'))
+        .rejects.toMatchObject({ statusCode: 409, code: 'WALLET_IN_USE' });
     });
   });
 

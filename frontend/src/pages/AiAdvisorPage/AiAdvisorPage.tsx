@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import api from '@/services/api/client';
 import AiInsightCard from '@/components/AiInsightCard/AiInsightCard';
-import PageHeader from '@/components/common/PageHeader/PageHeader';
 import { formatVND } from '@/utils/formatCurrency';
 
 const AiAdvisorPage: React.FC = () => {
@@ -43,20 +42,20 @@ const AiAdvisorPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        eyebrow="Trợ lý thông minh"
-        title="AI Tài chính"
-        description={(
-          <>
-            Phân tích thông minh, dự đoán ngân sách &amp; cố vấn cá nhân
-            {status && (
-              <span className="ml-2 app-badge-info">
-                {status.enhancedWithLlm ? `OpenAI ${status.model}` : 'Rule-based'}
-              </span>
-            )}
-          </>
-        )}
-      />
+      <div className="app-page-header">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles  className="size-icon-medium text-brand-500" />
+          <AppTitle unstyled level={1} className="text-2xl font-extrabold text-slate-950 dark:text-slate-100">AI Tài chính</AppTitle>
+        </div>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
+          Phân tích thông minh, dự đoán ngân sách & cố vấn cá nhân
+          {status && (
+            <span className="ml-2 app-badge-info">
+              {status.enhancedWithLlm ? `OpenAI ${status.model}` : 'Rule-based'}
+            </span>
+          )}
+        </p>
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center py-24"><Loader2  className="size-8 animate-spin text-brand-500" /></div>

@@ -1,116 +1,118 @@
-# MoneyMate Business Rules
+# Business Rules - MoneyMate
 
-> Implementation reference, verified against the repository on 2026-09-24. Service and repository tests are authoritative when this summary and executable behavior differ.
+This document defines the core business rules and logic constraints for the **MoneyMate** Personal Finance Management System.
 
-## 1. Authentication and authorization
+---
 
-- Emails are trimmed, normalized to lowercase, and unique.
-- Passwords contain at least eight characters at validation time and are stored with bcrypt using 10 salt rounds.
-- Access tokens use HS256, expire after 15 minutes, and include user ID, email, and role.
-- Refresh tokens expire after seven days, are stored only as SHA-256 hashes, rotate atomically, and belong to a token family.
-- Reusing a revoked refresh token revokes the whole family.
-- Logout and session revocation set `revokedAt`; audit records are retained.
-- Users may access only their own records. Administrator endpoints require the `ADMIN` role.
-- Login and registration are rate limited.
+## 1. Authentication & Security (BR-AUTH)
 
-## 2. Wallets
+### BR-AUTH-01: Password Hashing
+All user passwords must be hashed before storage using the `bcrypt` algorithm with a salt round parameter of at least 10. Raw passwords must never be logged or stored in the database.
 
-- Supported wallet types are `CASH`, `BANK`, `CREDIT_CARD`, `E_WALLET`, and `SAVING`.
-- Currency defaults to `VND`.
-- The persisted `initialBalance` field currently acts as the mutable wallet amount for balance-affecting operations.
-- Income credits the wallet. Transfers debit the source and credit the destination. Savings-goal deposits debit a wallet and withdrawals credit it.
-- Expense records contribute to spending and reports but do not decrement the persisted wallet amount in the current implementation.
-- A transfer requires two different active wallets owned by the user, a positive amount, and sufficient source balance.
-- Transfers execute atomically and create two `TRANSFER` transaction records plus one `WalletTransfer` audit record.
-- Deleting a wallet is a soft delete. Historical records remain, the wallet disappears from active queries, and active recurring schedules using it are disabled.
+### BR-AUTH-02: Session Expiration & Tokens
+- **Access Token**: Short-lived JWT (JSON Web Token), expiration set to exactly **15 minutes**. Must contain `userId` and `email` in the payload.
+- **Refresh Token**: Long-lived token stored in the database, expiration set to **7 days**. When a new access token is requested using a valid refresh token, the old refresh token is rotated (Refresh Token Rotation) to prevent replay attacks.
+- **Revocation**: Logging out deletes the corresponding refresh token from the database, immediately preventing subsequent access token requests with that session.
 
-## 3. Categories
+---
 
-- Categories are strictly `INCOME` or `EXPENSE`.
-- System categories have `userId=null` and are available to every user.
-- Custom categories belong to one user.
-- Custom category names are unique per user and type.
-- A transaction or recurring schedule category must match its income/expense type.
-- Budgets may reference only expense categories or use the global scope.
+## 2. Wallet & Balance Constraints (BR-WALL)
 
-## 4. Transactions and transfers
+### BR-WALL-01: Wallet Types
+Every wallet must belong to one of the following pre-defined types:
+- `CASH` (Tiền mặt)
+- `BANK` (Tài khoản ngân hàng)
+- `CREDIT_CARD` (Thẻ tín dụng)
+- `E_WALLET` (Ví điện tử)
+- `SAVING` (Tài khoản tiết kiệm)
 
-- Normal transaction creation accepts only `INCOME` or `EXPENSE`; transfers use the dedicated transfer endpoint.
-- Amounts must be positive.
-- Normal transaction dates cannot be in the future.
-- Wallets and custom categories must belong to the authenticated user; system categories are allowed.
-- Lists support search, wallet/category/type/date filters, sorting, and bounded pagination.
-- Updates and deletes use an optional client version and an atomic database version check. Conflicts return `VERSION_CONFLICT`.
-- Deleting a normal transaction sets `deletedAt` and increments its version so mobile sync receives a tombstone.
-- Transfer transactions cannot be edited or deleted through the normal transaction endpoints.
-- Create-transaction and transfer requests support user-scoped idempotency keys and request hashes.
+### BR-WALL-02: Balance Computations
+- Wallet balance is dynamically computed as:
+  $$\text{Balance} = \text{Initial Balance} + \sum \text{Income Transactions} - \sum \text{Expense Transactions} - \sum \text{Outward Transfers} + \sum \text{Inward Transfers} - \sum \text{Saving Deposits} + \sum \text{Saving Withdrawals}$$
+- The initial balance is set when the wallet is created and can be updated through a balance adjustment transaction.
 
-## 5. Budgets
+### BR-WALL-03: Negative Balances
+- Wallets of type `CREDIT_CARD` are allowed to have a negative balance up to their credit limit.
+- Other wallet types (`CASH`, `BANK`, `E_WALLET`, `SAVING`) can go negative if the user records transactions retrospectively, but the UI should display a warning state, and API requests that would cause a negative balance can either warn the user or proceed depending on the user's "allow overdraft" settings (default: allow, but highlight in red).
 
-- A budget has a positive amount, month, year, and either a global scope or one expense category.
-- Only one budget may exist for each `(user, category scope, month, year)` tuple.
-- Usage is calculated from non-deleted expense transactions for the selected period.
-- Status is `OK` below 80%, `WARNING` from 80% to below 100%, and `EXCEEDED` at 100% or above.
-- Threshold flags are atomically claimed so each warning/exceeded level is notified once per budget state.
-- Budget alerts are processed after an expense commit. Notification failure does not roll back the financial transaction.
-- Exceeding a budget does not block an expense.
+### BR-WALL-04: Multi-Wallet Transfer Logic
+- A transfer from Wallet A to Wallet B must be processed in a database transaction block (atomicity).
+- If either wallet does not exist, or is owned by a different user, the transfer must fail.
+- Fees associated with the transfer (if any) must be recorded as an additional `EXPENSE` transaction linked to the source wallet.
 
-## 6. Savings goals
+---
 
-- A goal requires a positive target amount and a target date.
-- Status is derived rather than persisted: `COMPLETED` when current amount reaches the target, `EXPIRED` when the target date has passed, otherwise `ACTIVE`.
-- A deposit requires an active wallet owned by the user, a positive amount, and sufficient wallet balance.
-- Deposits and withdrawals update both wallet and goal amounts atomically and create `GoalTransaction` history.
-- Withdrawals cannot exceed the goal's current amount.
-- A completed goal triggers a best-effort notification.
-- A goal can be deleted only when its current amount is zero and it has no funding history.
+## 3. Category Constraints (BR-CAT)
 
-## 7. Recurring transactions
+### BR-CAT-01: Category Types
+Categories are strictly typed as either `INCOME` or `EXPENSE`. A category cannot contain both income and expense transactions.
 
-- Supported frequencies are `DAILY`, `WEEKLY`, `MONTHLY`, and `YEARLY`.
-- A schedule references an active owned wallet and an accessible category with the same type.
-- Pausing stops generation. Resuming resets the recurrence anchor and next execution time to the resume time; paused occurrences are skipped.
-- The backend checks due schedules at startup and every 24 hours while the process remains alive.
-- Processing catches up missed occurrences chronologically, with a maximum of 100 occurrences per schedule per run.
-- The processor atomically advances `nextExecutionDate` before creating linked transactions, preventing duplicate claims by concurrent workers.
-- Recurring income credits a wallet. Recurring expenses affect reporting and budget alerts under the same rules as normal expenses.
-- Transaction creation and schedule advancement are atomic; notifications and post-commit budget alerts are best effort.
+### BR-CAT-02: System Defaults vs. Custom Categories
+- **System Categories**: Pre-populated standard categories (e.g., *Salary* for Income, *Food & Dining* for Expense) are global, read-only, and cannot be modified or deleted by standard users.
+- **Custom Categories**: Users can create custom categories.
+- Custom categories must have unique names *per user per type*. A user cannot have two custom expense categories named "Snacks". However, they can have an income category named "Gift" and an expense category named "Gift".
 
-## 8. Reports and snapshots
+---
 
-- Dashboard and report queries exclude soft-deleted wallets and transactions.
-- Reports provide current wallet totals, monthly income/expense aggregates, category breakdowns, trends, and yearly summaries.
-- Monthly savings snapshots cache closed-period calculations and carry a formula version.
-- Writes that affect a closed period invalidate the matching snapshot so it can be recalculated.
-- Excel and PDF exports use the same authenticated monthly reporting scope.
+## 4. Transaction Logic (BR-TX)
 
-## 9. Attachments and OCR
+### BR-TX-01: Mandatory Fields
+Every transaction record must include:
+- `userId` (Owner)
+- `walletId` (Associated wallet)
+- `categoryId` (Associated category)
+- `amount` (Positive float, > 0)
+- `type` (`INCOME`, `EXPENSE`, or `TRANSFER`)
+- `transactionDate` (Timestamp)
 
-- Uploads accept JPEG, PNG, WEBP, and PDF files up to 5 MiB.
-- Attachments may use local storage in development or S3-compatible storage in production.
-- Attachment reads and deletes must validate ownership through the associated transaction.
-- Receipt OCR returns proposed data for user review; it does not automatically create a transaction.
+### BR-TX-02: Transaction Dates
+Users can record transactions in the past. However, normal transactions cannot be set with a future date (unless configured through the recurring transaction engine).
 
-## 10. Notifications and devices
+### BR-TX-03: Attachments
+- Receipt uploads must be limited to standard image formats (`JPEG`, `PNG`, `WEBP`) or `PDF`.
+- Maximum file size is limited to **5MB** to save storage space and bandwidth.
 
-- Notifications belong to one user and may be listed, marked read individually or in bulk, and deleted.
-- Push device registration supports iOS and Android and is unique per `(user, device, provider)` while the provider token is globally unique.
-- Budget, goal, and recurring workflows create in-app notifications; push delivery is an optional side effect.
+---
 
-## 11. Mobile synchronization
+## 5. Budget Constraints (BR-BUD)
 
-- Transaction sync uses a bounded opaque cursor derived from `(updatedAt, id)`.
-- Sync responses include soft-delete tombstones.
-- The mobile outbox retries supported mutations with stable idempotency keys and exponential backoff.
-- A conflict must be shown to the user or resolved explicitly; the client must not silently overwrite a newer server version.
+### BR-BUD-01: Time Period
+Budgets are tracked on a strict monthly calendar cycle (from the 1st day of the month to the last day of the month).
 
-## 12. AI and Copilot
+### BR-BUD-02: Category Limits
+- A user can define at most **one** budget limit per category per month.
+- Users can also create a **Global Budget** representing total monthly spend limits across all categories.
 
-- AI output is advisory and must not be presented as guaranteed financial or investment results.
-- Personal financial numbers require an authenticated, user-scoped tool call; the model must not invent them from chat text.
-- Copilot financial tools are read-only.
-- `recordExpense` requires explicit confirmation before calling the transaction API.
-- `setAppTheme` accepts only `light` or `dark`.
-- `navigateToPage` accepts only allowlisted internal pages and cannot navigate to arbitrary URLs.
-- The Copilot cannot edit or delete transactions.
-- Model errors must be converted to safe user-facing messages without exposing secrets or provider internals.
+### BR-BUD-03: Threshold Alert Triggers
+The system monitors transaction creations for the current month and triggers alerts:
+- **Warning Alert**: Triggered when $\text{Sum of Expenses in Category} \ge 80\% \text{ of Budget Limit}$.
+- **Overlimit Alert**: Triggered when $\text{Sum of Expenses in Category} \ge 100\% \text{ of Budget Limit}$.
+- Overlimit budgets do not block transactions; they only alert the user.
+
+---
+
+## 6. Saving Goals Constraints (BR-GOAL)
+
+### BR-GOAL-01: Goal Lifecycle
+- **Active**: Target date is in the future, and $\text{Current Savings} < \text{Target Savings}$.
+- **Completed**: $\text{Current Savings} \ge \text{Target Savings}$. A goal completed notification is sent, and the status changes to `COMPLETED`.
+- **Expired**: Target date is reached, but $\text{Current Savings} < \text{Target Savings}$. Status becomes `EXPIRED`.
+
+### BR-GOAL-02: Deposit & Withdrawal Restrictions
+- Depositing money into a saving goal requires a source wallet. The system must deduct the amount from the wallet balance and credit it to the saving goal (creating a goal transaction).
+- Withdrawing/Refunding money from a saving goal must credit the amount back to a designated user wallet.
+
+---
+
+## 7. Recurring Transactions Logic (BR-REC)
+
+### BR-REC-01: Frequency Intervals
+Supported intervals are `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`.
+
+### BR-REC-02: Automatic Generation Engine
+- A system-level cron job evaluates recurring transaction schedules every day at 00:05 UTC.
+- For each active scheduler where $\text{nextExecutionDate} \le \text{currentDate}$:
+  1. A new `Transaction` is inserted into the database with `transactionDate` set to `nextExecutionDate`.
+  2. The wallet balance is updated.
+  3. The `nextExecutionDate` is calculated and updated based on the frequency.
+  4. An in-app Notification is generated informing the user that a recurring transaction has been posted.

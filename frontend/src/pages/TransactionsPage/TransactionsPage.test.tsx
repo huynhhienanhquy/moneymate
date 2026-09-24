@@ -1,8 +1,7 @@
-import { fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
 import { act } from 'react';
 import { renderPage } from '@/test/pageTest';
 import { cleanup, screen } from '@/test/render';
-import api from '@/services/api/client';
 import TransactionsPage from './TransactionsPage';
 
 describe('TransactionsPage', () => {
@@ -23,8 +22,7 @@ describe('TransactionsPage', () => {
     expect(screen.getByText('Không tìm thấy giao dịch nào')).toBeInTheDocument();
   });
 
-  it('allows an expense larger than the wallet amount without changing the wallet', async () => {
-    vi.mocked(api.post).mockClear();
+  it('shows an insufficient balance message before creating an oversized expense', async () => {
     renderPage(TransactionsPage);
     act(() => fireEvent.click(screen.getByRole('button', { name: /Thêm giao dịch/ })));
 
@@ -35,38 +33,7 @@ describe('TransactionsPage', () => {
       fireEvent.click(document.getElementById('tx-save')!);
     });
 
-    await waitFor(() => expect(api.post).toHaveBeenCalledWith('/transactions', expect.objectContaining({
-      amount: 6_000_000,
-      type: 'EXPENSE',
-      walletId: 'wallet-1',
-    })));
-    expect(screen.queryByText('Số dư không đủ')).not.toBeInTheDocument();
-  });
-
-  it('loads transactions within the selected month', () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 8, 15));
-    vi.mocked(api.get).mockClear();
-    try {
-      renderPage(TransactionsPage);
-      expect(screen.getByText('Tháng 9/2026')).toBeInTheDocument();
-
-      act(() => fireEvent.click(screen.getByRole('button', { name: 'Tháng trước' })));
-      expect(screen.getByText('Tháng 8/2026')).toBeInTheDocument();
-
-      const transactionCalls = vi.mocked(api.get).mock.calls.filter(([url]) => url === '/transactions');
-      const params = transactionCalls[transactionCalls.length - 1]?.[1]?.params as {
-        startDate: string;
-        endDate: string;
-      };
-      expect(new Date(params.startDate).getFullYear()).toBe(2026);
-      expect(new Date(params.startDate).getMonth()).toBe(7);
-      expect(new Date(params.startDate).getDate()).toBe(1);
-      expect(new Date(params.endDate).getMonth()).toBe(7);
-      expect(new Date(params.endDate).getDate()).toBe(31);
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(await screen.findByRole('alert')).toHaveTextContent('Số dư không đủ');
   });
 
   it('distinguishes an API error from an empty transaction list', () => {

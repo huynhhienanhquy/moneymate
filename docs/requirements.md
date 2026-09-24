@@ -1,124 +1,78 @@
-# MoneyMate Requirements
+# Functional & Non-functional Requirements - MoneyMate
 
-> Current product baseline, verified against the repository on 2026-09-24.
+This document maps out the detailed Functional Requirements (FRs) and Non-functional Requirements (NFRs) for the **MoneyMate** Personal Finance Management System.
 
-The keywords **must**, **should**, and **may** indicate required, recommended, and optional behavior. This document describes the current web/API/mobile scope; Swagger and executable validation remain authoritative for wire-level details.
+---
 
-## 1. Functional requirements
+## 1. Functional Requirements (FR)
 
-### 1.1 Accounts and sessions
+### 1.1 Authentication & User Module (FR-AUTH)
+- **FR-AUTH-01 (Register)**: The system shall allow users to register an account using their Full Name, Email, and Password. Email must be unique and properly formatted.
+- **FR-AUTH-02 (Login)**: The system shall authenticate users using their Email and Password, returning a short-lived Access Token (JWT) and a long-lived Refresh Token.
+- **FR-AUTH-03 (Token Refresh)**: The system shall automatically exchange a valid Refresh Token for a new Access Token upon expiration to maintain session continuity.
+- **FR-AUTH-04 (Logout)**: The system shall invalidate the user's current session by deleting their Refresh Token from the database.
+- **FR-AUTH-05 (Profile View)**: The system shall allow authenticated users to view their profile details, including their Avatar, Name, Email, and Registration Date.
+- **FR-AUTH-06 (Profile Update)**: The system shall allow users to update their Name and upload/change their Avatar image (stored via Cloud/Uploads folder).
 
-- **FR-AUTH-01**: A visitor must be able to register with full name, unique email, and password.
-- **FR-AUTH-02**: A user must be able to sign in on web, iOS, and Android.
-- **FR-AUTH-03**: The system must issue a short-lived access token and a rotating refresh session appropriate to the client platform.
-- **FR-AUTH-04**: A user must be able to list active sessions and revoke one or all sessions.
-- **FR-AUTH-05**: A user must be able to view and update profile information and change their password.
-- **FR-AUTH-06**: Account deletion must require password confirmation and remove relational user data.
-- **FR-AUTH-07**: Administrator functionality must be restricted to users with the `ADMIN` role.
+### 1.2 Wallet Module (FR-WALL)
+- **FR-WALL-01 (Create Wallet)**: The system shall allow users to create multiple wallets by specifying a Name, Wallet Type (Cash, Bank, Credit Card, E-wallet, Saving), Currency, and Initial Balance.
+- **FR-WALL-02 (Update Wallet)**: The system shall allow users to edit the wallet name, type, and current balance adjustments.
+- **FR-WALL-03 (Delete Wallet)**: The system shall allow users to delete a wallet. Upon deletion, all associated transactions must either be cascade-deleted or re-assigned to a default wallet (depending on user choice).
+- **FR-WALL-04 (Wallet Transfer)**: The system shall allow users to transfer funds between their own wallets, specifying the Source Wallet, Destination Wallet, Amount, Date, and Optional Notes.
 
-### 1.2 Wallets and categories
+### 1.3 Category Module (FR-CAT)
+- **FR-CAT-01 (Default Categories)**: The system shall provide pre-defined, non-editable categories (e.g., Food, Transport, Rent, Salary, Dividends).
+- **FR-CAT-02 (Custom Categories)**: The system shall allow users to create custom categories with a Name, Type (Income or Expense), Color (HEX code), and Icon.
+- **FR-CAT-03 (Manage Categories)**: The system shall allow users to edit and delete their custom categories.
 
-- **FR-WALLET-01**: Users must be able to create, list, view, update, and archive multiple wallets.
-- **FR-WALLET-02**: Wallets must support cash, bank, credit-card, e-wallet, and savings types with a currency value.
-- **FR-WALLET-03**: Users must be able to transfer a positive amount between two owned wallets when the source balance is sufficient.
-- **FR-CATEGORY-01**: The system must provide shared system categories.
-- **FR-CATEGORY-02**: Users must be able to manage custom income and expense categories with color and icon metadata.
-- **FR-CATEGORY-03**: Category ownership and type must be validated anywhere a category is referenced.
+### 1.4 Transaction Module (FR-TX)
+- **FR-TX-01 (Create Transaction)**: The system shall allow users to record an Income or Expense transaction specifying Amount, Date, Category, Wallet, Notes, and an optional image attachment (receipt).
+- **FR-TX-02 (Edit/Delete)**: The system shall allow users to update or delete any transaction, automatically recalculating the associated wallet balance.
+- **FR-TX-03 (Search & Filter)**: The system shall allow users to search transactions by notes/tags and filter them by Wallet, Category, Transaction Type, and Date Range.
+- **FR-TX-04 (Sort)**: The system shall support sorting transactions by Date (Ascending/Descending) and Amount (Highest/Lowest).
 
-### 1.3 Transactions and synchronization
+### 1.5 Budget Module (FR-BUD)
+- **FR-BUD-01 (Monthly Budgets)**: The system shall allow users to set monthly expense limits for specific categories.
+- **FR-BUD-02 (Budget Tracking)**: The system shall display budget usage in real-time using progress bars.
+- **FR-BUD-03 (Budget Alert)**: The system shall generate in-app notifications when a category's expenses reach 80% and 100% of its budget limit.
 
-- **FR-TX-01**: Users must be able to create, list, view, update, and soft-delete income and expense records.
-- **FR-TX-02**: Transaction lists must support search, filters, sorting, and pagination.
-- **FR-TX-03**: Normal transaction dates must not be in the future.
-- **FR-TX-04**: Updates and deletes must detect stale versions when a version is supplied.
-- **FR-TX-05**: Supported mutation endpoints must accept idempotency keys to prevent duplicate replay.
-- **FR-TX-06**: Mobile clients must be able to request transaction deltas and deletion tombstones using an opaque cursor.
-- **FR-TX-07**: Transfers must use a dedicated atomic workflow and remain immutable through normal transaction endpoints.
+### 1.6 Saving Goals Module (FR-GOAL)
+- **FR-GOAL-01 (Goal Setting)**: The system shall allow users to define saving goals with a Title, Target Amount, Target Date, and Description.
+- **FR-GOAL-02 (Deposit to Goal)**: The system shall allow users to deposit money into a saving goal from an active wallet, deducting the balance from the wallet.
+- **FR-GOAL-03 (Goal Tracking)**: The system shall calculate and display the current progress percentage and project whether the goal will be reached by the target date.
 
-### 1.4 Budgets and savings goals
+### 1.7 Recurring Transactions Module (FR-REC)
+- **FR-REC-01 (Create Recurring Schedule)**: The system shall allow users to configure recurring income or expense templates (e.g., monthly salary, utility bills, subscriptions) specifying the Interval (Daily, Weekly, Monthly, Yearly).
+- **FR-REC-02 (Automated Generation)**: The system shall automatically create the transaction records on the scheduled dates and update the associated wallet balances.
 
-- **FR-BUDGET-01**: Users must be able to manage one global or category budget per month and year.
-- **FR-BUDGET-02**: Budget responses must include amount, spent, remaining, percentage, and status.
-- **FR-BUDGET-03**: The system must create one warning and one exceeded notification when the relevant thresholds are first reached.
-- **FR-GOAL-01**: Users must be able to manage savings goals with target amount and target date.
-- **FR-GOAL-02**: Users must be able to deposit from and withdraw to owned wallets atomically.
-- **FR-GOAL-03**: Goal progress and active/completed/expired status must be derived from current values.
-- **FR-GOAL-04**: Funded goal history must not be discarded through deletion.
+### 1.8 Reports & Dashboard (FR-REP)
+- **FR-REP-01 (Dashboard Summary)**: The system shall display total balance across all wallets, monthly net savings, monthly total income, and monthly total expenses.
+- **FR-REP-02 (Visual Charts)**: The system shall render charts showing:
+  - Category breakdown (Pie Chart).
+  - Income vs. Expense monthly comparisons (Bar Chart).
+  - Net savings progress over time (Line Chart).
+- **FR-REP-03 (Export Data)**: The system shall support exporting monthly transaction logs to PDF or Excel spreadsheets.
 
-### 1.5 Recurring transactions
+---
 
-- **FR-REC-01**: Users must be able to create, update, pause/resume, list, and delete recurring income or expense schedules.
-- **FR-REC-02**: Daily, weekly, monthly, and yearly frequencies must be supported.
-- **FR-REC-03**: The processor must create due occurrences without duplicate concurrent claims.
-- **FR-REC-04**: The processor must catch up missed occurrences within a bounded run and retain the link from generated transactions to their schedule.
+## 2. Non-functional Requirements (NFR)
 
-### 1.6 Dashboard, reports, and exports
+### 2.1 Security & Data Protection (NFR-SEC)
+- **NFR-SEC-01 (Transport Security)**: All communication between the client and server must be encrypted using HTTPS/TLS 1.3.
+- **NFR-SEC-02 (Password Hashing)**: User passwords must be stored using bcrypt hashing. Raw passwords must never be stored.
+- **NFR-SEC-03 (Input Validation)**: All input data on both the client (Zod schemas) and server (express validators + Zod schema validation) must be strictly sanitized and validated to prevent SQL Injection and Cross-Site Scripting (XSS).
+- **NFR-SEC-04 (Token Storage)**: JWT access tokens must be stored in application state (in-memory) and refresh tokens should be stored in secure, `httpOnly`, `sameSite: strict` cookies to prevent XSS and CSRF token thefts.
 
-- **FR-REPORT-01**: The dashboard must show wallet totals, current-period income/expense/savings information, and recent transactions.
-- **FR-REPORT-02**: Monthly reports must include category breakdowns and comparison-ready aggregates.
-- **FR-REPORT-03**: The system must provide a bounded monthly trend and a yearly report.
-- **FR-REPORT-04**: Users must be able to export an authenticated monthly report as Excel or PDF.
-- **FR-REPORT-05**: Closed-period snapshot caches must be invalidated after backdated changes.
+### 2.2 Performance & Scalability (NFR-PERF)
+- **NFR-PERF-01 (API Latency)**: Common API read endpoints (e.g., get profile, list wallets) must respond within **200ms** under normal load conditions.
+- **NFR-PERF-02 (Database Connection)**: Database queries must utilize index optimizations (e.g., indexes on `userId` in transactions, `nextExecutionDate` in recurring tables) to handle up to 100,000 transaction records per user without latency degradation.
+- **NFR-PERF-03 (Responsive UI)**: The frontend interface must load and render charts within **1.5 seconds** on broadband networks.
 
-### 1.7 Attachments, notifications, and native capabilities
+### 2.3 Usability & Design (NFR-USE)
+- **NFR-USE-01 (Responsive Design)**: The interface must adapt cleanly to all viewports (Mobile, Tablet, Desktop) using Tailwind CSS.
+- **NFR-USE-02 (Accessibility)**: Color contrasts on visual charts must meet WCAG 2.1 AA requirements.
+- **NFR-USE-03 (Dark Mode)**: The application must support seamless toggle between Light and Dark mode UI states.
 
-- **FR-FILE-01**: Users must be able to upload, list, download, and delete owned transaction attachments.
-- **FR-FILE-02**: Uploads must enforce allowlisted types and a 5 MiB limit.
-- **FR-NOTIFY-01**: Users must be able to list, mark read, mark all read, and delete notifications.
-- **FR-NOTIFY-02**: Mobile clients must be able to register and unregister push devices.
-- **FR-MOBILE-01**: The mobile application must support secure credential storage, an offline mutation outbox, and cursor-based transaction synchronization.
-- **FR-MOBILE-02**: Camera/OCR, biometrics, privacy protection, push notifications, and deep links must be available in compatible native builds.
-
-### 1.8 AI and Copilot
-
-- **FR-AI-01**: Authenticated users must be able to request expense analysis, budget forecasts, advisor insights, chat, and receipt OCR when AI is configured.
-- **FR-COPILOT-01**: The Copilot must expose only user-scoped aggregate financial reads from server tools.
-- **FR-COPILOT-02**: Recording an expense through Copilot must display a human confirmation UI before any write.
-- **FR-COPILOT-03**: The Copilot must be able to set light/dark mode and navigate only to allowlisted internal pages.
-- **FR-COPILOT-04**: The application must provide a safe fallback chat experience when CopilotKit is disabled.
-
-### 1.9 Administration
-
-- **FR-ADMIN-01**: Administrators must be able to list, inspect, update, and delete users.
-- **FR-ADMIN-02**: Admin operations must be protected independently of normal authenticated routes.
-
-## 2. Non-functional requirements
-
-### 2.1 Security and privacy
-
-- **NFR-SEC-01**: Production traffic must use HTTPS; exact browser origins must be configured.
-- **NFR-SEC-02**: Passwords must use bcrypt and refresh tokens must be stored only as hashes.
-- **NFR-SEC-03**: All private resources must enforce authentication, role checks where applicable, and user ownership.
-- **NFR-SEC-04**: Inputs, uploads, pagination, AI messages, and Copilot requests must be bounded and validated.
-- **NFR-SEC-05**: Secrets must remain server-side and must never enter logs, frontend bundles, or model context.
-- **NFR-SEC-06**: Production JWT secrets must be independent, non-example values of at least 32 characters.
-
-### 2.2 Data integrity and reliability
-
-- **NFR-DATA-01**: Multi-record financial mutations must be atomic.
-- **NFR-DATA-02**: Retryable mutations must use stable idempotency keys.
-- **NFR-DATA-03**: Concurrent transaction edits must not silently overwrite newer versions.
-- **NFR-DATA-04**: Soft-deleted sync entities must remain available as tombstones.
-- **NFR-DATA-05**: Database migrations require backup, verified restore, staging validation, and forward-fix rollback planning.
-
-### 2.3 Performance and scalability
-
-- **NFR-PERF-01**: Lists and sync endpoints must use bounded page sizes.
-- **NFR-PERF-02**: Queries for user/date, recurring due items, sync cursors, sessions, and idempotency expiry should use indexed access paths.
-- **NFR-PERF-03**: Route-level web pages should remain lazy loaded.
-- **NFR-PERF-04**: Performance targets must be measured in the deployment environment; the repository does not claim a guaranteed latency without load-test evidence.
-
-### 2.4 Accessibility and usability
-
-- **NFR-UX-01**: Web and mobile must support light/dark themes and responsive layouts.
-- **NFR-UX-02**: Keyboard navigation, visible focus, semantic labels, reduced motion, and accessible chart summaries should meet WCAG 2.1 AA intent.
-- **NFR-UX-03**: Loading, empty, error, offline, and conflict states must be explicit.
-- **NFR-UX-04**: Currency and dates must be formatted consistently for the Vietnamese product locale.
-
-### 2.5 Maintainability and observability
-
-- **NFR-MAINT-01**: TypeScript strict mode and layered backend boundaries must be preserved.
-- **NFR-MAINT-02**: Shared contracts and tokens should remain in workspace packages rather than being duplicated across clients.
-- **NFR-MAINT-03**: Material behavior changes require focused unit/integration tests and updated documentation.
-- **NFR-OPS-01**: API responses and logs should carry request IDs without exposing credentials or personal financial payloads.
-- **NFR-OPS-02**: Services must shut down gracefully and disconnect database clients.
+### 2.4 Maintainability & Architecture (NFR-MNT)
+- **NFR-MNT-01 (Clean Architecture)**: The backend project structure must maintain strict layer separation: Route -> Controller -> Service -> Repository -> Database. Dependencies must point inwards.
+- **NFR-MNT-02 (Type Safety)**: Both frontend and backend codebase must be written using TypeScript with strict mode enabled.

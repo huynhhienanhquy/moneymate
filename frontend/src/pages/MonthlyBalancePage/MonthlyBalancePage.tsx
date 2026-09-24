@@ -17,7 +17,6 @@ import {
 import { Calendar, ChevronLeft, ChevronRight, Loader2, TrendingDown, TrendingUp, WalletCards } from 'lucide-react';
 import api from '@/services/api/client';
 import { formatChartValue, formatVND } from '@/utils/formatCurrency';
-import PageHeader from '@/components/common/PageHeader/PageHeader';
 
 const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 
@@ -25,7 +24,7 @@ const MonthlyBalancePage: React.FC = () => {
   const [year, setYear] = useState(new Date().getFullYear());
 
   const { data, isLoading } = useQuery({
-    queryKey: ['monthly-balance-v7', year],
+    queryKey: ['monthly-balance-v5', year],
     queryFn: () => api.get('/transactions/report/yearly', { params: { year } }).then((r) => r.data.data),
     staleTime: 0,
   });
@@ -44,9 +43,9 @@ const MonthlyBalancePage: React.FC = () => {
       return itemDate >= createdMonth;
     })
     .map((item: any) => {
-      const income = Number(item.walletBalance ?? item.income ?? 0);
+      const income = Number(item.income || 0);
       const expense = Number(item.expense || 0);
-      const remaining = income - expense;
+      const remaining = Number(item.savings ?? income - expense);
       cumulativeSavings += remaining;
 
       return {
@@ -68,32 +67,35 @@ const MonthlyBalancePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Dòng tiền"
-        title="Tiết kiệm mỗi tháng"
-        actions={(
-          <div className="flex items-center gap-3">
-            <AppButton unstyled
-              aria-label="Năm trước"
-              onClick={() => setYear((y) => y - 1)}
-              className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            >
-              <ChevronLeft className="size-4.5" />
-            </AppButton>
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-              <Calendar  className="size-icon-nav text-blue-600" />
-              Năm {year}
-            </div>
-            <AppButton unstyled
-              aria-label="Năm sau"
-              onClick={() => setYear((y) => y + 1)}
-              className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            >
-              <ChevronRight className="size-4.5" />
-            </AppButton>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <AppTitle unstyled level={1} className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">Tiết kiệm mỗi tháng</AppTitle>
+          <p className="mt-1 text-slate-500 dark:text-slate-400">
+            Tính từ tháng tạo tài khoản đến tháng hiện tại. Các tháng chưa tới sẽ không thống kê.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <AppButton unstyled
+            aria-label="Năm trước"
+            onClick={() => setYear((y) => y - 1)}
+            className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            <ChevronLeft className="size-4.5" />
+          </AppButton>
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <Calendar  className="size-icon-nav text-blue-600" />
+            Năm {year}
           </div>
-        )}
-      />
+          <AppButton unstyled
+            aria-label="Năm sau"
+            onClick={() => setYear((y) => y + 1)}
+            className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            <ChevronRight className="size-4.5" />
+          </AppButton>
+        </div>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
@@ -150,6 +152,7 @@ const MonthlyBalancePage: React.FC = () => {
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
               <div>
               <AppTitle unstyled level={2} className="font-extrabold text-slate-900 dark:text-slate-100">Tiết kiệm theo tháng</AppTitle>
+              <p className="mt-1 text-slate-500 dark:text-slate-400">Tổng thu nhập bằng tổng tài sản cuối từng tháng, đồng bộ với biểu đồ Tổng quan; tháng hiện tại lấy tổng tài sản hiện tại. Tiết kiệm tháng = tổng thu nhập tháng - tổng chi tiêu tháng.</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={chartTheme.height}>

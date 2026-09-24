@@ -8,7 +8,7 @@ import AppButton from '@/components/common/AppButton/AppButton';
 
 const VIETNAMESE_LABELS: Partial<CopilotChatLabels> = {
   modalHeaderTitle: 'Trợ lý MoneyMate',
-  welcomeMessageText: 'Xin chào! Tôi giúp bạn quản lý tài chính cá nhân, ghi khoản chi và thao tác MoneyMate. Bạn có thể yêu cầu: “mở trang báo cáo”, “bật chế độ tối” hoặc “hôm nay ăn uống hết 12 đ”.',
+  welcomeMessageText: 'Xin chào! Tôi giúp bạn quản lý tài chính cá nhân và ghi khoản chi. Ví dụ: hôm nay ăn uống hết 12 đ. Bạn sẽ kiểm tra và xác nhận trước khi lưu.',
   chatInputPlaceholder: 'Hỏi MoneyMate hoặc nhập khoản chi của bạn...',
   chatDisclaimerText: 'MoneyMate AI chỉ cung cấp thông tin tham khảo, không phải tư vấn tài chính.',
   chatToggleOpenLabel: 'Mở trợ lý MoneyMate',

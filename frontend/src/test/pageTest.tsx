@@ -17,12 +17,12 @@ const queryFixtures: Record<string, unknown> = {
   'saving-goals': [{ id: 'goal-1', title: 'Du lịch', name: 'Du lịch', targetAmount: 10_000_000, currentAmount: 2_000_000, targetDate: '2026-12-31', deadline: '2026-12-31', color: '#2a95ff' }],
   dashboard: { totalBalance: 5_000_000, netWorth: 5_000_000, monthlyIncome: 10_000_000, monthlyExpense: 4_000_000, monthlySavings: 6_000_000, savingsRate: 60, categoryExpenses: [{ id: category.id, categoryId: category.id, categoryName: category.name, name: category.name, value: 1_000_000, amount: 1_000_000, color: category.color }], recentTransactions: [transaction] },
   'monthly-report': { summary: { totalIncome: 5_000_000, totalExpense: 4_000_000, netSavings: 1_000_000 }, categoryExpenses: [{ id: category.id, categoryId: category.id, categoryName: category.name, name: category.name, amount: 1_000_000, value: 1_000_000 }] },
-  'yearly-report': { walletBalanceTotal: 5_000_000, totalIncome: 120_000_000, totalExpense: 48_000_000, netSavings: 72_000_000, monthlyData: [{ month: 1, income: 10_000_000, expense: 4_000_000, savings: 6_000_000 }] },
+  'yearly-report': { walletBalanceTotal: 5_000_000, totalIncome: 120_000_000, totalExpense: 48_000_000, balance: 72_000_000, monthlyData: [{ month: 1, income: 10_000_000, expense: 4_000_000, balance: 6_000_000 }] },
   'monthly-trend': [{ month: 7, year: 2026, income: 10_000_000, expense: 4_000_000 }],
-  'monthly-balance-v7': { accountCreatedAt: '2025-01-01', monthlyData: [
-    { month: 1, income: 999_999, walletBalance: 5_000_000, expense: 4_000_000, savings: 999_999 },
-    { month: 2, income: 999_999, walletBalance: 3_000_000, expense: 4_000_000, savings: 999_999 },
-    { month: 3, income: 999_999, walletBalance: 7_000_000, expense: 2_000_000, savings: 999_999 },
+  'monthly-balance-v5': { accountCreatedAt: '2025-01-01', monthlyData: [
+    { month: 1, income: 5_000_000, expense: 4_000_000, savings: 1_000_000 },
+    { month: 2, income: 3_000_000, expense: 4_000_000, savings: -1_000_000 },
+    { month: 3, income: 7_000_000, expense: 2_000_000, savings: 5_000_000 },
   ] },
   profile: { id: 'user-1', fullName: 'Money Mate', email: 'user@moneymate.vn', avatarUrl: null, role: 'USER', createdAt: '2025-01-01' },
   'ai-advisor': { recommendations: [{ id: 'recommendation-1', title: 'Tiết kiệm', description: 'Giảm chi tiêu', priority: 'HIGH' }] },

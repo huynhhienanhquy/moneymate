@@ -6,8 +6,7 @@ describe('DashboardPage', () => {
   it('renders the financial overview', () => {
     renderPage(DashboardPage);
     expect(screen.getByText('Tổng quan tài chính')).toBeInTheDocument();
-    expect(screen.getByText('Tổng thu nhập tháng này')).toBeInTheDocument();
-    expect(screen.getByText('10.000.000 đ')).toBeInTheDocument();
+    expect(screen.getByText('Tổng tài sản')).toBeInTheDocument();
     expect(screen.getByText('Ăn trưa')).toBeInTheDocument();
   });
 

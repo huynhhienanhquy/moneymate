@@ -15,14 +15,14 @@ export class WalletRepository {
   }
 
   async findById(id: string) {
-    return prisma.wallet.findFirst({
-      where: { id, deletedAt: null }
+    return prisma.wallet.findUnique({
+      where: { id }
     });
   }
 
   async findAllByUserId(userId: string) {
     return prisma.wallet.findMany({
-      where: { userId, deletedAt: null },
+      where: { userId },
       orderBy: { createdAt: 'desc' }
     });
   }
@@ -34,18 +34,21 @@ export class WalletRepository {
     });
   }
 
-  async archive(id: string, userId: string) {
-    return prisma.$transaction(async (tx) => {
-      const result = await tx.wallet.updateMany({
-        where: { id, userId, deletedAt: null },
-        data: { deletedAt: new Date() },
-      });
-      if (result.count !== 1) return false;
-      await tx.recurringTransaction.updateMany({
-        where: { walletId: id, userId, isActive: true },
-        data: { isActive: false },
-      });
-      return true;
+  async delete(id: string) {
+    return prisma.wallet.delete({
+      where: { id }
     });
+  }
+
+  async countReferences(id: string) {
+    const [transactions, recurringTransactions, transfers, goalTransactions] = await Promise.all([
+      prisma.transaction.count({ where: { walletId: id } }),
+      prisma.recurringTransaction.count({ where: { walletId: id } }),
+      prisma.walletTransfer.count({
+        where: { OR: [{ sourceWalletId: id }, { destinationWalletId: id }] },
+      }),
+      prisma.goalTransaction.count({ where: { walletId: id } }),
+    ]);
+    return transactions + recurringTransactions + transfers + goalTransactions;
   }
 }

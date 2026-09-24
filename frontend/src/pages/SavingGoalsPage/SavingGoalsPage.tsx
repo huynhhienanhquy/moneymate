@@ -129,7 +129,7 @@ const SavingGoalsPage: React.FC = () => {
 
   return (
     <div>
-      <PageHeader eyebrow="Mục tiêu" title="Mục tiêu tiết kiệm" description />
+      <PageHeader eyebrow="Mục tiêu" title="Mục tiêu tiết kiệm" description="Theo dõi tiến độ tiết kiệm của bạn" />
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SummaryCard icon={<Target className="size-4.5" />} label="Tổng mục tiêu" value={String(goals.length)} tone="blue" />

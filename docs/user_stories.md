@@ -1,168 +1,107 @@
-# MoneyMate User Stories
+# User Stories - MoneyMate
 
-> Current product baseline, verified against the repository on 2026-09-24.
+This document lists the user stories for **MoneyMate**, split across the development phases (MVP, Advanced, AI). Each story includes detailed acceptance criteria (AC).
 
-## US-01 — Register and sign in securely
+---
 
-**As a visitor, I want to create an account and sign in, so that my financial records are private and available across devices.**
+## Phase 1: MVP Features
 
-Acceptance criteria:
+### US-01: User Registration
+**As a** new visitor,  
+**I want to** register for a MoneyMate account with my name, email, and password,  
+**So that** I can securely store and track my personal finances.
 
-- Registration validates full name, normalized unique email, and a password of at least eight characters.
-- Login returns a short-lived access token and creates a rotating refresh session.
-- Invalid credentials use a generic error and login/registration are rate limited.
-- Web and mobile receive refresh credentials through their appropriate secure transport.
+#### Acceptance Criteria:
+- **AC-01**: Registration form requires Full Name, a valid unique email, and a password (min 8 characters, containing at least one number and letter).
+- **AC-02**: The API must validate input formats and return descriptive error messages (e.g., "Email already registered").
+- **AC-03**: Upon successful registration, the user is redirected to the login screen with a success message.
+- **AC-04**: Password must be saved securely using bcrypt hashing.
 
-## US-02 — Manage devices and account
+### US-02: Multi-Wallet Setup
+**As a** user,  
+**I want to** create multiple wallets (e.g., Cash, Techcombank, Momo),  
+**So that** I can track balances separately across different assets.
 
-**As a user, I want to review sessions and manage my profile, so that I stay in control of my account.**
+#### Acceptance Criteria:
+- **AC-01**: User can add a new wallet by entering Name, choosing a Type (Cash, Bank, Credit Card, E-wallet, Saving), selecting a Currency, and inputting an Initial Balance.
+- **AC-02**: Wallets list displays the current calculated balance for each wallet.
+- **AC-03**: User can edit a wallet's name and type, or delete the wallet entirely.
 
-Acceptance criteria:
+### US-03: Custom Categories
+**As a** user,  
+**I want to** customize my income and expense categories,  
+**So that** I can classify my cash flow according to my personal lifestyle.
 
-- I can view active sessions and revoke one or all of them.
-- I can update my name/avatar metadata and change my password after confirming the current password.
-- I can delete my account only after password confirmation.
-- Refresh-token replay revokes the affected token family.
+#### Acceptance Criteria:
+- **AC-01**: System provides standard default categories (e.g., Salary, Food, Utilities) which are read-only.
+- **AC-02**: User can create a custom category by choosing Category Name, Type (Income/Expense), a hex Color, and a descriptive Icon.
+- **AC-03**: Users cannot duplicate names for custom categories of the same type.
 
-## US-03 — Manage wallets and categories
+### US-04: Log Income & Expenses
+**As a** user,  
+**I want to** record my daily transactions (income or expense),  
+**So that** my wallet balances and reports reflect actual spending.
 
-**As a user, I want separate wallets and personal categories, so that my records match how I manage money.**
+#### Acceptance Criteria:
+- **AC-01**: User can log a transaction with Amount, Category, Wallet, Date, and optional note.
+- **AC-02**: Amount must be positive and non-zero.
+- **AC-03**: Saving an expense transaction automatically reduces the selected wallet balance.
+- **AC-04**: Saving an income transaction automatically increases the selected wallet balance.
 
-Acceptance criteria:
+### US-05: Dashboard Overview
+**As a** user,  
+**I want to** see an visual summary dashboard when I open the app,  
+**So that** I can instantly understand my overall financial status this month.
 
-- I can create, edit, list, and archive supported wallet types.
-- Archived wallets disappear from active lists while historical records remain.
-- I can use read-only system categories and manage my own income/expense categories.
-- The API rejects wallets/categories owned by another user and type mismatches.
+#### Acceptance Criteria:
+- **AC-01**: Dashboard shows net worth (sum of all wallet balances).
+- **AC-02**: Dashboard displays current month statistics: Total Income, Total Expenses, and Net Savings.
+- **AC-03**: Includes a Pie Chart showing expenses grouped by category.
+- **AC-04**: Includes a list of the 5 most recent transactions.
 
-## US-04 — Record and find transactions
+---
 
-**As a user, I want to record and organize income and expenses, so that reports reflect my activity.**
+## Phase 2: Advanced Features
 
-Acceptance criteria:
+### US-06: Category Budgeting
+**As a** user,  
+**I want to** set monthly spending limits for specific expense categories,  
+**So that** I can prevent overspending.
 
-- I can create an income or expense with positive amount, owned wallet, compatible category, date, and optional note.
-- A normal transaction date cannot be in the future.
-- I can search, filter, sort, and paginate transactions.
-- I can update or soft-delete a normal transaction, and stale versions produce a conflict instead of overwriting newer data.
+#### Acceptance Criteria:
+- **AC-01**: User can define a monthly budget for any expense category.
+- **AC-02**: Budget progress bar dynamically updates as new transactions are added.
+- **AC-03**: System sends an in-app notification when spending reaches 80% and 100% of the budget.
 
-## US-05 — Transfer between wallets
+### US-07: Saving Goals progress
+**As a** user,  
+**I want to** set up saving goals with targets (e.g., Buy a laptop) and deposit funds into them,  
+**So that** I can systematically save money for future plans.
 
-**As a user, I want to transfer money between my wallets, so that balances stay consistent.**
+#### Acceptance Criteria:
+- **AC-01**: User can create a goal with Title, Target Amount, Target Date, and Description.
+- **AC-02**: User can transfer money from any wallet to the goal, which updates the goal's saved amount and decreases the wallet's balance.
+- **AC-03**: System highlights goal status as Completed when target amount is reached.
 
-Acceptance criteria:
+### US-08: Automatic Recurring Bills
+**As a** user,  
+**I want to** set up recurring transaction schedules (e.g., monthly rent, weekly gym fee),  
+**So that** the system automatically logs these transactions for me.
 
-- Source and destination must be different active wallets owned by me.
-- The amount must be positive and the source must have sufficient balance.
-- Debit, credit, transfer audit record, and linked transaction records commit atomically.
-- Retrying the same idempotent request does not create a duplicate transfer.
+#### Acceptance Criteria:
+- **AC-01**: User can define recurring schedules with Interval (Daily, Weekly, Monthly, Yearly), Start Date, Wallet, Category, and Amount.
+- **AC-02**: A daily automated task evaluates schedules and logs transactions when their execution date matches the current date.
 
-## US-06 — Plan with budgets
+---
 
-**As a user, I want monthly global or category budgets, so that I can detect overspending.**
+## Phase 3: AI Features
 
-Acceptance criteria:
+### US-09: Smart Receipt Scanner (OCR)
+**As a** user,  
+**I want to** take a photo of my store receipt and have the system scan it,  
+**So that** I don't have to enter transaction details manually.
 
-- I can create one budget per scope/month/year and update or delete it.
-- The UI shows limit, spent, remaining, utilization percentage, and status.
-- I receive one warning at 80% and one exceeded notification at 100% or above.
-- Exceeding a budget does not block a valid expense.
-
-## US-07 — Fund savings goals
-
-**As a user, I want to move money between wallets and goals, so that I can track progress toward a target.**
-
-Acceptance criteria:
-
-- I can create a goal with a positive target and target date.
-- Deposits require sufficient owned-wallet balance and update wallet, goal, and history atomically.
-- Withdrawals cannot exceed the saved amount and credit an owned wallet.
-- Completed/expired/active status and progress are derived consistently.
-- A goal with funds or funding history cannot be deleted.
-
-## US-08 — Automate recurring activity
-
-**As a user, I want recurring income and expense schedules, so that routine records are created automatically.**
-
-Acceptance criteria:
-
-- I can manage daily, weekly, monthly, and yearly schedules.
-- I can pause a schedule and resume it without generating the paused period.
-- Due occurrences are generated once even if processors overlap.
-- Missed occurrences are caught up in order within a bounded run.
-
-## US-09 — Understand reports
-
-**As a user, I want dashboards and reports, so that I can understand financial trends.**
-
-Acceptance criteria:
-
-- The dashboard shows wallet totals, current-period metrics, and recent transactions.
-- Monthly reports show summary values and expense categories.
-- Trend and yearly views use bounded date ranges and exclude deleted data.
-- I can export a selected month as PDF or Excel.
-
-## US-10 — Attach and scan receipts
-
-**As a user, I want to attach or scan receipts, so that I can keep evidence and reduce manual entry.**
-
-Acceptance criteria:
-
-- JPEG, PNG, WEBP, and PDF files up to 5 MiB are accepted.
-- I can list, download, and delete attachments only for my own transactions.
-- OCR proposes extracted fields for review rather than saving automatically.
-- Storage/provider failures produce a recoverable user-facing error.
-
-## US-11 — Receive notifications
-
-**As a user, I want relevant alerts, so that I notice budget, goal, and recurring events.**
-
-Acceptance criteria:
-
-- I can list, mark read, mark all read, and delete my notifications.
-- iOS/Android devices can register and unregister push tokens.
-- Push delivery is optional and does not roll back committed financial data.
-
-## US-12 — Work offline on mobile
-
-**As a mobile user, I want safe offline behavior, so that temporary network loss does not duplicate or lose supported changes.**
-
-Acceptance criteria:
-
-- Supported offline mutations enter a persistent SQLite outbox.
-- Replay uses the original idempotency key and bounded exponential backoff.
-- Transaction deltas include edits and deletion tombstones after the saved cursor.
-- Conflicts are visible and are not silently overwritten.
-
-## US-13 — Ask the financial Copilot
-
-**As a user, I want to ask natural-language questions, so that aggregate financial information is easier to understand.**
-
-Acceptance criteria:
-
-- Personal numbers come from authenticated, user-scoped read-only tools.
-- Answers identify relevant time periods and format VND clearly.
-- The Copilot states limitations instead of inventing unavailable data.
-- Provider and connection errors are shown without exposing internal details or secrets.
-
-## US-14 — Control the app through Copilot
-
-**As a user, I want the Copilot to perform simple app actions, so that I can navigate and adjust the interface conversationally.**
-
-Acceptance criteria:
-
-- I can request light or dark mode and the exact theme is persisted.
-- I can request a supported MoneyMate page; arbitrary external URLs are rejected by design.
-- I can describe an expense and review the proposed amount/date/category/wallet before saving.
-- Canceling the confirmation does not create a transaction.
-- The Copilot cannot edit or delete transactions.
-
-## US-15 — Administer users
-
-**As an administrator, I want a protected user-management area, so that authorized operations staff can support the service.**
-
-Acceptance criteria:
-
-- Only an authenticated `ADMIN` can enter the admin route or call admin APIs.
-- An administrator can list, inspect, update, and delete user accounts.
-- Standard users receive an authorization failure without admin data leakage.
+#### Acceptance Criteria:
+- **AC-01**: User uploads a receipt image (PNG, JPG).
+- **AC-02**: AI extracts Amount, Date, Merchant, and recommends a Category.
+- **AC-03**: Pre-filled form is shown to the user to review and save with one click.

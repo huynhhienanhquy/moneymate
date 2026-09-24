@@ -1,106 +1,97 @@
-# MoneyMate Entity Relationship Model
+# Entity Relationship Diagram & Schema Specifications - MoneyMate
 
-> Derived from `backend/prisma/schema.prisma`, verified on 2026-09-24. The Prisma schema and migrations are authoritative.
+This document specifies the database structure, data types, and relationships for the **MoneyMate** Personal Finance Management System.
 
-## Entity relationship diagram
+---
+
+## 1. Entity Relationship Diagram (ERD)
+
+The diagram below represents the tables and their relations.
 
 ```mermaid
 erDiagram
-    User ||--o{ Wallet : owns
-    User ||--o{ Category : creates
-    User ||--o{ Transaction : records
-    User ||--o{ Budget : defines
-    User ||--o{ SavingGoal : owns
-    User ||--o{ RecurringTransaction : schedules
-    User ||--o{ Notification : receives
-    User ||--o{ RefreshToken : authenticates
-    User ||--o{ DeviceToken : registers
-    User ||--o{ IdempotencyRecord : scopes
-    User ||--o{ WalletTransfer : initiates
-    User ||--o{ MonthlySavingsSnapshot : caches
+    users ||--o{ wallets : "owns"
+    users ||--o{ categories : "owns (custom)"
+    users ||--o{ transactions : "performs"
+    users ||--o{ budgets : "defines"
+    users ||--o{ saving_goals : "targets"
+    users ||--o{ recurring_transactions : "schedules"
+    users ||--o{ notifications : "receives"
+    users ||--o{ refresh_tokens : "authenticates"
+    users ||--o{ wallet_transfers : "initiates"
 
-    Wallet ||--o{ Transaction : contains
-    Wallet ||--o{ RecurringTransaction : funds
-    Wallet ||--o{ GoalTransaction : funds
-    Wallet ||--o{ WalletTransfer : source
-    Wallet ||--o{ WalletTransfer : destination
+    wallets ||--o{ transactions : "logs"
+    wallets ||--o{ recurring_transactions : "sources"
+    wallets ||--o{ wallet_transfers : "source/destination"
+    wallets ||--o{ goal_transactions : "funds"
 
-    Category ||--o{ Transaction : classifies
-    Category ||--o{ Budget : limits
-    Category ||--o{ RecurringTransaction : classifies
+    categories ||--o{ transactions : "classifies"
+    categories ||--o{ budgets : "bounds"
+    categories ||--o{ recurring_transactions : "classifies"
 
-    SavingGoal ||--o{ GoalTransaction : tracks
-    RecurringTransaction o|--o{ Transaction : generates
-    Transaction ||--o{ Attachment : has
+    saving_goals ||--o{ goal_transactions : "tracks"
+    transactions ||--o{ attachments : "holds"
 
-    User {
-        string id PK
-        string email UK
-        string passwordHash
-        string fullName
-        string avatarUrl "nullable"
-        Role role
+    users {
+        varchar id PK
+        varchar email UK
+        varchar passwordHash
+        varchar fullName
+        varchar avatarUrl
         datetime createdAt
         datetime updatedAt
     }
 
-    Wallet {
-        string id PK
-        string userId FK
-        string name
-        WalletType type
-        string currency
+    wallets {
+        varchar id PK
+        varchar userId FK
+        varchar name
+        varchar type "CASH, BANK, CREDIT_CARD, E_WALLET, SAVING"
+        varchar currency "default 'VND'"
         decimal initialBalance
         datetime createdAt
         datetime updatedAt
-        datetime deletedAt "nullable"
     }
 
-    Category {
-        string id PK
-        string userId FK "nullable for system categories"
-        string name
-        CategoryType type
-        string color
-        string icon
+    categories {
+        varchar id PK
+        varchar userId FK "NULL for system defaults"
+        varchar name
+        varchar type "INCOME, EXPENSE"
+        varchar color
+        varchar icon
         datetime createdAt
         datetime updatedAt
     }
 
-    Transaction {
-        string id PK
-        string userId FK
-        string walletId FK
-        string categoryId FK
-        string recurringTransactionId FK "nullable"
+    transactions {
+        varchar id PK
+        varchar userId FK
+        varchar walletId FK
+        varchar categoryId FK
         decimal amount
-        TransactionType type
-        text note "nullable"
+        varchar type "INCOME, EXPENSE, TRANSFER"
+        text note
         datetime transactionDate
-        int version
-        datetime deletedAt "nullable"
         datetime createdAt
         datetime updatedAt
     }
 
-    Budget {
-        string id PK
-        string userId FK
-        string categoryId FK "nullable for global budget"
-        string categoryScope
+    budgets {
+        varchar id PK
+        varchar userId FK
+        varchar categoryId FK "NULL for global budget"
         decimal amount
         int month
         int year
-        boolean warningNotified
-        boolean exceededNotified
         datetime createdAt
         datetime updatedAt
     }
 
-    SavingGoal {
-        string id PK
-        string userId FK
-        string title
+    saving_goals {
+        varchar id PK
+        varchar userId FK
+        varchar title
         decimal targetAmount
         decimal currentAmount
         datetime targetDate
@@ -108,24 +99,24 @@ erDiagram
         datetime updatedAt
     }
 
-    GoalTransaction {
-        string id PK
-        string savingGoalId FK
-        string walletId FK
+    goal_transactions {
+        varchar id PK
+        varchar savingGoalId FK
+        varchar walletId FK
         decimal amount
-        GoalTransactionType type
+        varchar type "DEPOSIT, WITHDRAW"
         datetime createdAt
     }
 
-    RecurringTransaction {
-        string id PK
-        string userId FK
-        string walletId FK
-        string categoryId FK
+    recurring_transactions {
+        varchar id PK
+        varchar userId FK
+        varchar walletId FK
+        varchar categoryId FK
         decimal amount
-        CategoryType type
-        Frequency frequency
-        text note "nullable"
+        varchar type "INCOME, EXPENSE"
+        varchar frequency "DAILY, WEEKLY, MONTHLY, YEARLY"
+        text note
         datetime startDate
         datetime nextExecutionDate
         boolean isActive
@@ -133,148 +124,155 @@ erDiagram
         datetime updatedAt
     }
 
-    Notification {
-        string id PK
-        string userId FK
-        string title
+    notifications {
+        varchar id PK
+        varchar userId FK
+        varchar title
         text message
-        NotificationType type
+        varchar type "BUDGET_ALERT, BILL_REMINDER, GOAL_COMPLETED, RECURRING_TRANSACTION"
         boolean isRead
         datetime createdAt
     }
 
-    RefreshToken {
-        string id PK
-        string userId FK
-        string tokenHash UK
-        string tokenFamily
-        string deviceId "nullable"
-        string deviceName "nullable"
-        string platform
-        string appVersion "nullable"
-        string timezone "nullable"
+    refresh_tokens {
+        varchar id PK
+        varchar userId FK
+        varchar token UK
         datetime expiresAt
-        datetime lastSeenAt
-        datetime revokedAt "nullable"
         datetime createdAt
     }
 
-    DeviceToken {
-        string id PK
-        string userId FK
-        string deviceId
-        string token UK
-        string platform
-        string provider
-        string appVersion "nullable"
-        string locale "nullable"
-        string timezone "nullable"
-        boolean isActive
-        datetime lastSeenAt
-        datetime createdAt
-        datetime updatedAt
-    }
-
-    IdempotencyRecord {
-        string id PK
-        string userId FK
-        string key
-        string requestHash
-        string status
-        int statusCode "nullable"
-        json responseBody "nullable"
-        datetime createdAt
-        datetime expiresAt
-    }
-
-    WalletTransfer {
-        string id PK
-        string userId FK
-        string sourceWalletId FK
-        string destinationWalletId FK
+    wallet_transfers {
+        varchar id PK
+        varchar userId FK
+        varchar sourceWalletId FK
+        varchar destinationWalletId FK
         decimal amount
-        text note "nullable"
+        text note
         datetime transferDate
         datetime createdAt
     }
 
-    MonthlySavingsSnapshot {
-        string id PK
-        string userId FK
-        int month
-        int year
-        decimal salaryIncome
-        decimal otherIncome
-        decimal expense
-        decimal savings
-        decimal walletBalance
-        int formulaVersion
-        datetime createdAt
-    }
-
-    Attachment {
-        string id PK
-        string transactionId FK "nullable before association"
-        string url
-        string filename
-        string fileType
+    attachments {
+        varchar id PK
+        varchar transactionId FK "NULL before logging"
+        varchar url
+        varchar filename
+        varchar fileType
         int fileSize
         datetime createdAt
     }
 ```
 
-## Enumerations
+---
 
-| Enum | Values |
-| --- | --- |
-| `Role` | `USER`, `ADMIN` |
-| `WalletType` | `CASH`, `BANK`, `CREDIT_CARD`, `E_WALLET`, `SAVING` |
-| `CategoryType` | `INCOME`, `EXPENSE` |
-| `TransactionType` | `INCOME`, `EXPENSE`, `TRANSFER` |
-| `GoalTransactionType` | `DEPOSIT`, `WITHDRAW` |
-| `Frequency` | `DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY` |
-| `NotificationType` | `BUDGET_ALERT`, `BILL_REMINDER`, `GOAL_COMPLETED`, `RECURRING_TRANSACTION` |
+## 2. Table Specifications
 
-## Key constraints and indexes
+### 2.1 users
+Stores registered user credentials and profile information.
+- `id`: `VARCHAR(36)` - Primary Key (UUID).
+- `email`: `VARCHAR(191)` - Unique key, user email for authentication.
+- `passwordHash`: `VARCHAR(255)` - Bcrypt hashed password.
+- `fullName`: `VARCHAR(255)` - User's display name.
+- `avatarUrl`: `VARCHAR(255)` - URL/path to stored avatar image.
+- `createdAt` / `updatedAt`: `DATETIME(3)`.
 
-### Ownership and deletion
+### 2.2 wallets
+Tracks balances across individual funding sources.
+- `id`: `VARCHAR(36)` - Primary Key (UUID).
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+- `name`: `VARCHAR(255)` - Custom name of the wallet (e.g., Momo, ATM VCB).
+- `type`: `ENUM('CASH', 'BANK', 'CREDIT_CARD', 'E_WALLET', 'SAVING')`.
+- `currency`: `VARCHAR(10)` - Default 'VND'.
+- `initialBalance`: `DECIMAL(15, 2)` - Starting balance at wallet creation.
+- `createdAt` / `updatedAt`: `DATETIME(3)`.
 
-- Deleting a `User` cascades through directly owned relational data.
-- `Wallet` and `Transaction` use nullable `deletedAt` timestamps for soft deletion.
-- Transactions restrict wallet/category deletion at the database relation level.
-- Attachments cascade when their associated transaction row is physically deleted.
-- A recurring source on a generated transaction is nullable and becomes `NULL` if the schedule is deleted.
+### 2.3 categories
+Classifies transactions into income and expense categories.
+- `id`: `VARCHAR(36)` - Primary Key (UUID).
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)`. NULL represents system-wide default categories.
+- `name`: `VARCHAR(255)` - Name of category.
+- `type`: `ENUM('INCOME', 'EXPENSE')`.
+- `color`: `VARCHAR(7)` - Color hex code for UI display.
+- `icon`: `VARCHAR(50)` - Lucide/FontAwesome icon key name.
+- @@unique([`userId`, `name`, `type`]) - Enforces category name uniqueness per user per category type.
 
-### Uniqueness
+### 2.4 transactions
+Main ledger for all physical cash movements (income and expenses).
+- `id`: `VARCHAR(36)` - Primary Key (UUID).
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+- `walletId`: `VARCHAR(36)` - Foreign Key referencing `wallets(id)` ON DELETE RESTRICT.
+- `categoryId`: `VARCHAR(36)` - Foreign Key referencing `categories(id)` ON DELETE RESTRICT.
+- `amount`: `DECIMAL(15, 2)` - positive financial amount.
+- `type`: `ENUM('INCOME', 'EXPENSE', 'TRANSFER')`.
+- `note`: `TEXT` - Optional note.
+- `transactionDate`: `DATETIME(3)` - Timestamp when transaction occurred.
 
-- User email is globally unique.
-- Custom/system category identity is constrained by `(userId, name, type)`.
-- A budget is unique by `(userId, categoryScope, month, year)`; `categoryScope` normalizes global versus category scope for MySQL uniqueness.
-- Monthly snapshots are unique by `(userId, month, year)`.
-- Refresh-token hashes and push-provider tokens are globally unique.
-- Device registration is unique by `(userId, deviceId, provider)`.
-- Idempotency keys are unique per user.
+### 2.5 budgets
+Defines monthly spending caps.
+- `id`: `VARCHAR(36)` - Primary Key (UUID).
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+- `categoryId`: `VARCHAR(36)` - Foreign Key referencing `categories(id)` ON DELETE CASCADE. NULL means global monthly budget.
+- `amount`: `DECIMAL(15, 2)` - Total monthly limit.
+- `month` / `year`: `INT` - Calendar tracking parameters.
+- @@unique([`userId`, `categoryId`, `month`, `year`]) - Limit category to one budget target per month.
 
-### Operational indexes
+### 2.6 saving_goals & goal_transactions
+Saving Goals are target metrics. Goal Transactions capture deposits/withdrawals.
+- **saving_goals**:
+  - `id`: `VARCHAR(36)` - Primary Key (UUID).
+  - `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+  - `title`: `VARCHAR(255)` - E.g., "Build Gaming PC".
+  - `targetAmount`: `DECIMAL(15, 2)`.
+  - `currentAmount`: `DECIMAL(15, 2)` - Updated automatically by goal transactions.
+  - `targetDate`: `DATETIME(3)`.
+- **goal_transactions**:
+  - `id`: `VARCHAR(36)` - Primary Key.
+  - `savingGoalId`: `VARCHAR(36)` - Foreign Key referencing `saving_goals(id)` ON DELETE CASCADE.
+  - `walletId`: `VARCHAR(36)` - Foreign Key referencing `wallets(id)` ON DELETE RESTRICT (source/target wallet).
+  - `amount`: `DECIMAL(15, 2)`.
+  - `type`: `ENUM('DEPOSIT', 'WITHDRAW')`.
 
-- Wallets: `(userId, deletedAt)`.
-- Transactions: `(userId, updatedAt)`, `(userId, deletedAt, transactionDate)`, and `(recurringTransactionId, transactionDate)`.
-- Recurring schedules: `(isActive, nextExecutionDate)`.
-- Refresh sessions: `(userId, revokedAt)` and `tokenFamily`.
-- Device tokens: `(userId, isActive)`.
-- Idempotency records: `expiresAt`.
+### 2.7 recurring_transactions
+Templates for automated bills, subscriptions, or recurring salaries.
+- `id`: `VARCHAR(36)` - Primary Key (UUID).
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+- `walletId`: `VARCHAR(36)` - Foreign Key referencing `wallets(id)` ON DELETE RESTRICT.
+- `categoryId`: `VARCHAR(36)` - Foreign Key referencing `categories(id)` ON DELETE RESTRICT.
+- `amount`: `DECIMAL(15, 2)`.
+- `type`: `ENUM('INCOME', 'EXPENSE')`.
+- `frequency`: `ENUM('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')`.
+- `startDate` / `nextExecutionDate`: `DATETIME(3)`.
+- `isActive`: `BOOLEAN` - Set to `true` by default.
 
-## Data semantics
+### 2.8 notifications
+Stores system warnings and activity alerts.
+- `id`: `VARCHAR(36)` - Primary Key.
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+- `title`: `VARCHAR(255)`.
+- `message`: `TEXT`.
+- `type`: `ENUM('BUDGET_ALERT', 'BILL_REMINDER', 'GOAL_COMPLETED', 'RECURRING_TRANSACTION')`.
+- `isRead`: `BOOLEAN` - default false.
 
-- Monetary columns use `Decimal(15,2)`.
-- VND is the default wallet currency, but the wallet schema stores a currency string.
-- The field named `Wallet.initialBalance` currently stores the mutable wallet amount used by income, transfer, and savings-goal operations; the name is retained for migration compatibility.
-- Expense transactions are reporting records in the current service behavior and do not decrement that stored wallet amount.
-- `Transaction.version` and `deletedAt` support optimistic concurrency and mobile tombstone synchronization.
-- `Budget.warningNotified` and `exceededNotified` prevent duplicate threshold notifications.
-- `MonthlySavingsSnapshot.formulaVersion` supports invalidating/recomputing historical formulas.
-- `IdempotencyRecord.requestHash` prevents reuse of the same key with a different request body.
+### 2.9 refresh_tokens
+Authenticates session renewals securely.
+- `id`: `VARCHAR(36)` - Primary Key.
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+- `token`: `VARCHAR(255)` - Unique token signature.
+- `expiresAt` / `createdAt`: `DATETIME(3)`.
 
-## Migration policy
+### 2.10 wallet_transfers
+Records the source-destination logs of multi-wallet transfers.
+- `id`: `VARCHAR(36)` - Primary Key (UUID).
+- `userId`: `VARCHAR(36)` - Foreign Key referencing `users(id)` ON DELETE CASCADE.
+- `sourceWalletId`: `VARCHAR(36)` - Foreign Key referencing `wallets(id)` ON DELETE RESTRICT.
+- `destinationWalletId`: `VARCHAR(36)` - Foreign Key referencing `wallets(id)` ON DELETE RESTRICT.
+- `amount`: `DECIMAL(15, 2)`.
+- `transferDate`: `DATETIME(3)`.
 
-Schema changes must be introduced through new Prisma migrations. Production deployments use `prisma migrate deploy`; they must never use `migrate reset`. Destructive or large-table migrations require a tested backup/restore and a forward-fix plan.
+### 2.11 attachments
+Receipt image files linked to transactional expenses.
+- `id`: `VARCHAR(36)` - Primary Key.
+- `transactionId`: `VARCHAR(36)` - Foreign Key referencing `transactions(id)` ON DELETE CASCADE (nullable).
+- `url` / `filename` / `fileType`: `VARCHAR`.
+- `fileSize`: `INT`.

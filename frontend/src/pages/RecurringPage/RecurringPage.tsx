@@ -134,7 +134,7 @@ const RecurringPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /><span>Thêm định kỳ</span></AppButton>} />
+      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description="Lương, hóa đơn, Netflix... tự động mỗi kỳ" actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /><span>Thêm định kỳ</span></AppButton>} />
 
       {isLoading ? (
         <LoadingState />

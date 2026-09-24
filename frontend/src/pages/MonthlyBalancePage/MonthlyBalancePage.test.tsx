@@ -5,7 +5,7 @@ import { within } from '@testing-library/react';
 import { formatVND } from '@/utils/formatCurrency';
 
 describe('MonthlyBalancePage', () => {
-  it('uses the month-end wallet total as income, then subtracts expenses', () => {
+  it('shows each month\'s assets and carries negative savings into the cumulative total', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 8, 6));
     try {
