@@ -5,6 +5,7 @@ coverage/
 storybook-static/
 .tmp-web-export/
 .tmp-pages-results.json
+.tmp/
 
 # Local configuration (commit examples and test defaults only)
 .env

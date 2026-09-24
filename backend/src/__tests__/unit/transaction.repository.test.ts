@@ -64,7 +64,7 @@ describe('TransactionRepository monthly assets', () => {
     jest.useRealTimers();
   });
 
-  it('recovers month-end assets without counting later income, transfers or goal movements', async () => {
+  it('recovers month-end assets without reversing reporting-only expenses', async () => {
     jest.useFakeTimers().setSystemTime(new Date(2026, 8, 6));
     const cutoff = new Date(2026, 7, 31, 23, 59, 59, 999);
     const mockPrisma = prisma as any;
@@ -73,8 +73,7 @@ describe('TransactionRepository monthly assets', () => {
       { id: 'old-b', initialBalance: '2000000' },
     ]);
     mockPrisma.transaction.aggregate
-      .mockResolvedValueOnce({ _sum: { amount: '2000000' } })
-      .mockResolvedValueOnce({ _sum: { amount: '1000000' } });
+      .mockResolvedValueOnce({ _sum: { amount: '2000000' } });
     mockPrisma.walletTransfer.findMany.mockResolvedValue([
       { sourceWalletId: 'old-a', destinationWalletId: 'new-wallet', amount: '500000' },
       { sourceWalletId: 'new-wallet', destinationWalletId: 'old-a', amount: '200000' },
@@ -87,20 +86,17 @@ describe('TransactionRepository monthly assets', () => {
 
     const result = await new TransactionRepository().getWalletBalancesAtDate('user-1', cutoff);
 
-    expect(result).toBe(4_500_000);
+    expect(result).toBe(3_500_000);
     expect(mockPrisma.wallet.findMany).toHaveBeenCalledWith({
-      where: { userId: 'user-1', createdAt: { lte: cutoff } },
+      where: { userId: 'user-1', createdAt: { lte: cutoff },
+        OR: [{ deletedAt: null }, { deletedAt: { gt: cutoff } }] },
     });
     expect(mockPrisma.transaction.aggregate).toHaveBeenNthCalledWith(1, {
       where: { userId: 'user-1', deletedAt: null, walletId: { in: ['old-a', 'old-b'] },
         type: 'INCOME', transactionDate: { gt: cutoff } },
       _sum: { amount: true },
     });
-    expect(mockPrisma.transaction.aggregate).toHaveBeenNthCalledWith(2, {
-      where: { userId: 'user-1', deletedAt: null, walletId: { in: ['old-a', 'old-b'] },
-        type: 'EXPENSE', transactionDate: { gt: cutoff } },
-      _sum: { amount: true },
-    });
+    expect(mockPrisma.transaction.aggregate).toHaveBeenCalledTimes(1);
     expect(mockPrisma.walletTransfer.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ userId: 'user-1', transferDate: { gt: cutoff } }),
     }));
@@ -121,7 +117,20 @@ describe('TransactionRepository monthly assets', () => {
     expect(mockPrisma.transaction.aggregate).not.toHaveBeenCalled();
   });
 
-  it('plots each month\'s own assets across a year boundary, including zero and negative assets', async () => {
+  it('sums active wallet amounts for current total assets', async () => {
+    const mockPrisma = prisma as any;
+    mockPrisma.wallet.findMany.mockResolvedValue([
+      { initialBalance: '3000000' },
+      { initialBalance: '2500000' },
+    ]);
+
+    await expect(new TransactionRepository().getWalletBalanceTotal('user-1')).resolves.toBe(5_500_000);
+    expect(mockPrisma.wallet.findMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', deletedAt: null },
+    });
+  });
+
+  it('plots each month\'s wallet balance and expense across a year boundary', async () => {
     jest.useFakeTimers().setSystemTime(new Date(2026, 0, 6));
     const repository = new TransactionRepository();
     const summary = jest.spyOn(repository, 'getMonthlySummary');
@@ -148,7 +157,7 @@ describe('TransactionRepository monthly assets', () => {
 });
 
 describe('TransactionRepository yearly savings snapshots', () => {
-  it('recalculates legacy snapshots using historical month-end assets minus expense', async () => {
+  it('recalculates legacy snapshots using each month\'s income minus expense', async () => {
     const repository = new TransactionRepository();
     const mockPrisma = prisma as any;
     mockPrisma.monthlySavingsSnapshot.findUnique.mockResolvedValue({ formulaVersion: 7, walletBalance: '5000000' });
@@ -174,24 +183,26 @@ describe('TransactionRepository yearly savings snapshots', () => {
     const result = await repository.getYearlySummary('user-1', 2020);
 
     expect(result.monthlyData[0]).toMatchObject({
-      income: 11_000_000,
+      income: 10_000_000,
       salaryIncome: 8_000_000,
+      otherIncome: 2_000_000,
+      walletBalance: 11_000_000,
       expense: 4_000_000,
-      savings: 7_000_000,
+      savings: 6_000_000,
     });
     expect(mockPrisma.monthlySavingsSnapshot.upsert).toHaveBeenCalledWith(expect.objectContaining({
       update: expect.objectContaining({
         salaryIncome: 8_000_000,
         otherIncome: 2_000_000,
-        savings: 7_000_000,
+        savings: 6_000_000,
         walletBalance: 11_000_000,
-        formulaVersion: 8,
+        formulaVersion: 9,
       }),
     }));
     expect(result.netSavings).toBe(result.monthlyData.reduce((sum, item) => sum + item.savings, 0));
   });
 
-  it('matches dashboard trend for every month and refreshes history after backdated changes', async () => {
+  it('matches the monthly trend and keeps snapshot wallet balances current', async () => {
     jest.useFakeTimers().setSystemTime(new Date(2026, 8, 5));
     try {
       const repository = new TransactionRepository();
@@ -214,18 +225,20 @@ describe('TransactionRepository yearly savings snapshots', () => {
 
       for (const point of trend) {
         expect(result.monthlyData[point.month - 1]).toMatchObject({
-          income: point.income, expense: point.expense, savings: point.remaining,
+          walletBalance: point.income,
+          expense: point.expense,
         });
+        expect(point.remaining).toBe(point.income - point.expense);
       }
-      expect(result.monthlyData[7]).toMatchObject({ income: 8_000_000, savings: 2_000_000 });
-      expect(result.monthlyData[8]).toMatchObject({ income: 9_000_000, expense: 6_000_000, savings: 3_000_000 });
+      expect(result.monthlyData[7]).toMatchObject({ income: 10_000_000, savings: 4_000_000 });
+      expect(result.monthlyData[8]).toMatchObject({ income: 10_000_000, expense: 6_000_000, savings: 4_000_000 });
 
       correction = 500_000;
       const updated = await repository.getYearlySummary('user-1', 2026);
-      expect(updated.monthlyData[7]).toMatchObject({ income: 8_500_000, savings: 2_500_000 });
+      expect(updated.monthlyData[7]).toMatchObject({ income: 10_000_000, savings: 4_000_000 });
       expect(mockPrisma.monthlySavingsSnapshot.upsert).toHaveBeenCalledWith(expect.objectContaining({
         where: { userId_month_year: { userId: 'user-1', month: 8, year: 2026 } },
-        update: expect.objectContaining({ walletBalance: 8_500_000, savings: 2_500_000, formulaVersion: 8 }),
+        update: expect.objectContaining({ walletBalance: 8_500_000, savings: 4_000_000, formulaVersion: 9 }),
       }));
     } finally {
       jest.useRealTimers();

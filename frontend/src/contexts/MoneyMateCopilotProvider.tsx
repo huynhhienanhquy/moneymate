@@ -23,6 +23,7 @@ import { getCurrentPageName } from '@/helpers/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { ExpenseTool } from '@/components/MoneyMateCopilot/ExpenseTool';
+import { AppControlTools } from '@/components/MoneyMateCopilot/AppControlTools';
 import { toLocalDateInputValue } from '@/utils/dateInput';
 
 type CopilotKitErrorEvent = Parameters<
@@ -129,7 +130,12 @@ const MoneyMateCopilotBindings = () => {
     [],
   );
 
-  return <ExpenseTool />;
+  return (
+    <>
+      <ExpenseTool />
+      <AppControlTools />
+    </>
+  );
 };
 
 export const useMoneyMateCopilotStatus = () => useContext(MoneyMateCopilotStatusContext);

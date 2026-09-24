@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowRightLeft, ArrowUp, CalendarDays, ChevronLeft, ChevronRight, Download, Loader2, LogOut, Mail, PencilLine, Search, Settings, ShieldCheck, UserPlus, Users, Wallet, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppButton from '@/components/common/AppButton/AppButton';
+import PageHeader from '@/components/common/PageHeader/PageHeader';
 import api from '@/services/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import UserModal, { type UserForm } from './UserModal';
@@ -87,20 +88,23 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-panel-subtle px-4 py-7 text-slate-900 sm:px-7 dark:bg-slate-950 dark:text-slate-100">
       <section className="mx-auto max-w-admin">
-        <header className="flex flex-wrap items-center justify-between gap-5">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-page-title font-extrabold tracking-tight">Quản lý người dùng</h1>
-              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-badge font-semibold text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">{metric(users.length)} tài khoản</span>
-            </div>
-            <p className="mt-1 max-w-lg text-sm leading-relaxed text-slate-500 dark:text-slate-400">Xem thông tin, phân quyền vai trò và quản lý tài khoản toàn hệ thống ví MoneyMate.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+        <PageHeader
+          eyebrow="Quản trị hệ thống"
+          title="Quản lý người dùng"
+          description={(
+            <>
+              <span className="mr-2 rounded-full bg-blue-50 px-2.5 py-1 text-badge font-semibold text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">{metric(users.length)} tài khoản</span>
+              Xem thông tin, phân quyền vai trò và quản lý tài khoản toàn hệ thống ví MoneyMate.
+            </>
+          )}
+          actions={(
+            <>
             <AppButton unstyled onClick={() => exportUsers(filtered)} disabled={unavailable || !filtered.length} className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-caption font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"><Download className="size-3.5" />Xuất danh sách</AppButton>
             <AppButton unstyled onClick={() => openModal('create')} className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-3 text-caption font-semibold text-white shadow-sm transition hover:bg-blue-700"><UserPlus className="size-3.5" />Thêm người dùng</AppButton>
             <AppButton unstyled onClick={handleLogout} className="inline-flex h-9 items-center gap-2 rounded-lg border border-rose-200 bg-white px-3 text-caption font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/30 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-500/10"><LogOut className="size-3.5" />Đăng xuất</AppButton>
-          </div>
-        </header>
+            </>
+          )}
+        />
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard title="Tổng tài khoản" value={metric(users.length)} icon={<Users className="size-5" />} tone="blue" description={<><span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">+{metric(stats.newUsers)} mới</span><span>trong tháng này</span></>} />

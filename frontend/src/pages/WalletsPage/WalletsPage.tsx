@@ -1,6 +1,6 @@
-import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppCard from '@/components/common/AppCard/AppCard';
 import AppButton from '@/components/common/AppButton/AppButton';
+import PageHeader from '@/components/common/PageHeader/PageHeader';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Wallet, Pencil, Trash2, Loader2, ArrowLeftRight } from 'lucide-react';
@@ -34,7 +34,13 @@ const WalletsPage: React.FC = () => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/wallets/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['wallets'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); setDeletingId(null); },
+    onSuccess: () => {
+      for (const queryKey of ['wallets', 'dashboard', 'monthly-report', 'yearly-report', 'monthly-trend', 'monthly-balance-v7']) {
+        qc.invalidateQueries({ queryKey: [queryKey] });
+      }
+      setDeletingId(null);
+    },
+    onError: () => setDeletingId(null),
   });
 
   const transferMutation = useMutation({
@@ -48,25 +54,23 @@ const WalletsPage: React.FC = () => {
 
   return (
     <div>
-      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <AppTitle unstyled level={1} className="whitespace-nowrap text-page-title font-extrabold leading-none tracking-normal text-black dark:text-slate-100">
-            <span className="mr-2.5 inline-block">Ví</span>
-            <span>tài khoản</span>
-          </AppTitle>
-          <p className="mt-2 text-caption text-slate-600 dark:text-slate-400">Tổng tài sản: <span className="font-extrabold text-primary dark:text-brand-400">{formatVND(totalBalance)}</span></p>
-        </div>
-        <div className="flex gap-2">
-          {wallets.length >= 2 && (
-            <AppButton unstyled onClick={() => setShowTransfer(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-primary bg-white px-3 text-mini font-bold text-primary shadow-sm transition hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-              <ArrowLeftRight className="size-3" /><span>Chuyển tiền</span>
+      <PageHeader
+        eyebrow="Tài khoản"
+        title="Ví tài khoản"
+        description={<>Tổng tài sản: <span className="font-extrabold text-primary dark:text-brand-400">{formatVND(totalBalance)}</span></>}
+        actions={(
+          <>
+            {wallets.length >= 2 && (
+              <AppButton unstyled onClick={() => setShowTransfer(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-primary bg-white px-3 text-mini font-bold text-primary shadow-sm transition hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800">
+                <ArrowLeftRight className="size-3" /><span>Chuyển tiền</span>
+              </AppButton>
+            )}
+            <AppButton unstyled id="add-wallet-btn" onClick={() => setShowModal(true)} className="inline-flex h-8 items-center gap-2 rounded-md bg-action px-3.5 text-mini font-bold text-white shadow-action-button transition hover:bg-action-hover">
+              <Plus className="size-3" /><span>Thêm ví</span>
             </AppButton>
-          )}
-          <AppButton unstyled id="add-wallet-btn" onClick={() => setShowModal(true)} className="inline-flex h-8 items-center gap-2 rounded-md bg-action px-3.5 text-mini font-bold text-white shadow-action-button transition hover:bg-action-hover">
-            <Plus className="size-3" /><span>Thêm ví</span>
-          </AppButton>
-        </div>
-      </div>
+          </>
+        )}
+      />
 
       {isLoading ? (
         <div className="flex justify-center py-20"><Loader2  className="size-7 animate-spin text-brand-500" /></div>
@@ -108,7 +112,7 @@ const WalletsPage: React.FC = () => {
                     </AppButton>
                     <AppButton unstyled
                       id={`delete-wallet-${wallet.id}`}
-                      onClick={() => { if (confirm(`Xóa ví "${wallet.name}"?`)) { setDeletingId(wallet.id); deleteMutation.mutate(wallet.id); } }}
+                      onClick={() => { if (confirm(`Xóa ví "${wallet.name}"? Ví sẽ không còn trong tổng tài sản, lịch sử giao dịch vẫn được giữ và giao dịch định kỳ của ví sẽ dừng.`)) { setDeletingId(wallet.id); deleteMutation.mutate(wallet.id); } }}
                       aria-label={`Xóa ví ${wallet.name}`}
                       className="rounded p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10"
                     >
@@ -126,6 +130,8 @@ const WalletsPage: React.FC = () => {
           })}
         </div>
       )}
+
+      {deleteMutation.isError && <p role="alert" className="mt-3 text-sm text-rose-600">Không thể xóa ví. Vui lòng thử lại.</p>}
 
       {showModal && (
         <WalletModal

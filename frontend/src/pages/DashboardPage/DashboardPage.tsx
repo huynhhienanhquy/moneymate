@@ -2,9 +2,10 @@ import { chartTheme } from '@/theme/charts';
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppCard from '@/components/common/AppCard/AppCard';
 import AppButton from '@/components/common/AppButton/AppButton';
+import PageHeader from '@/components/common/PageHeader/PageHeader';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight, Zap } from 'lucide-react';
+import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -114,10 +115,9 @@ const DashboardPage: React.FC = () => {
   const reportData = reportQuery.data;
   const trendData = trendQuery.data ?? [];
 
-  const netWorth: number = dashData?.netWorth || 0;
+  const monthlyIncome: number = dashData?.monthlyIncome || 0;
   const monthlyExpense: number = dashData?.monthlyExpense || 0;
   const monthlySavings: number = dashData?.monthlySavings || 0;
-  const actualExpense: number = dashData?.actualExpense || 0;
   const recentTransactions: any[] = dashData?.recentTransactions || [];
   const categoryExpenses: any[] = reportData?.categoryExpenses || [];
 
@@ -130,25 +130,13 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="dashboard-page space-y-6 animate-fade-in">
       {/* Page Header */}
-      <div className="dashboard-hero app-page-header">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider mb-2">
-              <Zap className="size-3.5" /> Tổng quan tài chính
-            </div>
-            <AppTitle unstyled level={1} className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-              Xin chào, {user?.fullName?.split(' ').pop() || 'bạn'} 👋
-            </AppTitle>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">
-              Báo cáo thông minh cho tháng <span className="font-bold text-slate-800 dark:text-slate-200">{now.getMonth() + 1}/{now.getFullYear()}</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/transactions" className="app-primary-button shadow-md">
-              + Thêm giao dịch
-            </Link>
-          </div>
-        </div>
+      <PageHeader
+        eyebrow="Tổng quan tài chính"
+        title={`Xin chào, ${user?.fullName?.split(' ').pop() || 'bạn'} 👋`}
+        description={<>Báo cáo thông minh cho tháng <span className="font-bold text-slate-800 dark:text-slate-200">{now.getMonth() + 1}/{now.getFullYear()}</span></>}
+        actions={<Link to="/transactions" className="app-primary-button shadow-md">+ Thêm giao dịch</Link>}
+      />
+
       {/* AI Insight Banner */}
       {aiInsight?.insights?.[0] && (
         <Link to="/ai" className="dashboard-insight app-card flex items-center gap-4 p-3.5 group">
@@ -165,17 +153,15 @@ const DashboardPage: React.FC = () => {
           <ChevronRight  className="size-4.5 text-brand-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
         </Link>
       )}
-      </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <StatCard
-          title="Tổng tài sản"
-          value={formatVND(netWorth)}
+          title="Tổng thu nhập tháng này"
+          value={formatVND(monthlyIncome)}
           icon={<Wallet  className="size-6 text-brand-500" />}
           iconBg="bg-brand-500/10"
           variant="asset"
-          trend="Số dư khả dụng trong tất cả ví"
           trendColor="text-slate-500 dark:text-slate-400"
         />
         <StatCard
@@ -184,7 +170,6 @@ const DashboardPage: React.FC = () => {
           icon={<TrendingDown  className="size-6 text-rose-500" />}
           iconBg="bg-rose-500/10"
           variant="expense"
-          trend={`Chi trực tiếp: ${formatVND(actualExpense)}`}
           trendColor="text-slate-500 dark:text-slate-400"
         />
         <StatCard
@@ -193,7 +178,6 @@ const DashboardPage: React.FC = () => {
           icon={<Sparkles  className="size-6 text-amber-500" />}
           iconBg="bg-amber-500/10"
           variant="savings"
-          trend="Tổng tài sản - chi tiêu tháng này"
           trendColor={monthlySavings >= 0 ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}
         />
       </div>
@@ -260,9 +244,7 @@ const DashboardPage: React.FC = () => {
               <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Thu nhập & Chi tiêu 6 tháng</AppTitle>
               <span className="text-xs font-semibold text-brand-500 uppercase">Xu hướng</span>
             </div>
-            <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-              Thu nhập bằng tổng tài sản cuối từng tháng; tháng hiện tại lấy tổng tài sản hiện tại.
-            </p>
+
             <ResponsiveContainer width="100%" height={chartTheme.dashboardHeight}>
               <BarChart data={barData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />

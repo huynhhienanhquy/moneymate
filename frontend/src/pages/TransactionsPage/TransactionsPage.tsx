@@ -5,11 +5,12 @@ import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, ArrowDownLeft, Pencil, Trash2, Loader2, X, Filter, ChevronDown, Paperclip, ScanLine, CarFront, Utensils, Banknote } from 'lucide-react';
+import { Plus, Search, ArrowDownLeft, Pencil, Trash2, Loader2, X, Filter, ChevronDown, ChevronLeft, ChevronRight, CalendarDays, Paperclip, ScanLine, CarFront, Utensils, Banknote } from 'lucide-react';
 import api from '@/services/api/client';
 import AppModal from '@/components/common/AppModal/AppModal';
 import ReceiptScanModal, { ScanResult } from '@/components/ReceiptScanModal/ReceiptScanModal';
 import LoadingState from '@/components/common/LoadingState/LoadingState';
+import PageHeader from '@/components/common/PageHeader/PageHeader';
 import { formatVND } from '@/utils/formatCurrency';
 import { useCategories, useWallets } from '@/hooks/useReferenceData';
 import { toLocalDateInputValue } from '@/utils/dateInput';
@@ -57,11 +58,6 @@ const TransactionModal: React.FC<{
       return;
     }
     const amount = Number(form.amount);
-    const selectedWallet = wallets.find((wallet: any) => wallet.id === form.walletId);
-    if (!tx && form.type === 'EXPENSE' && selectedWallet && amount > Number(selectedWallet.initialBalance)) {
-      setSaveError('Số dư không đủ');
-      return;
-    }
     setSaveError('');
     try {
       await onSave({ ...form, amount, transactionDate: new Date(form.transactionDate) }, receiptFile || undefined);
@@ -211,11 +207,33 @@ const TransactionsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [page, setPage] = useState(0);
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
   const PAGE_SIZE = 15;
 
-  const params: any = { skip: page * PAGE_SIZE, take: PAGE_SIZE, sortBy: 'transactionDate', order: 'desc' };
+  const params: any = {
+    skip: page * PAGE_SIZE,
+    take: PAGE_SIZE,
+    sortBy: 'transactionDate',
+    order: 'desc',
+    startDate: new Date(year, month - 1, 1).toISOString(),
+    endDate: new Date(year, month, 0, 23, 59, 59, 999).toISOString(),
+  };
   if (search) params.search = search;
   if (typeFilter) params.type = typeFilter;
+
+  const previousMonth = () => {
+    setPage(0);
+    if (month === 1) { setMonth(12); setYear((value) => value - 1); }
+    else setMonth((value) => value - 1);
+  };
+
+  const nextMonth = () => {
+    setPage(0);
+    if (month === 12) { setMonth(1); setYear((value) => value + 1); }
+    else setMonth((value) => value + 1);
+  };
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['transactions', params],
@@ -249,7 +267,15 @@ const TransactionsPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/transactions/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['transactions'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); qc.invalidateQueries({ queryKey: ['wallets'] }); setDeletingId(null); },
+    onSuccess: () => {
+      for (const queryKey of [
+        ['transactions'], ['wallets'], ['dashboard'], ['monthly-report'],
+        ['yearly-report'], ['monthly-trend'], ['monthly-balance-v7'], ['budgets'],
+      ]) {
+        void qc.invalidateQueries({ queryKey });
+      }
+      setDeletingId(null);
+    },
     onError: () => setDeletingId(null),
   });
 
@@ -281,19 +307,32 @@ const TransactionsPage: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <AppTitle unstyled level={1} className="text-page-title font-extrabold leading-none tracking-normal text-black dark:text-slate-100">Giao dịch</AppTitle>
-          <p className="mt-2 text-caption text-slate-600 dark:text-slate-400">Theo dõi toàn bộ thu chi của bạn</p>
+      <PageHeader
+        eyebrow="Thu chi"
+        title="Giao dịch"
+        actions={(
+          <>
+            <AppButton unstyled onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-mini font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+              <ScanLine className="size-3" /><span>Quét hóa đơn</span>
+            </AppButton>
+            <AppButton unstyled id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-accent px-3.5 text-mini font-bold text-slate-900 shadow-accent-button transition hover:bg-accent-hover">
+              <Plus className="size-3" /><span>Thêm giao dịch</span>
+            </AppButton>
+          </>
+        )}
+      />
+
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <AppButton unstyled aria-label="Tháng trước" onClick={previousMonth} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition hover:text-blue-600 dark:bg-slate-900 dark:text-slate-300">
+          <ChevronLeft className="size-4" />
+        </AppButton>
+        <div className="flex min-w-36 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-sm dark:bg-slate-900 dark:text-slate-100">
+          <CalendarDays className="size-4 text-primary" />
+          Tháng {month}/{year}
         </div>
-        <div className="flex gap-2">
-          <AppButton unstyled onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-mini font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-            <ScanLine className="size-3" /><span>Quét hóa đơn</span>
-          </AppButton>
-          <AppButton unstyled id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-accent px-3.5 text-mini font-bold text-slate-900 shadow-accent-button transition hover:bg-accent-hover">
-            <Plus className="size-3" /><span>Thêm giao dịch</span>
-          </AppButton>
-        </div>
+        <AppButton unstyled aria-label="Tháng sau" onClick={nextMonth} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition hover:text-blue-600 dark:bg-slate-900 dark:text-slate-300">
+          <ChevronRight className="size-4" />
+        </AppButton>
       </div>
 
       {/* Filters */}
@@ -388,7 +427,7 @@ const TransactionsPage: React.FC = () => {
                           </span>
                           {tx.type !== 'TRANSFER' && <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 bg-white pl-2 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">
                             <AppButton unstyled id={`edit-tx-${tx.id}`} aria-label="Chỉnh sửa giao dịch" onClick={() => setEditTx(tx)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"><Pencil className="size-icon-tiny" /></AppButton>
-                            <AppButton unstyled id={`del-tx-${tx.id}`} aria-label="Xóa giao dịch" onClick={() => { if (confirm('Xóa giao dịch này?')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10">
+                            <AppButton unstyled id={`del-tx-${tx.id}`} aria-label="Xóa giao dịch" onClick={() => { if (confirm(tx.type === 'EXPENSE' ? 'Xóa giao dịch này? Số tiền đã chi sẽ được hoàn lại vào ví.' : 'Xóa giao dịch này? Số tiền đã thu sẽ được trừ khỏi ví.')) { setDeletingId(tx.id); deleteMutation.mutate(tx.id); } }} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-500/10">
                               {deletingId === tx.id ? <Loader2  className="size-icon-tiny animate-spin" /> : <Trash2 className="size-icon-tiny" />}
                             </AppButton>
                           </div>}

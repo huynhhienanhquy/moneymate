@@ -2,6 +2,7 @@ import { act } from 'react';
 import { render, screen } from '@/test/render';
 import { getCopilotErrorMessage, MoneyMateCopilotProvider } from './MoneyMateCopilotProvider';
 vi.mock('@/components/MoneyMateCopilot/ExpenseTool', () => ({ ExpenseTool: () => <div data-testid="expense-tool" /> }));
+vi.mock('@/components/MoneyMateCopilot/AppControlTools', () => ({ AppControlTools: () => <div data-testid="app-control-tools" /> }));
 
 const copilotMocks = vi.hoisted(() => ({
   providerProps: [] as Array<Record<string, unknown>>,
@@ -148,6 +149,7 @@ describe('MoneyMateCopilotProvider', () => {
     expect(suggestionConfig.available).toBe('before-first-message');
     expect(suggestionConfig.suggestions).toHaveLength(6);
     expect(screen.getByTestId('expense-tool')).toBeInTheDocument();
+    expect(screen.getByTestId('app-control-tools')).toBeInTheDocument();
     expect(suggestionConfig.suggestions.map((item: { message: string }) => item.message)).toContain(
       'Tháng này tôi chi nhiều nhất ở đâu?',
     );

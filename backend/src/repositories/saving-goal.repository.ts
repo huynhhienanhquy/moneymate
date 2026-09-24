@@ -80,6 +80,7 @@ export class SavingGoalRepository {
           where: {
             id: data.walletId,
             userId: data.userId,
+            deletedAt: null,
             initialBalance: { gte: amountDec },
           },
           data: { initialBalance: { decrement: amountDec } },
@@ -109,7 +110,7 @@ export class SavingGoalRepository {
         }
 
         const walletCredit = await tx.wallet.updateMany({
-          where: { id: data.walletId, userId: data.userId },
+          where: { id: data.walletId, userId: data.userId, deletedAt: null },
           data: { initialBalance: { increment: amountDec } },
         });
         if (walletCredit.count !== 1) {

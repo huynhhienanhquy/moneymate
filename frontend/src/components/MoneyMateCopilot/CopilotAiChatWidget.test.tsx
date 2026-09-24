@@ -31,6 +31,8 @@ describe('CopilotAiChatWidget', () => {
     expect(mocks.chatProps[0].agentId).toBe('default');
     const labels = mocks.chatProps[0].labels as Record<string, string>;
     expect(labels.welcomeMessageText).toContain('tài chính cá nhân');
+    expect(labels.welcomeMessageText).toContain('mở trang báo cáo');
+    expect(labels.welcomeMessageText).toContain('bật chế độ tối');
     expect(labels.chatInputPlaceholder).toContain('Hỏi MoneyMate');
     expect(labels.chatDisclaimerText).toContain('không phải tư vấn tài chính');
   });
