@@ -16,7 +16,7 @@
   }
 
   :focus-visible {
-    outline: 3px solid rgba(42, 149, 255, 0.45);
+    outline: 3px solid rgba(0, 83, 219, 0.45);
     outline-offset: 3px;
   }
 
@@ -27,7 +27,7 @@
   body {
     @apply antialiased text-slate-800 dark:text-slate-100 selection:bg-brand-500/20 selection:text-brand-600 dark:selection:text-brand-400;
     min-height: 100vh;
-    background: theme('backgroundImage.app');
+    background: theme('colors.background');
   }
 
   .dark body {
@@ -42,8 +42,8 @@
 }
 
 @layer components {
-  .dashboard-sidebar { @apply border-r border-slate-200/70 bg-nav-surface dark:border-slate-800 dark:bg-slate-900; }
-  .dashboard-page .app-card, .dashboard-page .app-stat-card { @apply rounded-xl border-slate-200/70 bg-white shadow-sm backdrop-blur-none; }
+  .dashboard-sidebar { @apply border-r border-outline-variant/70 bg-surface-container-lowest dark:border-on-surface-variant dark:bg-inverse-surface; box-shadow: 8px 0 24px rgba(19, 27, 46, .035); }
+  .dashboard-page .app-card, .dashboard-page .app-stat-card { @apply rounded-2xl border-outline-variant/55 bg-surface-container-lowest shadow-summary backdrop-blur-none; }
   .dashboard-hero { @apply rounded-xl border-white bg-gradient-to-br from-white via-white to-cyan-100/70 p-6 shadow-sm; }
   .dashboard-hero::after { @apply hidden; }
   .dashboard-insight { @apply relative z-10 mt-6; }
@@ -151,7 +151,7 @@
 
   /* Standard Component Cards */
   .app-card {
-    @apply rounded-2xl border border-slate-200/70 bg-white/85 shadow-md shadow-slate-300/20 backdrop-blur-xl transition-all duration-slow dark:border-slate-800/80 dark:bg-slate-900/80 dark:shadow-black/30;
+    @apply rounded-2xl border border-outline-variant/55 bg-surface-container-lowest shadow-md shadow-surface-dim/25 transition-all duration-slow dark:border-slate-800/80 dark:bg-slate-900 dark:shadow-black/30;
   }
 
   .app-card-hover {
@@ -210,11 +210,11 @@
 
   /* Buttons */
   .app-primary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-500/25 transition-all duration-normal hover:from-brand-500 hover:to-cyan-400 hover:shadow-brand-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-press disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-brand-500/25;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition-all duration-normal hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-blue-600/30 active:translate-y-0 active:scale-press disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
   }
 
   .app-secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/90 bg-white/90 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all duration-normal hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-600 hover:-translate-y-0.5 active:translate-y-0 active:scale-press dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/90 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-normal hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 active:translate-y-0 active:scale-press dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100;
   }
 
   .app-danger-button {
@@ -247,12 +247,35 @@
   }
 
   .app-page-header {
-    @apply app-shell-card overflow-hidden p-6 md:p-8 relative;
+    @apply relative flex min-h-[154px] flex-col justify-between gap-5 overflow-hidden rounded-[18px] border border-blue-400/20 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-900 p-6 text-white shadow-hero md:flex-row md:items-center md:p-8;
   }
 
   .app-page-header::after {
     content: '';
-    @apply absolute -right-8 -top-8 h-44 w-44 rounded-full bg-gradient-to-br from-brand-400/20 via-cyan-400/15 to-violet-400/15 blur-3xl dark:from-brand-500/20 dark:to-cyan-500/20;
+    @apply absolute -right-16 -top-24 h-64 w-64 rounded-full bg-cyan-300/20 blur-3xl;
+  }
+
+  .app-page-header::before {
+    content: '';
+    @apply absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-violet-400/20 blur-3xl;
+  }
+
+  .app-page-header h1 { @apply text-white; }
+  .app-page-header .app-title-eyebrow {
+    @apply inline-flex w-fit items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-blue-100;
+  }
+  .app-page-header .app-title-eyebrow::before {
+    content: '';
+    @apply mr-2 h-1.5 w-1.5 rounded-full bg-emerald-300;
+  }
+  .app-page-header .app-primary-button,
+  .app-page-header [class*="bg-action"],
+  .app-page-header [class*="bg-accent"] {
+    @apply min-h-11 rounded-xl bg-white px-5 font-bold text-blue-700 shadow-lg shadow-blue-950/20 hover:bg-blue-50;
+  }
+  .app-page-header .app-secondary-button,
+  .app-page-header button[class*="border"] {
+    @apply min-h-11 border-white/20 bg-white/10 text-white hover:border-white/40 hover:bg-white/15 hover:text-white;
   }
 
   .app-empty-state {
@@ -368,8 +391,8 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(42, 149, 255, 0.15); }
-  50% { box-shadow: 0 0 35px rgba(42, 149, 255, 0.3); }
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 83, 219, 0.15); }
+  50% { box-shadow: 0 0 35px rgba(0, 83, 219, 0.3); }
 }
 
 @keyframes float {
@@ -439,7 +462,7 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.12) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(195, 198, 215, 0.18) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
@@ -499,53 +522,6 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px theme('colors.slate.800') inset;
 }
 
-/* Desktop typography contract
- * Sidebar: 16px
- * Page title: 28px
- * Section/card title: 18px
- * Body, controls and table content: 16px
- */
-@media (min-width: theme('screens.md')) {
-  .dashboard-sidebar nav a {
-    font-size: theme('fontSize.base') !important;
-    line-height: 1.5 !important;
-  }
-
-  #main-content h1,
-  #main-content h1 span,
-  .admin-page-content h1,
-  .admin-page-content h1 span {
-    font-size: theme('fontSize.page-title') !important;
-    line-height: 1.3 !important;
-  }
-
-  #main-content h2,
-  #main-content h2 span,
-  #main-content h3,
-  #main-content h3 span,
-  .admin-page-content h2,
-  .admin-page-content h2 span,
-  .admin-page-content h3,
-  .admin-page-content h3 span {
-    font-size: theme('fontSize.lg') !important;
-    line-height: 1.4 !important;
-  }
-
-  #main-content :where(p, span, label, button, a, input, select, textarea, th, td, li),
-  .admin-page-content :where(p, span, label, button, a, input, select, textarea, th, td, li) {
-    font-size: theme('fontSize.base') !important;
-    line-height: 1.5 !important;
-  }
-
-  #main-content h1 :where(span),
-  .admin-page-content h1 :where(span) {
-    font-size: theme('fontSize.page-title') !important;
-    line-height: 1.3 !important;
-  }
-
-  #main-content :where(h2, h3) :where(span),
-  .admin-page-content :where(h2, h3) :where(span) {
-    font-size: theme('fontSize.lg') !important;
-    line-height: 1.4 !important;
-  }
+@media (max-width: theme('screens.md')) {
+  .app-page-header { min-height: 142px; }
 }

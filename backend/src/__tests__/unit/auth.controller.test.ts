@@ -71,7 +71,7 @@ describe('AuthController platform token transport', () => {
   it('returns a rotated body token when refresh uses body transport', async () => {
     const controller = new AuthController();
     const service = MockAuthService.mock.instances[0] as jest.Mocked<AuthService>;
-    service.refresh.mockResolvedValue({ accessToken: 'new-access', refreshToken: 'new-refresh' });
+    service.refresh.mockResolvedValue({ accessToken: 'new-access', refreshToken: 'new-refresh', user: { id: 'user-id', email: 'test@example.com', fullName: 'Test', avatarUrl: null, role: 'USER' } });
     const response = createResponse();
 
     await controller.refresh(
@@ -82,14 +82,14 @@ describe('AuthController platform token transport', () => {
 
     expect(service.refresh).toHaveBeenCalledWith('old-refresh');
     expect(response.json).toHaveBeenCalledWith(expect.objectContaining({
-      data: { accessToken: 'new-access', refreshToken: 'new-refresh' }
+      data: { accessToken: 'new-access', user: { id: 'user-id', email: 'test@example.com', fullName: 'Test', avatarUrl: null, role: 'USER' }, refreshToken: 'new-refresh' }
     }));
   });
 
   it('never exposes a rotated token when a cookie token wins over a body token', async () => {
     const controller = new AuthController();
     const service = MockAuthService.mock.instances[0] as jest.Mocked<AuthService>;
-    service.refresh.mockResolvedValue({ accessToken: 'new-access', refreshToken: 'new-refresh' });
+    service.refresh.mockResolvedValue({ accessToken: 'new-access', refreshToken: 'new-refresh', user: { id: 'user-id', email: 'test@example.com', fullName: 'Test', avatarUrl: null, role: 'USER' } });
     const response = createResponse();
 
     await controller.refresh(
@@ -100,7 +100,24 @@ describe('AuthController platform token transport', () => {
 
     expect(service.refresh).toHaveBeenCalledWith('cookie-token');
     const payload = response.json.mock.calls[0][0];
-    expect(payload.data).toEqual({ accessToken: 'new-access' });
+    expect(payload.data).toEqual({ accessToken: 'new-access', user: { id: 'user-id', email: 'test@example.com', fullName: 'Test', avatarUrl: null, role: 'USER' } });
     expect(payload.data.refreshToken).toBeUndefined();
+  });
+
+  it('clears the browser cookie even when server-side revocation fails', async () => {
+    const controller = new AuthController();
+    const service = MockAuthService.mock.instances[0] as jest.Mocked<AuthService>;
+    service.logout.mockRejectedValue(new Error('database unavailable'));
+    const response = createResponse();
+    const next = jest.fn();
+
+    await controller.logout(
+      { cookies: { refreshToken: 'refresh-token' }, body: {} } as never,
+      response as never,
+      next
+    );
+
+    expect(response.clearCookie).toHaveBeenCalledWith('refreshToken', expect.objectContaining({ path: '/' }));
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
   });
 });

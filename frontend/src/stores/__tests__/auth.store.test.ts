@@ -17,6 +17,10 @@ describe('auth store', () => {
     useAuthStore.getState().setInitializing(true);
     expect(useAuthStore.getState()).toMatchObject({ user: renamedUser, accessToken: 'new-token', isInitializing: true });
     expect(JSON.parse(localStorage.getItem('mm_user') || '{}')).toEqual(renamedUser);
+    const refreshedUser = { id: 'user-2', email: 'admin@moneymate.vn', fullName: 'Admin', role: 'ADMIN' } as never;
+    useAuthStore.getState().setToken('refreshed-token', refreshedUser);
+    expect(useAuthStore.getState()).toMatchObject({ user: refreshedUser, accessToken: 'refreshed-token' });
+    expect(JSON.parse(localStorage.getItem('mm_user') || '{}')).toEqual(refreshedUser);
     useAuthStore.getState().logout();
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
   });

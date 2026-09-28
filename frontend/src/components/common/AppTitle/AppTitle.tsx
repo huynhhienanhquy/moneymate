@@ -15,9 +15,9 @@ const AppTitle = ({ children, level = 1, eyebrow, description, unstyled = false,
 
   return (
     <div className={className}>
-      {eyebrow && <p className="font-semibold text-brand-600 dark:text-brand-400">{eyebrow}</p>}
-      <Heading className={`${eyebrow ? 'mt-1' : ''} ${size} font-extrabold tracking-tight text-slate-950 dark:text-slate-100`} {...headingProps}>{children}</Heading>
-      {description && <p className="mt-1 text-slate-500 dark:text-slate-400">{description}</p>}
+      {eyebrow && <p className="app-title-eyebrow">{eyebrow}</p>}
+      <Heading className={`${eyebrow ? 'mt-2' : ''} ${size} font-extrabold tracking-tight`} {...headingProps}>{children}</Heading>
+      {description && <p className="mt-1.5 max-w-2xl text-sm font-medium opacity-80">{description}</p>}
     </div>
   );
 };

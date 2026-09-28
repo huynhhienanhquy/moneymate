@@ -7,11 +7,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, LabelList,
 } from 'recharts';
-import { Calendar, TrendingUp, TrendingDown, Sparkles, Loader2, ChevronLeft, ChevronRight, FileText, FileSpreadsheet, Utensils, Home, Car, Shapes } from 'lucide-react';
+import { Calendar, TrendingUp, TrendingDown, Sparkles, Loader2, FileText, FileSpreadsheet, Utensils, Home, Car, Shapes } from 'lucide-react';
 import api from '@/services/api/client';
 import { formatChartValue, formatVND } from '@/utils/formatCurrency';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
+import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
 
 const downloadFile = async (url: string, filename: string) => {
   const [path, query] = url.split('?');
@@ -144,9 +145,9 @@ const ReportsPage: React.FC = () => {
         title="Báo cáo tài chính"
         actions={(
           <div className="flex flex-wrap items-stretch gap-3">
-            <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            <div className="flex rounded-xl bg-blue-950/25 p-1">
               {(['monthly', 'yearly'] as const).map((t) => (
-                <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-20 rounded-lg px-4 py-2 font-semibold transition ${reportType === t ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300'}`}>
+                <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-20 rounded-lg px-4 py-2 text-sm font-semibold transition ${reportType === t ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-100 hover:bg-white/10'}`}>
                   {t === 'monthly' ? 'Theo tháng' : 'Theo năm'}
                 </AppButton>
               ))}
@@ -154,12 +155,12 @@ const ReportsPage: React.FC = () => {
             {reportType === 'monthly' && (
               <>
                 <AppButton unstyled onClick={() => handleExport('pdf')} disabled={!!exporting || isFuturePeriod}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                  className="app-secondary-button">
                   {exporting === 'pdf' ? <Loader2  className="size-icon-small animate-spin" /> : <FileText className="size-icon-small" />}
                   <span>Xuất<br />PDF</span>
                 </AppButton>
                 <AppButton unstyled onClick={() => handleExport('excel')} disabled={!!exporting || isFuturePeriod}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                  className="app-secondary-button">
                   {exporting === 'excel' ? <Loader2  className="size-icon-small animate-spin" /> : <FileSpreadsheet className="size-icon-small" />}
                   <span>Xuất<br />Excel</span>
                 </AppButton>
@@ -170,17 +171,8 @@ const ReportsPage: React.FC = () => {
       />
 
       {/* Period Navigator */}
-      <div className="flex items-center justify-center gap-3">
-        <AppButton unstyled aria-label="Kỳ trước" onClick={prevPeriod} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-          <ChevronLeft className="size-4.5" />
-        </AppButton>
-        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-          <Calendar  className="size-icon-nav text-blue-600" />
-          {reportType === 'monthly' ? `${MONTHS[month - 1]}, ${year}` : `Năm ${year}`}
-        </div>
-        <AppButton unstyled aria-label="Kỳ sau" onClick={nextPeriod} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-          <ChevronRight className="size-4.5" />
-        </AppButton>
+      <div className="flex items-center justify-end">
+        <PeriodNavigator label={reportType === 'monthly' ? `${MONTHS[month - 1]}, ${year}` : `Năm ${year}`} onPrevious={prevPeriod} onNext={nextPeriod} />
       </div>
 
       {isFuturePeriod ? (
@@ -203,9 +195,9 @@ const ReportsPage: React.FC = () => {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <SummaryCard icon={<TrendingUp className="size-4.5" />} label={reportType === 'monthly' ? 'Tổng thu nhập tháng này' : 'Tổng thu nhập năm này'} value={formatVND(summary?.totalIncome || 0)} tone="green" />
-            <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Tổng chi tiêu" value={formatVND(summary?.totalExpense || 0)} tone="red" />
-            <SummaryCard icon={<Sparkles className="size-4.5" />} label="Tiết kiệm" badge={`${savingsRate}%`} value={formatVND(summary?.netSavings || 0)} tone={(summary?.netSavings || 0) >= 0 ? 'blue' : 'red'} />
+            <SummaryCard icon={<TrendingUp className="size-4.5" />} label={reportType === 'monthly' ? 'Tổng thu nhập tháng này' : 'Tổng thu nhập năm này'} value={formatVND(summary?.totalIncome || 0)} tone="green" variant="solid" caption="Dòng tiền vào trong kỳ" />
+            <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Tổng chi tiêu" value={formatVND(summary?.totalExpense || 0)} tone="red" variant="solid" caption="Chi phí đã ghi nhận" />
+            <SummaryCard icon={<Sparkles className="size-4.5" />} label="Tiết kiệm" badge={`${savingsRate}%`} value={formatVND(summary?.netSavings || 0)} tone={(summary?.netSavings || 0) >= 0 ? 'blue' : 'red'} variant="solid" caption="Tỷ lệ tiết kiệm trong kỳ" />
           </div>
 
           {/* Charts */}

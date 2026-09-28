@@ -55,7 +55,7 @@ describe('TransactionsPage', () => {
       expect(screen.getByText('Tháng 8/2026')).toBeInTheDocument();
 
       const transactionCalls = vi.mocked(api.get).mock.calls.filter(([url]) => url === '/transactions');
-      const params = transactionCalls.at(-1)?.[1]?.params as { startDate: string; endDate: string };
+      const params = transactionCalls[transactionCalls.length - 1]?.[1]?.params as { startDate: string; endDate: string };
       expect(new Date(params.startDate).getFullYear()).toBe(2026);
       expect(new Date(params.startDate).getMonth()).toBe(7);
       expect(new Date(params.startDate).getDate()).toBe(1);

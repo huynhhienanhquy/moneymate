@@ -1,15 +1,9 @@
 import type { PropsWithChildren } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { appQueryClient } from '@/services/queryClient';
 
-export const appQueryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+export { appQueryClient } from '@/services/queryClient';
 
 const AppProviders = ({ children }: PropsWithChildren) => (
   <QueryClientProvider client={appQueryClient}>

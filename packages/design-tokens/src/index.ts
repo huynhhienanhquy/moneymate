@@ -1,24 +1,24 @@
 export const palette = {
-  brand: { 50: '#EEF8FF', 100: '#D8EEFF', 200: '#B9E0FF', 300: '#89CEFF', 400: '#52B4FF', 500: '#2A95FF', 600: '#1475FF', 700: '#0C5DF6', 800: '#114BC5', 900: '#14429B' },
-  cyan: '#06B6D4', violet: '#8B5CF6', emerald: '#10B981', amber: '#F59E0B', rose: '#F43F5E'
+  brand: { 50: '#DBE1FF', 100: '#DBE1FF', 200: '#B4C5FF', 300: '#B4C5FF', 400: '#0053DB', 500: '#2563EB', 600: '#2563EB', 700: '#004AC6', 800: '#003EA8', 900: '#00174B' },
+  cyan: '#4EDEA3', violet: '#0053DB', emerald: '#006C49', amber: '#D22348', rose: '#AD0033'
 } as const;
 export const lightColors = {
-  background: '#F4F8FF', surface: '#FFFFFF', surfaceRaised: '#F8FAFC', text: '#172033', muted: '#64748B', subtle: '#94A3B8',
-  border: '#DCE7F5', borderStrong: '#CBD5E1', primarySoft: '#EAF5FF', primaryBorder: '#B9E0FF', successSoft: '#ECFDF5', successBorder: '#BBF7D0',
-  warningSoft: '#FFFBEB', warningBorder: '#FDE68A', dangerSoft: '#FFF1F2', dangerBorder: '#FECDD3', neutralSoft: '#F1F5F9',
-  overlay: 'rgba(15,23,42,0.52)', glass: 'rgba(255,255,255,0.94)', glowPrimary: '#DDF1FF', glowSecondary: '#F1EAFE', shadow: '#64748B',
+  background: '#FAF8FF', surface: '#FFFFFF', surfaceRaised: '#F2F3FF', text: '#131B2E', muted: '#434655', subtle: '#737686',
+  border: '#C3C6D7', borderStrong: '#737686', primarySoft: '#DBE1FF', primaryBorder: '#B4C5FF', successSoft: '#6FFBBE', successBorder: '#4EDEA3',
+  warningSoft: '#FFDADB', warningBorder: '#FFB2B7', dangerSoft: '#FFDAD6', dangerBorder: '#BA1A1A', neutralSoft: '#EAEDFF',
+  overlay: 'rgba(19,27,46,0.52)', glass: 'rgba(255,255,255,0.94)', glowPrimary: '#DBE1FF', glowSecondary: '#6FFBBE', shadow: '#434655',
 } as const;
 export const darkColors = {
-  background: '#070B14', surface: '#111827', surfaceRaised: '#182235', text: '#F1F5F9', muted: '#A5B4C7', subtle: '#7C8CA3',
-  border: '#29364A', borderStrong: '#475569', primarySoft: '#102C4D', primaryBorder: '#1E4D78', successSoft: '#0B3026', successBorder: '#166534',
-  warningSoft: '#3A2A0B', warningBorder: '#854D0E', dangerSoft: '#3B1521', dangerBorder: '#881337', neutralSoft: '#1E293B',
-  overlay: 'rgba(2,6,23,0.76)', glass: 'rgba(17,24,39,0.96)', glowPrimary: '#102C4D', glowSecondary: '#24143D', shadow: '#020617',
+  background: '#131B2E', surface: '#283044', surfaceRaised: '#131B2E', text: '#EEF0FF', muted: '#B4C5FF', subtle: '#C3C6D7',
+  border: '#434655', borderStrong: '#737686', primarySoft: '#00174B', primaryBorder: '#003EA8', successSoft: '#002113', successBorder: '#005236',
+  warningSoft: '#40000D', warningBorder: '#92002A', dangerSoft: '#40000D', dangerBorder: '#93000A', neutralSoft: '#283044',
+  overlay: 'rgba(19,27,46,0.76)', glass: 'rgba(40,48,68,0.96)', glowPrimary: '#00174B', glowSecondary: '#002113', shadow: '#131B2E',
 } as const;
 export const colors = {
-  primary: palette.brand[500], primaryStrong: palette.brand[600], primaryDeep: palette.brand[700], cyan: palette.cyan, violet: palette.violet,
-  success: palette.emerald, successStrong: '#059669', warning: palette.amber, warningStrong: '#D97706', danger: palette.rose, onBrand: '#FFFFFF', black: '#000000',
+  primary: '#004AC6', primaryStrong: '#003EA8', primaryDeep: '#00174B', cyan: palette.cyan, violet: palette.violet,
+  success: '#006C49', successStrong: '#005236', warning: '#D22348', warningStrong: '#AD0033', danger: '#BA1A1A', onBrand: '#FFFFFF', black: '#000000',
 } as const;
-export const gradients = { brand: [palette.brand[600], palette.brand[500], palette.cyan], background: ['#F4F8FF', '#F0FAFC', '#FAF5FF'], darkBackground: ['#070B14', '#0B1120', '#0D0E1A'] } as const;
+export const gradients = { brand: ['#004AC6', '#2563EB', '#003EA8'], background: ['#FAF8FF', '#F2F3FF', '#EAEDFF'], darkBackground: ['#131B2E', '#283044', '#131B2E'] } as const;
 export const spacing = { xxs: 2, xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 } as const;
 export const radius = { sm: 10, md: 16, lg: 24, xl: 30, pill: 999 } as const;
 export const typography = { caption: 11, bodySmall: 13, body: 15, title: 18, heading: 22, display: 30 } as const;

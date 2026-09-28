@@ -5,7 +5,7 @@ import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, ArrowDownLeft, Pencil, Trash2, Loader2, X, Filter, ChevronDown, ChevronLeft, ChevronRight, CalendarDays, Paperclip, ScanLine, CarFront, Utensils, Banknote } from 'lucide-react';
+import { Plus, Search, ArrowDownLeft, Pencil, Trash2, Loader2, X, Filter, ChevronDown, Paperclip, ScanLine, CarFront, Utensils, Banknote } from 'lucide-react';
 import api from '@/services/api/client';
 import AppModal from '@/components/common/AppModal/AppModal';
 import ReceiptScanModal, { ScanResult } from '@/components/ReceiptScanModal/ReceiptScanModal';
@@ -14,6 +14,7 @@ import PageHeader from '@/components/common/PageHeader/PageHeader';
 import { formatVND } from '@/utils/formatCurrency';
 import { useCategories, useWallets } from '@/hooks/useReferenceData';
 import { toLocalDateInputValue } from '@/utils/dateInput';
+import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
 
 const TransactionModal: React.FC<{
   tx?: any; prefill?: any; wallets: any[]; categories: any[];
@@ -310,33 +311,26 @@ const TransactionsPage: React.FC = () => {
       <PageHeader
         eyebrow="Thu chi"
         title="Giao dịch"
+        description="Kiểm soát chi tiết mọi dòng tiền vào và ra trong tài khoản của bạn"
         actions={(
           <>
-            <AppButton unstyled onClick={() => setShowScan(true)} className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-mini font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <AppButton unstyled onClick={() => setShowScan(true)} className="app-secondary-button">
               <ScanLine className="size-3" /><span>Quét hóa đơn</span>
             </AppButton>
-            <AppButton unstyled id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="inline-flex h-8 items-center gap-2 rounded-md bg-accent px-3.5 text-mini font-bold text-slate-900 shadow-accent-button transition hover:bg-accent-hover">
+            <AppButton unstyled id="add-tx-btn" onClick={() => { setPrefill(null); setShowModal(true); }} className="app-primary-button">
               <Plus className="size-3" /><span>Thêm giao dịch</span>
             </AppButton>
           </>
         )}
       />
 
-      <div className="mt-4 flex items-center justify-center gap-2">
-        <AppButton unstyled aria-label="Tháng trước" onClick={previousMonth} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition hover:text-blue-600 dark:bg-slate-900 dark:text-slate-300">
-          <ChevronLeft className="size-4" />
-        </AppButton>
-        <div className="flex min-w-36 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-800 shadow-sm dark:bg-slate-900 dark:text-slate-100">
-          <CalendarDays className="size-4 text-primary" />
-          Tháng {month}/{year}
-        </div>
-        <AppButton unstyled aria-label="Tháng sau" onClick={nextMonth} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition hover:text-blue-600 dark:bg-slate-900 dark:text-slate-300">
-          <ChevronRight className="size-4" />
-        </AppButton>
+      <div className="mt-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <PeriodNavigator label={`Tháng ${month}/${year}`} onPrevious={previousMonth} onNext={nextMonth} previousLabel="Tháng trước" nextLabel="Tháng sau" />
+        <div className="hidden text-right sm:block"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Giao dịch đã ghi</p><p className="text-lg font-extrabold text-slate-900 dark:text-white">{total} bản ghi</p></div>
       </div>
 
       {/* Filters */}
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="relative flex-1 min-w-48">
           <Search  className="size-icon-caption absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <AppInput unstyled
@@ -345,7 +339,7 @@ const TransactionsPage: React.FC = () => {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             placeholder="Tìm kiếm ghi chú..."
-            className="h-8 w-full rounded-md border-0 bg-white pl-8 pr-3 text-badge font-medium text-slate-700 shadow-sm outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 dark:bg-slate-900 dark:text-slate-200 dark:focus:ring-blue-500/20"
+            className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:focus:ring-blue-500/20"
           />
         </div>
         <div className="relative">
@@ -354,7 +348,7 @@ const TransactionsPage: React.FC = () => {
             id="tx-type-filter"
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setPage(0); }}
-            className="h-8 appearance-none rounded-md border-0 bg-white pl-8 pr-8 text-mini font-semibold text-slate-600 shadow-sm outline-none dark:bg-slate-900 dark:text-slate-300"
+            className="h-10 appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-8 text-sm font-semibold text-slate-600 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           >
             <option value="">Tất cả</option>
             <option value="INCOME">Thu nhập</option>
@@ -365,7 +359,7 @@ const TransactionsPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="mt-3 overflow-hidden rounded-control border border-white/80 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900">
         {isLoading ? (
           <LoadingState className="items-center" />
         ) : isError ? (

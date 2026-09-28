@@ -1,7 +1,6 @@
 import { chartTheme } from '@/theme/charts';
 import AppTitle from '@/components/common/AppTitle/AppTitle';
 import AppCard from '@/components/common/AppCard/AppCard';
-import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -14,10 +13,12 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import { Calendar, ChevronLeft, ChevronRight, Loader2, TrendingDown, TrendingUp, WalletCards } from 'lucide-react';
+import { Loader2, TrendingDown, TrendingUp, WalletCards } from 'lucide-react';
 import api from '@/services/api/client';
 import { formatChartValue, formatVND } from '@/utils/formatCurrency';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
+import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
+import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
 
 const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 
@@ -71,28 +72,8 @@ const MonthlyBalancePage: React.FC = () => {
       <PageHeader
         eyebrow="Dòng tiền"
         title="Tiết kiệm mỗi tháng"
-        actions={(
-          <div className="flex items-center gap-3">
-            <AppButton unstyled
-              aria-label="Năm trước"
-              onClick={() => setYear((y) => y - 1)}
-              className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            >
-              <ChevronLeft className="size-4.5" />
-            </AppButton>
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2 font-bold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-              <Calendar  className="size-icon-nav text-blue-600" />
-              Năm {year}
-            </div>
-            <AppButton unstyled
-              aria-label="Năm sau"
-              onClick={() => setYear((y) => y + 1)}
-              className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            >
-              <ChevronRight className="size-4.5" />
-            </AppButton>
-          </div>
-        )}
+        description="Theo dõi thặng dư tài chính tích lũy qua từng chu kỳ tháng"
+        actions={<PeriodNavigator label={`Năm ${year}`} onPrevious={() => setYear((y) => y - 1)} onNext={() => setYear((y) => y + 1)} previousLabel="Năm trước" nextLabel="Năm sau" />}
       />
 
       {isLoading ? (
@@ -112,38 +93,9 @@ const MonthlyBalancePage: React.FC = () => {
           ) : (
           <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-2xl bg-white p-5 shadow-summary dark:bg-slate-900">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/10">
-                  <TrendingUp  className="size-4.5 text-emerald-500" />
-                </div>
-                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng thu nhập</p>
-              </div>
-              <p className="text-2xl font-extrabold text-emerald-500">{formatVND(totalIncome)}</p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-summary dark:bg-slate-900">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-500/10">
-                  <TrendingDown  className="size-4.5 text-rose-500" />
-                </div>
-                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tổng chi tiêu</p>
-              </div>
-              <p className="text-2xl font-extrabold text-rose-500">{formatVND(totalExpense)}</p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-summary dark:bg-slate-900">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-brand-500/10">
-                  <WalletCards  className="size-4.5 text-brand-500" />
-                </div>
-                <p className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiết kiệm trung bình</p>
-              </div>
-              <p className={`text-2xl font-extrabold ${averageSavings >= 0 ? 'text-brand-500' : 'text-rose-500'}`}>
-                {formatVND(averageSavings)}
-              </p>
-              {bestMonth && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Tháng tốt nhất: {bestMonth.label}</p>}
-            </div>
+            <SummaryCard icon={<TrendingUp className="size-4.5" />} label="Tổng thu nhập" value={formatVND(totalIncome)} tone="green" caption="Tích lũy trong năm" />
+            <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Tổng chi tiêu" value={formatVND(totalExpense)} tone="red" caption="Tỷ trọng dòng tiền ra" />
+            <SummaryCard icon={<WalletCards className="size-4.5" />} label="Tiết kiệm trung bình" value={formatVND(averageSavings)} tone={averageSavings >= 0 ? 'blue' : 'red'} caption={bestMonth ? `Tháng tốt nhất: ${bestMonth.label}` : 'Chưa đủ dữ liệu'} />
           </div>
 
           <div className="rounded-2xl bg-white p-6 shadow-summary dark:bg-slate-900">

@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '@/services/api/client';
+import api, { runAuthSessionTransition } from '@/services/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 
 export const useLoginForm = () => {
@@ -22,7 +22,7 @@ export const useLoginForm = () => {
     if (!form.email || !form.password) return setError('Vui lòng điền đầy đủ thông tin.');
     setLoading(true);
     try {
-      const response = await api.post('/auth/login', { ...form, email: form.email.trim().toLowerCase(), platform: 'web' });
+      const response = await runAuthSessionTransition(() => api.post('/auth/login', { ...form, email: form.email.trim().toLowerCase(), platform: 'web' }));
       const { user, accessToken } = response.data.data;
       login(user, accessToken);
       navigate('/');

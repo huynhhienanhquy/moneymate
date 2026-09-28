@@ -1,7 +1,7 @@
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React from 'react';
-import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { Bot, X, Send, Loader2, Sparkles } from 'lucide-react';
 import { useAiChat } from '@/hooks/useAiChat';
 
 const AiChatWidget: React.FC = () => {
@@ -11,10 +11,10 @@ const AiChatWidget: React.FC = () => {
     <>
       <AppButton unstyled
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-all hover:scale-105"
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-105 hover:bg-blue-700"
         title="MoneyMate AI Chat"
       >
-        <MessageCircle className="size-6" />
+        <Bot className="size-6" />
       </AppButton>
 
       {open && (

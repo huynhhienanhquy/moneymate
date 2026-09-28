@@ -24,13 +24,16 @@ api.interceptors.request.use(
 
 // Startup and 401 recovery must share one refresh: refresh cookies are single-use.
 let refreshPromise: Promise<string> | null = null;
+let authTransitionCount = 0;
 
 export const refreshAccessToken = (): Promise<string> => {
   if (!refreshPromise) {
     refreshPromise = axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true })
       .then((response) => {
-        const { accessToken } = response.data.data;
-        useAuthStore.getState().setToken(accessToken);
+        const { accessToken, user } = response.data.data;
+        // The refresh cookie is the source of truth for both token and identity.
+        if (user) useAuthStore.getState().setToken(accessToken, user);
+        else useAuthStore.getState().setToken(accessToken);
         return accessToken;
       })
       .catch((error) => {
@@ -48,6 +51,27 @@ export const refreshAccessToken = (): Promise<string> => {
   return refreshPromise;
 };
 
+/**
+ * Serialize a login/logout operation after any cookie-rotating refresh and
+ * prevent new automatic refreshes from starting during that transition.
+ */
+export const runAuthSessionTransition = async <T>(operation: () => Promise<T>): Promise<T> => {
+  authTransitionCount += 1;
+  try {
+    const pendingRefresh = refreshPromise;
+    if (pendingRefresh) {
+      try {
+        await pendingRefresh;
+      } catch {
+        // Login/logout must still continue when refresh fails.
+      }
+    }
+    return await operation();
+  } finally {
+    authTransitionCount -= 1;
+  }
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -58,7 +82,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && authTransitionCount === 0) {
       const currentToken = useAuthStore.getState().accessToken;
       if (!currentToken && !refreshPromise) {
         return Promise.reject(error);

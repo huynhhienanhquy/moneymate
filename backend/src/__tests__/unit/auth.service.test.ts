@@ -209,6 +209,7 @@ describe('AuthService', () => {
       const result = await authService.refresh('raw-refresh-token');
 
       expect(result.accessToken).toBe('new-access-token');
+      expect(result.user).toEqual(expect.objectContaining({ id: 'uuid-123', email: 'test@example.com', role: Role.USER }));
       expect(mockTokenRepo.rotate).toHaveBeenCalledWith(
         expect.stringMatching(/^[a-f0-9]{64}$/),
         expect.any(Date),

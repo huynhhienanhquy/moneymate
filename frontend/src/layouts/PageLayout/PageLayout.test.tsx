@@ -15,7 +15,7 @@ vi.mock('react-router-dom', () => ({
 }));
 vi.mock('@/stores/auth.store', () => ({ useAuthStore: () => ({ user: { fullName: 'Admin', role: 'ADMIN' }, logout: mocks.logout }) }));
 vi.mock('@/stores/theme.store', () => ({ useThemeStore: () => ({ theme: 'light', toggleTheme: mocks.toggleTheme }) }));
-vi.mock('@/services/api/client', () => ({ default: { post: mocks.post } }));
+vi.mock('@/services/api/client', () => ({ default: { post: mocks.post }, runAuthSessionTransition: (operation: () => Promise<unknown>) => operation() }));
 vi.mock('@/components/NotificationBell/NotificationBell', () => ({ default: () => <span>notifications</span> }));
 vi.mock('@/components/AiChatWidget/AiChatWidget', () => ({ default: () => <span>money mate assistant</span> }));
 

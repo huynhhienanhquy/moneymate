@@ -72,6 +72,16 @@ describe('API client', () => {
     expect(setToken).toHaveBeenCalledWith('fresh-token');
   });
 
+  it('replaces a cached identity with the user bound to the refresh cookie', async () => {
+    const { refreshAccessToken } = await import('../client');
+    const refreshedUser = { id: 'user-account', role: 'USER' };
+    post.mockResolvedValueOnce({ data: { data: { accessToken: 'user-token', user: refreshedUser } } });
+
+    await expect(refreshAccessToken()).resolves.toBe('user-token');
+
+    expect(setToken).toHaveBeenCalledWith('user-token', refreshedUser);
+  });
+
   it('queues concurrent failures behind one refresh', async () => {
     await import('../client');
     let finish!: (value: unknown) => void;
@@ -107,6 +117,35 @@ describe('API client', () => {
     const error = { config: { url: '/notifications', headers: {} }, response: { status: 401 } };
     await expect(responseErrorHandler(error)).rejects.toBe(error);
     expect(post).not.toHaveBeenCalled();
+  });
+
+  it('does not start a new refresh while login or logout is switching sessions', async () => {
+    const { runAuthSessionTransition } = await import('../client');
+    let finishTransition!: () => void;
+    const transition = runAuthSessionTransition(() => new Promise<void>((resolve) => { finishTransition = resolve; }));
+    await Promise.resolve();
+    const error = { config: { url: '/wallets', headers: {} }, response: { status: 401 } };
+
+    await expect(responseErrorHandler(error)).rejects.toBe(error);
+    expect(post).not.toHaveBeenCalled();
+
+    finishTransition();
+    await transition;
+  });
+
+  it('waits for an existing refresh before switching sessions', async () => {
+    const { refreshAccessToken, runAuthSessionTransition } = await import('../client');
+    let finishRefresh!: (value: unknown) => void;
+    post.mockReturnValueOnce(new Promise((resolve) => { finishRefresh = resolve; }));
+    const refresh = refreshAccessToken();
+    const transitionOperation = vi.fn().mockResolvedValue('complete');
+    const transition = runAuthSessionTransition(transitionOperation);
+
+    expect(transitionOperation).not.toHaveBeenCalled();
+    finishRefresh({ data: { data: { accessToken: 'rotated-token' } } });
+
+    await expect(Promise.all([refresh, transition])).resolves.toEqual(['rotated-token', 'complete']);
+    expect(transitionOperation).toHaveBeenCalledOnce();
   });
 
   it('retries a late 401 with the already refreshed token', async () => {

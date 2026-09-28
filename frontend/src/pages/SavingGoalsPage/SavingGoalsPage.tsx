@@ -129,18 +129,19 @@ const SavingGoalsPage: React.FC = () => {
 
   return (
     <div>
-      <PageHeader eyebrow="Mục tiêu" title="Mục tiêu tiết kiệm" description />
+      <PageHeader eyebrow="Mục tiêu" title="Mục tiêu tiết kiệm" description="Theo dõi, tích lũy và hoàn thành các ước mơ tài chính đúng tiến độ" actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /> Thêm mục tiêu</AppButton>} />
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <SummaryCard icon={<Target className="size-4.5" />} label="Tổng mục tiêu" value={String(goals.length)} tone="blue" />
-        <SummaryCard icon={<TrendingUp className="size-4.5" />} label="Đã tiết kiệm" value={formatVND(totalSaved)} tone="cyan" />
-        <SummaryCard icon={<Trophy className="size-4.5" />} label="Hoàn thành" value={`${completedGoals}/${goals.length}`} tone="violet" />
+        <SummaryCard icon={<Target className="size-4.5" />} label="Tổng mục tiêu" value={String(goals.length)} tone="blue" iconPosition="right" caption={`${goals.length - completedGoals} đang chạy · ${completedGoals} đã xong`} />
+        <SummaryCard icon={<TrendingUp className="size-4.5" />} label="Đã tiết kiệm" value={formatVND(totalSaved)} tone="cyan" iconPosition="right" caption="Tăng trưởng đều đặn" />
+        <SummaryCard icon={<Trophy className="size-4.5" />} label="Hoàn thành" value={`${completedGoals}/${goals.length}`} tone="violet" iconPosition="right" caption="Hiệu suất mục tiêu" />
       </div>
 
       {isLoading ? <div className="mt-5"><LoadingState /></div> : (
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {goals.map((g: any) => (
-              <div key={g.id} className={`group relative flex min-h-goal flex-col rounded-xl border bg-white p-5 shadow-card dark:bg-slate-900 ${g.status === 'COMPLETED' ? 'border-violet-200 dark:border-violet-500/25' : 'border-white/80 dark:border-slate-800'}`}>
+              <div key={g.id} className={`group relative flex min-h-goal flex-col overflow-hidden rounded-2xl border bg-white p-5 pt-7 shadow-card dark:bg-slate-900 ${g.status === 'COMPLETED' ? 'border-violet-200 dark:border-violet-500/25' : 'border-blue-100 dark:border-slate-800'}`}>
+                <span className={`absolute inset-x-0 top-0 h-1.5 ${g.status === 'COMPLETED' ? 'bg-gradient-to-r from-violet-600 via-blue-500 to-emerald-500' : 'bg-gradient-to-r from-blue-700 to-emerald-400'}`} />
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {g.status === 'COMPLETED' ? (
@@ -195,7 +196,7 @@ const SavingGoalsPage: React.FC = () => {
             ))}
             {/* Add new goal card */}
             <AppButton unstyled onClick={() => setShowModal(true)}
-              className="group flex min-h-goal flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/35 p-5 text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
+              className="group flex min-h-goal flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-blue-200 bg-white/45 p-5 text-slate-500 transition hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-600 shadow-icon-tile transition group-hover:scale-105 dark:bg-slate-800 dark:text-blue-400">
                 <Plus  className="size-6 group-hover:rotate-90 transition-transform duration-slow" />
               </div>

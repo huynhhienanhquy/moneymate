@@ -11,8 +11,10 @@ interface PageHeaderProps {
 
 const PageHeader = ({ title, description, eyebrow, actions, className = '' }: PageHeaderProps) => (
   <header className={`app-page-header ${className}`}>
-    <AppTitle eyebrow={eyebrow} description={description}>{title}</AppTitle>
-    {actions && <div className="mt-4 flex flex-wrap gap-2">{actions}</div>}
+    <div className="relative z-10 min-w-0 flex-1">
+      <AppTitle eyebrow={eyebrow} description={description}>{title}</AppTitle>
+    </div>
+    {actions && <div className="relative z-10 flex flex-wrap items-center gap-2 md:justify-end">{actions}</div>}
   </header>
 );
 

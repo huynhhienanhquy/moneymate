@@ -5,7 +5,7 @@ import AppButton from '@/components/common/AppButton/AppButton';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight } from 'lucide-react';
+import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight, ScanLine, ArrowLeftRight, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -133,8 +133,8 @@ const DashboardPage: React.FC = () => {
       <PageHeader
         eyebrow="Tổng quan tài chính"
         title={`Xin chào, ${user?.fullName?.split(' ').pop() || 'bạn'} 👋`}
-        description={<>Báo cáo thông minh cho tháng <span className="font-bold text-slate-800 dark:text-slate-200">{now.getMonth() + 1}/{now.getFullYear()}</span></>}
-        actions={<Link to="/transactions" className="app-primary-button shadow-md">+ Thêm giao dịch</Link>}
+        description={<><span className="mr-1">Tổng tài sản</span><strong className="ml-1 text-xl text-white">{formatVND(netWorth)}</strong><span className="ml-2 text-xs">· đồng bộ tháng {now.getMonth() + 1}/{now.getFullYear()}</span></>}
+        actions={<><Link to="/transactions" className="app-primary-button"><Plus className="size-4" /> Thêm giao dịch</Link><Link to="/transactions" className="app-secondary-button"><ScanLine className="size-4" /> Quét hóa đơn</Link><Link to="/wallets" className="app-secondary-button"><ArrowLeftRight className="size-4" /> Chuyển khoản</Link></>}
       />
 
       {/* AI Insight Banner */}

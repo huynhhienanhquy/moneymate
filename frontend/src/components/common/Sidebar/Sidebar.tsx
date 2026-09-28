@@ -1,6 +1,6 @@
 import type { UserDto } from '@moneymate/contracts';
 import { Link } from 'react-router-dom';
-import { LogOut, Moon, Sun, User as UserIcon, X } from 'lucide-react';
+import { LogOut, Sun, User as UserIcon, X } from 'lucide-react';
 import { APP_IMAGES } from '@/assets/images';
 import { getNavigationItems, isRouteActive } from '@/helpers/navigation';
 
@@ -15,7 +15,7 @@ type SidebarProps = {
 };
 
 const NavigationLinks = ({ user, currentPath, onNavigate, mobile = false }: Pick<SidebarProps, 'user' | 'currentPath'> & { onNavigate?: () => void; mobile?: boolean }) => (
-  <nav aria-label="Điều hướng chính" className="flex-1 space-y-1 overflow-y-auto">
+  <nav aria-label="Điều hướng chính" className="flex-1 space-y-1 overflow-y-auto px-2">
     {getNavigationItems(user?.role === 'ADMIN').map((item) => {
       const Icon = item.icon;
       const active = isRouteActive(currentPath, item.path);
@@ -27,10 +27,11 @@ const NavigationLinks = ({ user, currentPath, onNavigate, mobile = false }: Pick
           aria-current={active ? 'page' : undefined}
           className={mobile
             ? `flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-normal ${active ? 'bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-500 text-white shadow-lg shadow-brand-600/20' : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'}`
-            : `flex items-center gap-3 px-3 py-2.5 rounded-compact text-xs font-medium transition-all duration-normal ${active ? 'bg-nav-active text-slate-800' : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100'}`}
+            : `group flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-normal ${active ? 'bg-indigo-50 text-blue-700 shadow-sm dark:bg-blue-500/15 dark:text-blue-300' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100'}`}
         >
-          <Icon className={mobile ? 'size-4.5' : 'size-icon-nav'} />
-          <span>{item.name}</span>
+          <Icon className={`${mobile ? 'size-4.5' : 'size-[18px]'} ${active ? 'text-blue-600 dark:text-blue-300' : 'text-slate-500 group-hover:text-slate-800 dark:text-slate-400'}`} />
+          <span className="min-w-0 flex-1">{item.name}</span>
+          {item.name === 'AI Tài chính' && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">Pro</span>}
         </Link>
       );
     })}
@@ -39,26 +40,26 @@ const NavigationLinks = ({ user, currentPath, onNavigate, mobile = false }: Pick
 
 const Sidebar = ({ user, currentPath, theme, mobileOpen, onMobileOpenChange, onThemeToggle, onLogout }: SidebarProps) => (
   <>
-    <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 hidden h-dvh w-sidebar flex-col px-2.5 py-3 md:flex">
-      <div className="flex items-center gap-2 px-2 py-1 mb-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-logo text-xs font-black text-white">MM</div>
+    <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 hidden h-dvh w-sidebar flex-col py-4 md:flex">
+      <div className="mb-4 flex items-center gap-2.5 px-4 py-1">
+        <img src={APP_IMAGES.logo} alt="" className="h-9 w-9 rounded-xl object-cover shadow-sm" />
         <div>
-          <span className="font-extrabold text-xl tracking-tight text-logo">MoneyMate</span>
-          <p className="text-caption font-semibold text-slate-400 dark:text-slate-400 tracking-wide uppercase">Smart Finance</p>
+          <span className="text-base font-extrabold tracking-tight text-blue-700 dark:text-blue-300">MoneyMate</span>
+          <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-500 dark:text-slate-400">Smart Finance</p>
         </div>
       </div>
 
       <NavigationLinks user={user} currentPath={currentPath} />
 
-      <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 p-2 pt-3">
-        <button onClick={onThemeToggle} className="flex items-center justify-between w-full px-4 py-2.5 rounded-2xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-all">
+      <div className="mt-4 flex flex-col gap-1 px-4 pb-1 pt-3">
+        <button onClick={onThemeToggle} className="flex min-h-11 w-full items-center justify-between rounded-xl bg-indigo-50/80 px-3 text-sm font-semibold text-slate-600 transition-all hover:bg-indigo-100 dark:bg-slate-800/70 dark:text-slate-300">
           <div className="flex items-center gap-3">
-            {theme === 'dark' ? <Sun  className="size-4.5 text-amber-400" /> : <Moon  className="size-4.5 text-brand-500" />}
+            {theme === 'dark' ? <Sun className="size-4.5 text-amber-400" /> : <Sun className="size-4.5 text-slate-500" />}
             <span>{theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}</span>
           </div>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-mono font-bold">{theme === 'dark' ? 'DARK' : 'LIGHT'}</span>
+          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-extrabold text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-300">{theme === 'dark' ? 'DARK' : 'LIGHT'}</span>
         </button>
-        <button onClick={onLogout} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl text-sm font-semibold text-rose-500 hover:bg-rose-500/10 transition-all">
+        <button onClick={onLogout} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10">
           <LogOut className="size-4.5" /><span>Đăng xuất</span>
         </button>
       </div>

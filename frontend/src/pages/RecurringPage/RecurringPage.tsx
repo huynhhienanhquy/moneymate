@@ -13,6 +13,7 @@ import { formatVND } from '@/utils/formatCurrency';
 import { useCategories, useWallets } from '@/hooks/useReferenceData';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
+import CategoryIcon from '@/components/common/CategoryIcon/CategoryIcon';
 import { toLocalDateInputValue } from '@/utils/dateInput';
 
 const FREQ_LABELS: Record<string, string> = {
@@ -134,7 +135,7 @@ const RecurringPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /><span>Thêm định kỳ</span></AppButton>} />
+      <PageHeader eyebrow="Định kỳ" title="Giao dịch định kỳ" description="Tự động quản lý các khoản thu và chi lặp lại theo chu kỳ" actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /><span>Thêm định kỳ</span></AppButton>} />
 
       {isLoading ? (
         <LoadingState />
@@ -142,9 +143,9 @@ const RecurringPage: React.FC = () => {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <SummaryCard icon={<Repeat className="size-4.5" />} label="Tổng giao dịch" value={String(items.length)} tone="blue" />
-            <SummaryCard icon={<ArrowDownRight className="size-4.5" />} label="Thu nhập định kỳ" value={formatVND(incomeTotal)} tone="green" />
-            <SummaryCard icon={<ArrowUpRight className="size-4.5" />} label="Chi tiêu định kỳ" value={formatVND(expenseTotal)} tone="red" />
+            <SummaryCard icon={<Repeat className="size-4.5" />} label="Tổng giao dịch" value={String(items.length)} tone="blue" caption={`${items.filter((item: any) => item.isActive).length} đang hoạt động`} />
+            <SummaryCard icon={<ArrowDownRight className="size-4.5" />} label="Thu nhập định kỳ" value={formatVND(incomeTotal)} tone="green" caption="Dự kiến trong chu kỳ" />
+            <SummaryCard icon={<ArrowUpRight className="size-4.5" />} label="Chi tiêu định kỳ" value={formatVND(expenseTotal)} tone="red" caption="Ước tính kỳ tới" />
           </div>
 
           <section className="mt-6">
@@ -163,21 +164,26 @@ const RecurringPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mt-4">
               {visibleItems.length === 0 ? (
-                <div className="flex flex-col items-center py-16 text-slate-500"><RefreshCw  className="size-icon-title mb-3 opacity-40" /><p className="font-semibold">Không tìm thấy giao dịch định kỳ</p><AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button mt-4"><Plus className="size-4" /> Thêm định kỳ</AppButton></div>
-              ) : <div className="overflow-x-auto"><table className="w-full min-w-table table-fixed text-left">
-                <thead className="border-b border-slate-100 dark:border-slate-800"><tr className="uppercase tracking-wide text-slate-500 dark:text-slate-400"><th className="w-recurring-description px-4 py-3">Giao dịch</th><th className="w-recurring-frequency px-3 py-3">Tần suất &amp; ví</th><th className="w-recurring-date px-3 py-3">Ngày tiếp theo</th><th className="w-recurring-amount px-3 py-3 text-right">Số tiền</th><th className="w-recurring-actions px-2 py-3 text-center">Thao tác</th></tr></thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {visibleItems.map((item: any) => <tr key={item.id} className={`transition hover:bg-slate-50 dark:hover:bg-slate-800/40 ${!item.isActive ? 'opacity-55' : ''}`}>
-                    <td className="px-4 py-3"><div className="flex items-center gap-3"><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.type === 'INCOME' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-rose-100 text-rose-500 dark:bg-rose-500/15'}`}><RefreshCw className="size-4" /></span><div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-bold text-slate-950 dark:text-white">{item.note || item.category?.name}</p><span className={`shrink-0 rounded-full px-2 py-0.5 font-bold uppercase ${item.isActive ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>{item.isActive ? 'Hoạt động' : 'Tạm dừng'}</span></div><p className="mt-0.5 text-slate-500 dark:text-slate-400">{item.category?.name}</p></div></div></td>
-                    <td className="px-3 py-3"><p className="font-semibold text-slate-700 dark:text-slate-300">{FREQ_LABELS[item.frequency]}</p><p className="mt-1 text-slate-500 dark:text-slate-400">Ví: {item.wallet?.name}</p></td>
-                    <td className="px-3 py-3"><p className="font-bold text-slate-900 dark:text-white">{new Date(item.nextExecutionDate).toLocaleDateString('vi-VN')}</p><span className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 font-semibold text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">Còn lịch</span></td>
-                    <td className={`whitespace-nowrap px-3 py-3 text-right font-extrabold ${item.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-500'}`}>{item.type === 'INCOME' ? '+' : '-'}{formatVND(Number(item.amount))}</td>
-                    <td className="relative px-2 py-3 text-center"><AppButton unstyled aria-label="Mở thao tác" onClick={() => setActionMenuId((id) => id === item.id ? null : item.id)} className="rounded-md p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical className="size-icon-nav" /></AppButton>{actionMenuId === item.id && <div className="absolute right-3 top-11 z-20 w-40 rounded-lg border border-slate-200 bg-white p-1 text-left shadow-xl dark:border-slate-700 dark:bg-slate-900"><AppButton unstyled onClick={() => { toggleMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">{item.isActive ? <Pause className="size-icon-small" /> : <Play className="size-icon-small" />}{item.isActive ? 'Tạm dừng' : 'Kích hoạt'}</AppButton><AppButton unstyled onClick={() => { setEditItem(item); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"><Pencil className="size-icon-small" />Chỉnh sửa</AppButton><AppButton unstyled onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 className="size-icon-small" />Xóa</AppButton></div>}</td>
-                  </tr>)}
-                </tbody>
-              </table></div>}
+                <div className="flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-slate-500 dark:border-slate-700 dark:bg-slate-900"><RefreshCw className="size-icon-title mb-3 opacity-40" /><p className="font-semibold">Không tìm thấy giao dịch định kỳ</p><AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button mt-4"><Plus className="size-4" /> Thêm định kỳ</AppButton></div>
+              ) : <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {visibleItems.map((item: any) => (
+                  <article key={item.id} className={`relative rounded-2xl border bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-slate-900 ${item.isActive ? 'border-emerald-200 dark:border-emerald-500/30' : 'border-slate-200 opacity-75 dark:border-slate-800'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-icon-tile ${item.type === 'INCOME' ? 'bg-emerald-600' : 'bg-blue-600'}`}><CategoryIcon name={item.category?.icon} className="size-5" /></span>
+                      <div className="min-w-0 flex-1"><p className="truncate font-extrabold text-slate-950 dark:text-white">{item.note || item.category?.name}</p><p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Danh mục: {item.category?.name}</p></div>
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase ${item.isActive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>{item.isActive ? 'Hoạt động' : 'Tạm dừng'}</span>
+                      <AppButton unstyled aria-label="Mở thao tác" onClick={() => setActionMenuId((id) => id === item.id ? null : item.id)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical className="size-4" /></AppButton>
+                    </div>
+                    {actionMenuId === item.id && <div className="absolute right-4 top-14 z-20 w-40 rounded-xl border border-slate-200 bg-white p-1 text-left shadow-xl dark:border-slate-700 dark:bg-slate-900"><AppButton unstyled onClick={() => { toggleMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">{item.isActive ? <Pause className="size-icon-small" /> : <Play className="size-icon-small" />}{item.isActive ? 'Tạm dừng' : 'Kích hoạt'}</AppButton><AppButton unstyled onClick={() => { setEditItem(item); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"><Pencil className="size-icon-small" />Chỉnh sửa</AppButton><AppButton unstyled onClick={() => { if (confirm('Xóa?')) deleteMutation.mutate(item.id); setActionMenuId(null); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"><Trash2 className="size-icon-small" />Xóa</AppButton></div>}
+                    <div className="mt-5 grid grid-cols-2 gap-3 border-y border-slate-100 py-4 dark:border-slate-800"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tần suất</p><p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-200">{FREQ_LABELS[item.frequency]}</p></div><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ví thanh toán</p><p className="mt-1 truncate text-sm font-bold text-slate-800 dark:text-slate-200">{item.wallet?.name}</p></div></div>
+                    <div className="mt-4 rounded-xl bg-blue-50 px-3 py-2.5 dark:bg-blue-500/10"><p className="text-xs text-slate-500 dark:text-slate-400">Kỳ tới: <strong className="ml-1 text-sm text-slate-900 dark:text-white">{new Date(item.nextExecutionDate).toLocaleDateString('vi-VN')}</strong><span className="float-right font-bold text-blue-600 dark:text-blue-300">Còn lịch</span></p></div>
+                    <div className="mt-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Số tiền</p><p className={`mt-1 text-xl font-extrabold ${item.type === 'INCOME' ? 'text-emerald-600' : 'text-rose-500'}`}>{item.type === 'INCOME' ? '+' : '-'}{formatVND(Number(item.amount))}</p></div><AppButton unstyled onClick={() => toggleMutation.mutate(item.id)} className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300">{item.isActive ? 'Tạm dừng' : 'Bật lại'}</AppButton></div>
+                  </article>
+                ))}
+                <AppButton unstyled onClick={() => setShowModal(true)} className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-white/50 text-slate-500 transition hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900/50"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-blue-600 shadow-md dark:bg-slate-800"><Plus className="size-6" /></span><strong className="text-slate-900 dark:text-white">Thêm giao dịch định kỳ</strong><span className="text-xs">Thiết lập chu kỳ tự động hóa mới</span></AppButton>
+              </div>}
             </div>
           </section>
         </>

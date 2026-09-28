@@ -7,7 +7,7 @@ import api from '@/services/api/client';
 import AdminPage from './AdminPage';
 import { exportUsers, type AdminUser } from './adminUsers';
 
-vi.mock('@/services/api/client', () => ({ default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
+vi.mock('@/services/api/client', () => ({ runAuthSessionTransition: (operation: () => Promise<unknown>) => operation(), default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('./adminUsers', async (importOriginal) => ({
   ...await importOriginal<typeof import('./adminUsers')>(), exportUsers: vi.fn(),

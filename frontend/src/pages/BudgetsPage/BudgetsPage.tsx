@@ -6,13 +6,16 @@ import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, PiggyBank, Pencil, Trash2, Loader2, X, ChevronLeft, ChevronRight, AlertTriangle, TrendingDown, CalendarDays, WalletCards } from 'lucide-react';
+import { Plus, PiggyBank, Pencil, Trash2, Loader2, X, AlertTriangle, TrendingDown, WalletCards } from 'lucide-react';
 import api from '@/services/api/client';
 import AppModal from '@/components/common/AppModal/AppModal';
 import LoadingState from '@/components/common/LoadingState/LoadingState';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import { formatVND } from '@/utils/formatCurrency';
 import { useCategories } from '@/hooks/useReferenceData';
+import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
+import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
+import CategoryIcon from '@/components/common/CategoryIcon/CategoryIcon';
 
 const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
 
@@ -138,13 +141,8 @@ const BudgetsPage: React.FC = () => {
       />
 
       {/* Period Navigator */}
-      <div className="mt-5 flex items-center justify-center gap-3">
-        <AppButton unstyled onClick={prev} aria-label="Tháng trước" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-blue-600 dark:hover:bg-slate-900"><ChevronLeft className="size-4.5" /></AppButton>
-        <div className="flex h-10 items-center gap-2 rounded-full bg-white px-5 font-bold text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200">
-          <CalendarDays  className="size-4 text-primary" />
-          Tháng {month} {year}
-        </div>
-        <AppButton unstyled onClick={next} aria-label="Tháng sau" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white hover:text-blue-600 dark:hover:bg-slate-900"><ChevronRight className="size-4.5" /></AppButton>
+      <div className="mt-5 flex items-center justify-end">
+        <PeriodNavigator label={`Tháng ${month}, ${year}`} onPrevious={prev} onNext={next} previousLabel="Tháng trước" nextLabel="Tháng sau" />
       </div>
 
       {isLoading ? (
@@ -164,22 +162,22 @@ const BudgetsPage: React.FC = () => {
         <>
           {/* Summary cards */}
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <SummaryCard icon={<WalletCards className="size-4.5" />} label="Tổng ngân sách" value={formatVND(totalBudget)} tone="blue" />
-            <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Đã chi" value={formatVND(totalSpent)} tone="red" />
-            <SummaryCard icon={<PiggyBank className="size-4.5" />} label="Còn lại" value={formatVND(totalRemaining)} tone="green" />
+            <SummaryCard icon={<WalletCards className="size-4.5" />} label="Tổng ngân sách" value={formatVND(totalBudget)} tone="blue" variant="solid" caption={`${budgets.length} danh mục đã thiết lập`} />
+            <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Đã chi" value={formatVND(totalSpent)} tone="red" variant="solid" caption={`${Math.round((totalSpent / Math.max(totalBudget, 1)) * 100)}% tổng ngân sách`} />
+            <SummaryCard icon={<PiggyBank className="size-4.5" />} label="Còn lại" value={formatVND(totalRemaining)} tone="green" variant="solid" caption={`${Math.max(0, Math.round((totalRemaining / Math.max(totalBudget, 1)) * 100))}% khả dụng`} />
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
             {budgets.map((b: any) => {
               const fc = forecastMap[b.categoryId || 'global'];
               const isWarning = b.status === 'WARNING';
               const isExceeded = b.status === 'EXCEEDED';
               const tone = isExceeded ? 'danger' : isWarning ? 'warning' : 'safe';
               return (
-              <div key={b.id} className={`group relative overflow-hidden rounded-xl border-t-4 bg-white p-4 shadow-category dark:bg-slate-900 ${isExceeded ? 'border-rose-500' : isWarning ? 'border-amber-400' : 'border-emerald-400'}`}>
+              <div key={b.id} className={`group relative min-h-[420px] overflow-hidden rounded-2xl border bg-white p-5 shadow-category dark:bg-slate-900 ${isExceeded ? 'border-rose-200 dark:border-rose-500/30' : isWarning ? 'border-amber-200 dark:border-amber-500/30' : 'border-emerald-200 dark:border-emerald-500/30'}`}>
                 <div className="flex items-start justify-between">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ color: b.category?.color || chartTheme.savings, background: b.category?.color ? `${b.category.color}18` : 'rgb(var(--chart-savings) / 0.1)' }}><PiggyBank className="size-icon-nav" /></span>
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-icon-tile" style={{ background: b.category?.color || chartTheme.savings }}><CategoryIcon name={b.category?.icon} className="size-icon-nav" /></span>
                     <div><AppTitle unstyled level={2} className="truncate font-extrabold text-slate-900 dark:text-slate-100">{b.category?.name || 'Tổng chi tiêu'}</AppTitle><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 font-semibold ${isExceeded ? 'bg-rose-100 text-rose-600' : isWarning ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>{isExceeded ? 'Vượt mức' : isWarning ? 'Sắp chạm mức' : 'Tốt'}</span></div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
@@ -187,10 +185,12 @@ const BudgetsPage: React.FC = () => {
                     <AppButton unstyled onClick={() => { if (confirm('Xóa ngân sách?')) deleteMutation.mutate(b.id); }} className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"><Trash2 className="size-3.5" /></AppButton>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-center"><ProgressRing percentage={b.percentage} tone={tone} /></div>
-                <div className="mt-3 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
-                  <div><p className="text-slate-500 dark:text-slate-400">Đã chi</p><p className="font-bold text-slate-900 dark:text-slate-100">{formatVND(b.spent)}</p></div>
-                  <div className="text-right"><p className="text-slate-500 dark:text-slate-400">Hạn mức</p><p className="font-bold text-slate-900 dark:text-slate-100">{formatVND(b.amount)}</p></div>
+                <div className="mt-8 flex items-center justify-center"><ProgressRing percentage={b.percentage} tone={tone} /></div>
+                <div className="mt-8 space-y-2.5 rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                  <div className="flex items-center justify-between"><p className="text-slate-500 dark:text-slate-400">Đã chi</p><p className="font-extrabold text-rose-600">{formatVND(b.spent)}</p></div>
+                  <div className="flex items-center justify-between"><p className="text-slate-500 dark:text-slate-400">Hạn mức</p><p className="font-bold text-slate-900 dark:text-slate-100">{formatVND(b.amount)}</p></div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><div className={`h-full rounded-full ${isExceeded ? 'bg-rose-600' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, Math.max(0, Number(b.percentage) || 0))}%` }} /></div>
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-2 dark:border-slate-800"><p className="text-slate-500 dark:text-slate-400">Còn lại</p><p className={`font-extrabold ${Number(b.amount) - Number(b.spent) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{formatVND(Number(b.amount) - Number(b.spent))}</p></div>
                 </div>
                 {fc && fc.severity !== 'OK' && (
                   <p className="text-xs mt-2 text-amber-500 dark:text-amber-400/80 border-t border-slate-100 dark:border-slate-800 pt-2 flex items-center gap-1">
@@ -201,7 +201,7 @@ const BudgetsPage: React.FC = () => {
             )})}
             {/* Add new budget card */}
             <AppButton unstyled onClick={() => setShowModal(true)}
-              className="group flex min-h-filter-wide flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/35 p-5 text-slate-500 transition-all hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
+              className="group flex min-h-[420px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-blue-200 bg-white/50 p-5 text-slate-500 transition-all hover:border-blue-400 hover:bg-blue-50/40 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-blue-500 dark:hover:bg-blue-500/5">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition group-hover:scale-105 dark:bg-blue-500/15 dark:text-blue-400">
                 <Plus  className="size-6 group-hover:rotate-90 transition-transform duration-slow" />
               </div>
@@ -216,12 +216,6 @@ const BudgetsPage: React.FC = () => {
       {editBudget && <BudgetModal budget={editBudget} categories={categories} month={month} year={year} onClose={() => setEditBudget(null)} onSave={(d) => updateMutation.mutate({ id: editBudget.id, data: { categoryId: d.categoryId, amount: d.amount } })} loading={updateMutation.isPending} />}
     </div>
   );
-};
-
-const SummaryCard = ({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: 'blue' | 'red' | 'green' }) => {
-  const styles = tone === 'red' ? 'bg-rose-100 text-rose-500 dark:bg-rose-500/15' : tone === 'green' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15' : 'bg-blue-100 text-blue-600 dark:bg-blue-500/15';
-  const valueColor = tone === 'red' ? 'text-rose-500' : tone === 'green' ? 'text-emerald-600' : 'text-slate-900 dark:text-white';
-  return <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-category dark:bg-slate-900"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${styles}`}>{icon}</span><div className="min-w-0"><p className="font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p><p className={`truncate font-extrabold ${valueColor}`}>{value}</p></div></div>;
 };
 
 export default BudgetsPage;

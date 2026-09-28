@@ -59,6 +59,7 @@ vi.mock('@/stores/auth.store', () => ({
   },
 }));
 vi.mock('@/services/api/client', () => ({
+  runAuthSessionTransition: (operation: () => Promise<unknown>) => operation(),
   default: {
     get: vi.fn().mockResolvedValue({ data: { data: {} } }),
     post: vi.fn().mockResolvedValue({ data: { data: { id: 'created-1' } } }),

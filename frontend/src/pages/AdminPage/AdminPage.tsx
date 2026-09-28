@@ -4,7 +4,7 @@ import { ArrowDown, ArrowRightLeft, ArrowUp, CalendarDays, ChevronLeft, ChevronR
 import { useNavigate } from 'react-router-dom';
 import AppButton from '@/components/common/AppButton/AppButton';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
-import api from '@/services/api/client';
+import api, { runAuthSessionTransition } from '@/services/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import UserModal, { type UserForm } from './UserModal';
 import { avatarColor, exportUsers, type AdminUser } from './adminUsers';
@@ -79,7 +79,7 @@ export default function AdminPage() {
   const openModal = (value: AdminUser | 'create') => { setFormError(''); setModal(value); };
   const handleLogout = async () => {
     if (!confirm('Bạn có chắc chắn muốn đăng xuất không?')) return;
-    try { await api.post('/auth/logout'); }
+    try { await runAuthSessionTransition(() => api.post('/auth/logout')); }
     finally { logout(); qc.clear(); navigate('/login', { replace: true }); }
   };
   const unavailable = isLoading || isError;

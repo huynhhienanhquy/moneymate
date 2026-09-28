@@ -25,4 +25,4 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => getMocks().navigate }));
 vi.mock('@/stores/auth.store', () => ({ useAuthStore: (selector: (state: unknown) => unknown) => selector({ login: getMocks().login }) }));
-vi.mock('@/services/api/client', () => ({ default: { get: (...args: any[]) => getMocks().get(...args), post: (...args: any[]) => getMocks().post(...args), patch: (...args: any[]) => getMocks().patch(...args), delete: (...args: any[]) => getMocks().delete(...args) } }));
+vi.mock('@/services/api/client', () => ({ runAuthSessionTransition: (operation: () => Promise<unknown>) => operation(), default: { get: (...args: any[]) => getMocks().get(...args), post: (...args: any[]) => getMocks().post(...args), patch: (...args: any[]) => getMocks().patch(...args), delete: (...args: any[]) => getMocks().delete(...args) } }));

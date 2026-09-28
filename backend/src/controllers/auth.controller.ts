@@ -8,7 +8,15 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax' as const,
+  path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+};
+
+const CLEAR_COOKIE_OPTIONS = {
+  httpOnly: COOKIE_OPTIONS.httpOnly,
+  secure: COOKIE_OPTIONS.secure,
+  sameSite: COOKIE_OPTIONS.sameSite,
+  path: COOKIE_OPTIONS.path,
 };
 
 export class AuthController {
@@ -66,6 +74,7 @@ export class AuthController {
         res,
         {
           accessToken: result.accessToken,
+          user: result.user,
           ...(usesBodyTransport ? { refreshToken: result.refreshToken } : {})
         },
         'Access token refreshed successfully'
@@ -77,17 +86,12 @@ export class AuthController {
 
   public logout = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+      const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+      // Clear the browser credential even if persistence revocation later fails.
+      res.clearCookie('refreshToken', CLEAR_COOKIE_OPTIONS);
       if (refreshToken) {
         await this.authService.logout(refreshToken);
       }
-      
-      // Clear cookies
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      });
       
       return sendSuccess(res, null, 'Logged out successfully');
     } catch (error) {
