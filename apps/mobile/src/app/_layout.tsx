@@ -8,7 +8,12 @@ function ThemedApplication() {
   return (
     <AppProvider>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: theme.colors.background },
+        }}
+      />
     </AppProvider>
   );
 }

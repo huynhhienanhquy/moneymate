@@ -1,7 +1,50 @@
 import '../helpers/prisma-mock';
 import prisma from '../../config/db';
 import { TransactionRepository } from '../../repositories/transaction.repository';
-import { CategoryType, Frequency } from '@prisma/client';
+import { CategoryType, Frequency, TransactionType } from '@prisma/client';
+
+describe('TransactionRepository transaction-page visibility', () => {
+  it('excludes transfer records from both rows and pagination totals', async () => {
+    const mockPrisma = prisma as any;
+    mockPrisma.transaction.findMany.mockResolvedValue([]);
+    mockPrisma.transaction.count.mockResolvedValue(0);
+    const repository = new TransactionRepository();
+    const filter = { userId: 'user-1', excludeTransfers: true };
+
+    await repository.findAll(filter);
+    await repository.count(filter);
+
+    const expectedWhere = expect.objectContaining({
+      userId: 'user-1',
+      AND: [{ type: { not: TransactionType.TRANSFER } }],
+    });
+    expect(mockPrisma.transaction.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expectedWhere }));
+    expect(mockPrisma.transaction.count).toHaveBeenCalledWith({ where: expectedWhere });
+  });
+
+  it('searches consistently by note, wallet name, or category name', async () => {
+    const mockPrisma = prisma as any;
+    mockPrisma.transaction.findMany.mockResolvedValue([]);
+    mockPrisma.transaction.count.mockResolvedValue(0);
+    const repository = new TransactionRepository();
+    const filter = { userId: 'user-1', search: 'ăn trưa' };
+
+    await repository.findAll(filter);
+    await repository.count(filter);
+
+    const expectedSearch = [
+      { note: { contains: 'ăn trưa' } },
+      { wallet: { name: { contains: 'ăn trưa' } } },
+      { category: { name: { contains: 'ăn trưa' } } },
+    ];
+    expect(mockPrisma.transaction.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ OR: expectedSearch }),
+    }));
+    expect(mockPrisma.transaction.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({ OR: expectedSearch }),
+    });
+  });
+});
 
 describe('TransactionRepository atomic transfer guards', () => {
   it('does not transfer after another request consumes the source balance', async () => {

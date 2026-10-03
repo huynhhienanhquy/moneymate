@@ -5,7 +5,7 @@ import AppLabel from '@/components/common/AppLabel/AppLabel';
 import AppButton from '@/components/common/AppButton/AppButton';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Target, Pencil, Trash2, Loader2, X, ArrowDownToLine, ArrowUpFromLine, Trophy, TrendingUp, Calendar } from 'lucide-react';
+import { Plus, Target, Pencil, Trash2, Loader2, X, ArrowDownToLine, ArrowUpFromLine, Trophy, TrendingUp, Calendar, Filter } from 'lucide-react';
 import api from '@/services/api/client';
 import AppModal from '@/components/common/AppModal/AppModal';
 import LoadingState from '@/components/common/LoadingState/LoadingState';
@@ -90,6 +90,9 @@ const SavingGoalsPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editGoal, setEditGoal] = useState<any>(null);
   const [action, setAction] = useState<{ goal: any; type: 'deposit' | 'withdraw' } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED'>('ALL');
+  const [sortBy, setSortBy] = useState<'DEADLINE' | 'PROGRESS'>('DEADLINE');
+  const [showFilters, setShowFilters] = useState(true);
 
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['saving-goals'],
@@ -126,10 +129,28 @@ const SavingGoalsPage: React.FC = () => {
   const totalSaved = goals.reduce((sum: number, goal: any) => sum + Number(goal.currentAmount), 0);
   const completedGoals = goals.filter((goal: any) => goal.status === 'COMPLETED').length;
   const getDaysLeft = (date: string) => Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000));
+  const visibleGoals = goals
+    .filter((goal: any) => statusFilter === 'ALL' || (statusFilter === 'COMPLETED' ? goal.status === 'COMPLETED' : goal.status !== 'COMPLETED'))
+    .slice()
+    .sort((a: any, b: any) => sortBy === 'PROGRESS'
+      ? Number(b.progress) - Number(a.progress)
+      : new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime());
 
   return (
     <div>
-      <PageHeader eyebrow="Mục tiêu" title="Mục tiêu tiết kiệm" description="Theo dõi, tích lũy và hoàn thành các ước mơ tài chính đúng tiến độ" actions={<AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /> Thêm mục tiêu</AppButton>} />
+      <PageHeader
+        eyebrow="Mục tiêu"
+        title="Mục tiêu tiết kiệm"
+        description="Theo dõi, tích lũy và hoàn thành các ước mơ tài chính đúng tiến độ"
+        actions={(
+          <>
+            <AppButton unstyled aria-controls="goal-filters" aria-expanded={showFilters} onClick={() => setShowFilters((value) => !value)} className="app-secondary-button">
+              <Filter className="size-4" /> Bộ lọc
+            </AppButton>
+            <AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button"><Plus className="size-4" /> Thêm mục tiêu</AppButton>
+          </>
+        )}
+      />
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SummaryCard icon={<Target className="size-4.5" />} label="Tổng mục tiêu" value={String(goals.length)} tone="blue" iconPosition="right" caption={`${goals.length - completedGoals} đang chạy · ${completedGoals} đã xong`} />
@@ -137,9 +158,32 @@ const SavingGoalsPage: React.FC = () => {
         <SummaryCard icon={<Trophy className="size-4.5" />} label="Hoàn thành" value={`${completedGoals}/${goals.length}`} tone="violet" iconPosition="right" caption="Hiệu suất mục tiêu" />
       </div>
 
+      {showFilters && (
+        <div id="goal-filters" className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="inline-flex w-fit rounded-xl border border-outline-variant/60 bg-surface-container-low p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            {([
+              ['ALL', `Tất cả (${goals.length})`],
+              ['ACTIVE', `Đang thực hiện (${goals.length - completedGoals})`],
+              ['COMPLETED', `Đã hoàn thành (${completedGoals})`],
+            ] as const).map(([value, label]) => (
+              <AppButton unstyled key={value} onClick={() => setStatusFilter(value)} className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${statusFilter === value ? 'bg-white text-primary shadow-sm dark:bg-slate-800 dark:text-blue-300' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}>
+                {label}
+              </AppButton>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <span>Sắp xếp:</span>
+            <AppSelect unstyled value={sortBy} onChange={(event) => setSortBy(event.target.value as 'DEADLINE' | 'PROGRESS')} className="h-10 rounded-xl border border-outline-variant/60 bg-white px-3 font-semibold text-slate-700 shadow-sm outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+              <option value="DEADLINE">Hạn chót gần nhất</option>
+              <option value="PROGRESS">Tiến độ cao nhất</option>
+            </AppSelect>
+          </label>
+        </div>
+      )}
+
       {isLoading ? <div className="mt-5"><LoadingState /></div> : (
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {goals.map((g: any) => (
+          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {visibleGoals.map((g: any) => (
               <div key={g.id} className={`group relative flex min-h-goal flex-col overflow-hidden rounded-2xl border bg-white p-5 pt-7 shadow-card dark:bg-slate-900 ${g.status === 'COMPLETED' ? 'border-violet-200 dark:border-violet-500/25' : 'border-blue-100 dark:border-slate-800'}`}>
                 <span className={`absolute inset-x-0 top-0 h-1.5 ${g.status === 'COMPLETED' ? 'bg-gradient-to-r from-violet-600 via-blue-500 to-emerald-500' : 'bg-gradient-to-r from-blue-700 to-emerald-400'}`} />
                 <div className="flex items-start justify-between">

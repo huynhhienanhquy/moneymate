@@ -12,22 +12,26 @@ const neutral = {
   900: web.colors['on-surface'], 950: web.colors['on-surface'],
 };
 const primaryScale = {
-  50: web.colors['primary-fixed'], 100: web.colors['primary-fixed'], 200: web.colors['primary-fixed-dim'],
+  50: web.colors['surface-container-low'], 100: web.colors['primary-fixed'], 200: web.colors['primary-fixed-dim'],
   300: web.colors['inverse-primary'], 400: web.colors['surface-tint'], 500: web.colors['primary-container'],
   600: web.colors['primary-container'], 700: web.colors.primary, 800: web.colors['on-primary-fixed-variant'],
   900: web.colors['on-primary-fixed'], 950: web.colors['on-primary-fixed'],
 };
 const secondaryScale = {
-  50: web.colors['secondary-fixed'], 100: web.colors['secondary-fixed'], 200: web.colors['secondary-fixed-dim'],
-  300: web.colors['secondary-fixed-dim'], 400: web.colors['secondary-container'], 500: web.colors.secondary,
+  50: '#effcf6', 100: '#d8f8ea', 200: '#aef0d3',
+  300: web.colors['secondary-fixed-dim'], 400: web.colors['secondary-container'], 500: '#00845a',
   600: web.colors.secondary, 700: web.colors['on-secondary-container'], 800: web.colors['on-secondary-fixed-variant'],
   900: web.colors['on-secondary-fixed'], 950: web.colors['on-secondary-fixed'],
 };
 const tertiaryScale = {
-  50: web.colors['tertiary-fixed'], 100: web.colors['tertiary-fixed'], 200: web.colors['tertiary-fixed-dim'],
+  50: '#fff4f5', 100: web.colors['tertiary-fixed'], 200: web.colors['tertiary-fixed-dim'],
   300: web.colors['tertiary-fixed-dim'], 400: web.colors['tertiary-container'], 500: web.colors.tertiary,
   600: web.colors.tertiary, 700: web.colors['on-tertiary-fixed-variant'], 800: web.colors['on-tertiary-fixed-variant'],
   900: web.colors['on-tertiary-fixed'], 950: web.colors['on-tertiary-fixed'],
+};
+const warningScale = {
+  50: '#fff9eb', 100: '#fff1c7', 200: '#ffe08a', 300: '#ffc94d', 400: '#f5aa16',
+  500: '#df8700', 600: '#ba6500', 700: '#934a00', 800: '#783b08', 900: '#62320d', 950: '#391a03',
 };
 
 /** @type {import('tailwindcss').Config} */
@@ -54,8 +58,8 @@ export default {
         rose: tertiaryScale,
         pink: tertiaryScale,
         red: tertiaryScale,
-        amber: tertiaryScale,
-        orange: tertiaryScale,
+        amber: warningScale,
+        orange: warningScale,
         brand: primaryScale,
         ...web.colors,
         ui: variableColors(web.light, 'ui'),

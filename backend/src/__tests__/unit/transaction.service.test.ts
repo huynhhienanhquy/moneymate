@@ -177,15 +177,8 @@ describe('TransactionService', () => {
       expect(updateWalletMany).not.toHaveBeenCalled();
     });
 
-    it('records an expense larger than the wallet amount without changing that amount', async () => {
+    it('rejects an expense larger than the wallet balance', async () => {
       mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
-      mockCategoryRepo.findById.mockResolvedValue(MOCK_EXPENSE_CATEGORY);
-      const create = jest.fn().mockResolvedValue({ id: 'tx-large-expense' });
-      const updateMany = jest.fn();
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => cb({
-        transaction: { create },
-        wallet: { updateMany },
-      }));
 
       await expect(txService.createTransaction('user-1', {
         walletId: 'wallet-1',
@@ -193,9 +186,12 @@ describe('TransactionService', () => {
         amount: 6000000,
         type: TransactionType.EXPENSE,
         transactionDate: new Date(),
-      })).resolves.toEqual({ id: 'tx-large-expense' });
-      expect(create).toHaveBeenCalled();
-      expect(updateMany).not.toHaveBeenCalled();
+      })).rejects.toMatchObject({
+        message: 'Số dư không đủ',
+        statusCode: 400,
+        code: 'INSUFFICIENT_WALLET_BALANCE',
+      });
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
 
     it('adds an income transaction amount to its wallet', async () => {
@@ -265,6 +261,24 @@ describe('TransactionService', () => {
         expect.objectContaining({ userId: 'user-1', transactionId: 'tx-committed' }),
       );
       errorSpy.mockRestore();
+    });
+  });
+
+  describe('getTransactions()', () => {
+    it('excludes wallet transfer records from the transaction page and total', async () => {
+      mockTransactionRepo.findAll.mockResolvedValue([]);
+      mockTransactionRepo.count.mockResolvedValue(0);
+
+      await txService.getTransactions('user-1', { skip: 0, take: 20 });
+
+      expect(mockTransactionRepo.findAll).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'user-1',
+        excludeTransfers: true,
+      }));
+      expect(mockTransactionRepo.count).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'user-1',
+        excludeTransfers: true,
+      }));
     });
   });
 
@@ -395,6 +409,24 @@ describe('TransactionService', () => {
       expect(updateWallet).not.toHaveBeenCalled();
       expect(updateWalletMany).not.toHaveBeenCalled();
     });
+
+    it('rejects an expense update larger than the target wallet balance', async () => {
+      mockWalletRepo.findById.mockResolvedValue(MOCK_WALLET);
+      mockTransactionRepo.findById.mockResolvedValue({
+        id: 'tx-1', userId: 'user-1', walletId: 'wallet-1', categoryId: 'cat-expense-1',
+        amount: '100000' as any, type: TransactionType.EXPENSE, version: 1,
+        note: null, transactionDate: new Date(), createdAt: new Date(), updatedAt: new Date(),
+      } as any);
+      mockCategoryRepo.findById.mockResolvedValue(MOCK_EXPENSE_CATEGORY);
+
+      await expect(txService.updateTransaction('user-1', 'tx-1', { amount: 6000000 }))
+        .rejects.toMatchObject({
+          message: 'Số dư không đủ',
+          statusCode: 400,
+          code: 'INSUFFICIENT_WALLET_BALANCE',
+        });
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    });
   });
 
   // ─── TRANSFER VALIDATION ──────────────────────────────────────────────────────
@@ -460,6 +492,13 @@ describe('TransactionService', () => {
       expect(result.monthlySavings).toBe(1_000_000);
       expect(result.monthlyRemaining).toBe(1_000_000);
       expect(mockTransactionRepo.getWalletBalanceTotal).toHaveBeenCalledWith('user-1');
+      expect(mockTransactionRepo.findAll).toHaveBeenCalledWith({
+        userId: 'user-1',
+        excludeTransfers: true,
+        take: 5,
+        sortBy: 'transactionDate',
+        order: 'desc',
+      });
     });
   });
 

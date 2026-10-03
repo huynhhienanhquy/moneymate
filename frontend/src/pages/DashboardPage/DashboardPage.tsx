@@ -118,7 +118,7 @@ const DashboardPage: React.FC = () => {
   const netWorth: number = dashData?.netWorth || 0;
   const monthlyExpense: number = dashData?.monthlyExpense || 0;
   const monthlySavings: number = dashData?.monthlySavings || 0;
-  const recentTransactions: any[] = dashData?.recentTransactions || [];
+  const recentTransactions: any[] = (dashData?.recentTransactions || []).filter((transaction: any) => transaction.type !== 'TRANSFER');
   const categoryExpenses: any[] = reportData?.categoryExpenses || [];
 
   const barData = trendData.map((item: any) => ({
@@ -131,6 +131,7 @@ const DashboardPage: React.FC = () => {
     <div className="dashboard-page space-y-6 animate-fade-in">
       {/* Page Header */}
       <PageHeader
+        size="hero"
         eyebrow="Tổng quan tài chính"
         title={`Xin chào, ${user?.fullName?.split(' ').pop() || 'bạn'} 👋`}
         description={<><span className="mr-1">Tổng tài sản</span><strong className="ml-1 text-xl text-white">{formatVND(netWorth)}</strong><span className="ml-2 text-xs">· đồng bộ tháng {now.getMonth() + 1}/{now.getFullYear()}</span></>}

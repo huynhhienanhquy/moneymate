@@ -8,6 +8,7 @@ export interface TransactionFilter {
   walletId?: string;
   categoryId?: string;
   type?: TransactionType;
+  excludeTransfers?: boolean;
   startDate?: Date;
   endDate?: Date;
   search?: string;
@@ -155,6 +156,10 @@ export class TransactionRepository {
       where.type = filter.type;
     }
 
+    if (filter.excludeTransfers) {
+      where.AND = [{ type: { not: TransactionType.TRANSFER } }];
+    }
+
     if (filter.startDate || filter.endDate) {
       where.transactionDate = {};
       if (filter.startDate) {
@@ -166,9 +171,11 @@ export class TransactionRepository {
     }
 
     if (filter.search) {
-      where.note = {
-        contains: filter.search
-      };
+      where.OR = [
+        { note: { contains: filter.search } },
+        { wallet: { name: { contains: filter.search } } },
+        { category: { name: { contains: filter.search } } },
+      ];
     }
 
     const sortBy = filter.sortBy || 'transactionDate';
@@ -206,6 +213,10 @@ export class TransactionRepository {
       where.type = filter.type;
     }
 
+    if (filter.excludeTransfers) {
+      where.AND = [{ type: { not: TransactionType.TRANSFER } }];
+    }
+
     if (filter.startDate || filter.endDate) {
       where.transactionDate = {};
       if (filter.startDate) {
@@ -217,9 +228,11 @@ export class TransactionRepository {
     }
 
     if (filter.search) {
-      where.note = {
-        contains: filter.search
-      };
+      where.OR = [
+        { note: { contains: filter.search } },
+        { wallet: { name: { contains: filter.search } } },
+        { category: { name: { contains: filter.search } } },
+      ];
     }
 
     return prisma.transaction.count({ where });
@@ -309,7 +322,7 @@ export class TransactionRepository {
         throw new AppError('Destination wallet not found or unauthorized', 404);
       }
       if (Number(srcWallet.initialBalance) < Number(data.amount)) {
-        throw new AppError('Insufficient balance in source wallet', 400);
+        throw new AppError('Số dư không đủ', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
       }
 
       // Debit only if the balance is still sufficient at the moment of the write.
@@ -323,7 +336,7 @@ export class TransactionRepository {
         data: { initialBalance: { decrement: amountDec } }
       });
       if (sourceDebit.count !== 1) {
-        throw new AppError('Insufficient balance in source wallet', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
+        throw new AppError('Số dư không đủ', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
       }
 
       // Credit Destination Wallet

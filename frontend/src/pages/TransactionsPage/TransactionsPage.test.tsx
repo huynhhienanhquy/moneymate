@@ -23,7 +23,7 @@ describe('TransactionsPage', () => {
     expect(screen.getByText('Không tìm thấy giao dịch nào')).toBeInTheDocument();
   });
 
-  it('allows an expense larger than the wallet amount without changing the wallet', async () => {
+  it('blocks an expense larger than the wallet balance', async () => {
     vi.mocked(api.post).mockClear();
     renderPage(TransactionsPage);
     act(() => fireEvent.click(screen.getByRole('button', { name: /Thêm giao dịch/ })));
@@ -35,12 +35,8 @@ describe('TransactionsPage', () => {
       fireEvent.click(document.getElementById('tx-save')!);
     });
 
-    await waitFor(() => expect(api.post).toHaveBeenCalledWith('/transactions', expect.objectContaining({
-      amount: 6_000_000,
-      type: 'EXPENSE',
-      walletId: 'wallet-1',
-    })));
-    expect(screen.queryByText('Số dư không đủ')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Số dư không đủ'));
+    expect(api.post).not.toHaveBeenCalled();
   });
 
   it('loads transactions within the selected month', () => {

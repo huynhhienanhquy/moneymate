@@ -13,7 +13,7 @@ import PageHeader from '@/components/common/PageHeader/PageHeader';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
 import CategoryIcon from '@/components/common/CategoryIcon/CategoryIcon';
 
-const COLORS = ['blue', 'income', 'warning', 'expense', 'purple', 'cyan', 'orange', 'violet', 'pink', 'teal'].map((name) => webTheme.chartColors[name as keyof typeof webTheme.chartColors]);
+const COLORS = [...new Set(['blue', 'income', 'warning', 'expense', 'purple', 'cyan', 'orange', 'violet', 'pink', 'teal'].map((name) => webTheme.chartColors[name as keyof typeof webTheme.chartColors]))];
 const ICONS = ['tag','utensils','home','car','heart-pulse','graduation-cap','shopping-bag','gamepad-2','receipt','briefcase','gift','more-horizontal'];
 
 const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({ cat, typeFilter, onClose, onSave, loading }) => {
@@ -156,9 +156,26 @@ const CategoriesPage: React.FC = () => {
         title="Danh mục"
         description="Quản lý và cá nhân hóa danh mục thu chi tài chính của bạn"
         actions={(
-          <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="app-primary-button">
-            <Plus className="size-4" /><span>Thêm danh mục</span>
-          </AppButton>
+          <div className="flex flex-col items-stretch gap-3">
+            <div className="flex gap-1 rounded-xl bg-blue-950/25 p-1">
+              {[{ key: 'EXPENSE', label: 'Chi tiêu', icon: TrendingDown }, { key: 'INCOME', label: 'Thu nhập', icon: TrendingUp }].map(({ key, label, icon: Icon }) => (
+                <AppButton unstyled
+                  key={key}
+                  id={`tab-${key.toLowerCase()}`}
+                  onClick={() => setActiveTab(key as any)}
+                  className={`flex min-h-9 min-w-32 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition ${activeTab === key
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}
+                >
+                  <Icon className="size-icon-small" />
+                  {label}
+                </AppButton>
+              ))}
+            </div>
+            <AppButton unstyled id="add-category-btn" onClick={() => setShowModal(true)} className="app-primary-button self-start">
+              <Plus className="size-4" /><span>Thêm danh mục mới</span>
+            </AppButton>
+          </div>
         )}
       />
 
@@ -166,23 +183,6 @@ const CategoriesPage: React.FC = () => {
         <SummaryCard icon={<Shapes className="size-5" />} label="Tổng số danh mục" value={`${allCategories.length} phân loại`} tone="blue" caption={`${allCategories.filter((c: any) => c.type === 'EXPENSE').length} Chi tiêu · ${allCategories.filter((c: any) => c.type === 'INCOME').length} Thu nhập`} />
         <SummaryCard icon={<Utensils className="size-5" />} label="Đang hiển thị" value={`${filtered.length} danh mục`} tone={activeTab === 'EXPENSE' ? 'red' : 'green'} caption={activeTab === 'EXPENSE' ? 'Nhóm chi tiêu' : 'Nhóm thu nhập'} />
         <SummaryCard icon={<Sparkles className="size-5" />} label="Danh mục tùy chỉnh" value={`${userCats.length} mục`} tone="violet" caption={userCats[0] ? 'Đã cá nhân hóa' : 'Chưa có danh mục riêng'} />
-      </div>
-
-      {/* Tabs */}
-      <div className="mt-5 flex w-fit gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        {[{ key: 'EXPENSE', label: 'Chi tiêu', icon: TrendingDown }, { key: 'INCOME', label: 'Thu nhập', icon: TrendingUp }].map(({ key, label, icon: Icon }) => (
-          <AppButton unstyled
-            key={key}
-            id={`tab-${key.toLowerCase()}`}
-            onClick={() => setActiveTab(key as any)}
-            className={`flex h-9 items-center gap-2 rounded-lg px-5 font-semibold transition-all ${activeTab === key
-              ? key === 'INCOME' ? 'bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-rose-100 text-rose-600 shadow-sm dark:bg-rose-500/15 dark:text-rose-300'
-              : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
-          >
-            <Icon className="size-icon-small" />
-            {label}
-          </AppButton>
-        ))}
       </div>
 
       {isLoading ? (

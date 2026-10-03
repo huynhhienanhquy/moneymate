@@ -27,16 +27,16 @@ const SummaryCard = ({ icon, label, value, tone = 'blue', badge, caption, varian
   const palette = tones[tone];
   const isSolid = variant === 'solid';
   return (
-    <AppCard padding="none" className={`relative min-h-[132px] overflow-hidden rounded-2xl border p-5 shadow-summary ${isSolid ? palette.solid : palette.soft} ${className}`}>
+    <AppCard padding="none" className={`relative overflow-hidden rounded-card border p-5 shadow-summary ${isSolid ? `min-h-[164px] ${palette.solid}` : `min-h-[128px] ${palette.soft}`} ${className}`}>
       <div className={`absolute -right-8 -top-10 h-28 w-28 rounded-full ${isSolid ? 'bg-white/10' : 'bg-surface-container/65 dark:bg-slate-800/50'}`} />
       <div className={`relative flex items-center gap-3 ${iconPosition === 'right' ? 'justify-between' : ''}`}>
         {iconPosition === 'left' && <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-lg ${isSolid ? 'border border-white/20 bg-white/15 text-white' : palette.icon}`}>{icon}</span>}
-        <p className={`text-xs font-extrabold uppercase tracking-wide ${isSolid ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>{label}</p>
+        <p className={`text-xs font-bold uppercase tracking-wide ${isSolid ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>{label}</p>
         {badge && <span className={`ml-auto rounded-full px-2.5 py-1 font-bold ${isSolid ? 'border border-white/20 bg-white/15 text-white' : palette.icon}`}>{badge}</span>}
         {iconPosition === 'right' && <span className={`ml-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-lg ${isSolid ? 'border border-white/20 bg-white/15 text-white' : palette.icon}`}>{icon}</span>}
       </div>
-      <p className={`relative mt-3 text-3xl font-extrabold tracking-tight ${isSolid ? 'text-white' : palette.value}`}>{value}</p>
-      {caption && <p className={`relative mt-1 ${isSolid ? 'text-white/75' : 'text-slate-500 dark:text-slate-400'}`}>{caption}</p>}
+      <p className={`relative mt-3 font-extrabold leading-none tracking-tight ${isSolid ? 'text-3xl text-white' : `text-[26px] ${palette.value}`}`}>{value}</p>
+      {caption && <p className={`relative mt-2 text-xs leading-5 ${isSolid ? 'text-white/75' : 'text-slate-500 dark:text-slate-400'}`}>{caption}</p>}
     </AppCard>
   );
 };

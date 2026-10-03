@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type PropsWithChildren,
+} from 'react';
 import { useColorScheme } from 'react-native';
 import {
   colors,
@@ -23,10 +31,17 @@ function buildTheme(colorScheme: 'light' | 'dark') {
   return {
     colorScheme,
     dark: colorScheme === 'dark',
-    colors: { ...(colorScheme === 'dark' ? darkColors : lightColors), ...colors },
+    colors: {
+      ...(colorScheme === 'dark' ? darkColors : lightColors),
+      ...colors,
+    },
     gradients: {
       brand: [...gradients.brand] as [string, string, ...string[]],
-      background: [...(colorScheme === 'dark' ? gradients.darkBackground : gradients.background)] as [string, string, ...string[]],
+      background: [
+        ...(colorScheme === 'dark'
+          ? gradients.darkBackground
+          : gradients.background),
+      ] as [string, string, ...string[]],
     },
     spacing,
     radius,
@@ -62,7 +77,8 @@ export function AppThemeProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     void keyValueStorage.getItem(THEME_KEY).then((stored) => {
-      if (stored === 'light' || stored === 'dark' || stored === 'system') setModeState(stored);
+      if (stored === 'light' || stored === 'dark' || stored === 'system')
+        setModeState(stored);
     });
   }, []);
 
@@ -70,12 +86,21 @@ export function AppThemeProvider({ children }: PropsWithChildren) {
     setModeState(nextMode);
     void keyValueStorage.setItem(THEME_KEY, nextMode);
   }, []);
-  const effectiveScheme = mode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : mode;
+  const effectiveScheme =
+    mode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : mode;
   const activeTheme = effectiveScheme === 'dark' ? darkTheme : lightTheme;
-  const toggleTheme = useCallback(() => setMode(effectiveScheme === 'dark' ? 'light' : 'dark'), [effectiveScheme, setMode]);
-  const value = useMemo(() => ({ theme: activeTheme, mode, setMode, toggleTheme }), [activeTheme, mode, setMode, toggleTheme]);
+  const toggleTheme = useCallback(
+    () => setMode(effectiveScheme === 'dark' ? 'light' : 'dark'),
+    [effectiveScheme, setMode],
+  );
+  const value = useMemo(
+    () => ({ theme: activeTheme, mode, setMode, toggleTheme }),
+    [activeTheme, mode, setMode, toggleTheme],
+  );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useAppTheme() {

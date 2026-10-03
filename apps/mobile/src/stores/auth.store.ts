@@ -3,7 +3,12 @@ import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as LocalAuthentication from 'expo-local-authentication';
 import type { LoginResponse, UserDto } from '@moneymate/contracts';
-import { ApiError, apiRequest, mobilePlatform, setAccessToken } from '@/lib/api';
+import {
+  ApiError,
+  apiRequest,
+  mobilePlatform,
+  setAccessToken,
+} from '@/lib/api';
 import { sessionStorage } from '@/storage/session';
 import { keyValueStorage } from '@/storage/key-value';
 
@@ -41,7 +46,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const raw = await sessionStorage.getUser();
       cached = raw ? JSON.parse(raw) : null;
-      const hasSessionCredential = mobilePlatform === 'web' || Boolean(await sessionStorage.getRefreshToken());
+      const hasSessionCredential =
+        mobilePlatform === 'web' ||
+        Boolean(await sessionStorage.getRefreshToken());
       if (!cached?.user || !hasSessionCredential) {
         set({ initialized: true, user: null });
         return;
@@ -50,7 +57,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: cached.user });
     } catch {
       await sessionStorage.clear().catch(() => undefined);
-      await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
+      await keyValueStorage
+        .removeItem('moneymate-query-cache')
+        .catch(() => undefined);
       setAccessToken(null);
       set({ user: null, initialized: true });
       return;
@@ -61,9 +70,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       await sessionStorage.setUser(JSON.stringify({ user: profile, deviceId }));
       set({ user: profile, initialized: true });
     } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      if (
+        error instanceof ApiError &&
+        (error.status === 401 || error.status === 403)
+      ) {
         await sessionStorage.clear().catch(() => undefined);
-        await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
+        await keyValueStorage
+          .removeItem('moneymate-query-cache')
+          .catch(() => undefined);
         setAccessToken(null);
         set({ user: null, initialized: true });
         return;
@@ -76,74 +90,115 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ loading: true, error: null });
     try {
       const currentDeviceId = await getDeviceId();
-      const result = await apiRequest<LoginResponse>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password,
-          platform: mobilePlatform,
-          deviceId: currentDeviceId,
-          deviceName: Device.modelName || Device.deviceName || 'Mobile device',
-          appVersion: '1.0.0',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        })
-      }, false);
+      const result = await apiRequest<LoginResponse>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+            password,
+            platform: mobilePlatform,
+            deviceId: currentDeviceId,
+            deviceName:
+              Device.modelName || Device.deviceName || 'Mobile device',
+            appVersion: '1.0.0',
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          }),
+        },
+        false,
+      );
       if (mobilePlatform !== 'web' && !result.refreshToken) {
         throw new Error('Máy chủ không trả refresh token cho mobile');
       }
       setAccessToken(result.accessToken);
-      if (result.refreshToken) await sessionStorage.setRefreshToken(result.refreshToken);
-      await sessionStorage.setUser(JSON.stringify({ user: result.user, deviceId: currentDeviceId }));
+      if (result.refreshToken)
+        await sessionStorage.setRefreshToken(result.refreshToken);
+      await sessionStorage.setUser(
+        JSON.stringify({ user: result.user, deviceId: currentDeviceId }),
+      );
       set({ user: result.user, loading: false });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Đăng nhập thất bại', loading: false });
+      set({
+        error: error instanceof Error ? error.message : 'Đăng nhập thất bại',
+        loading: false,
+      });
       throw error;
     }
   },
   logout: async () => {
-    const refreshToken = await sessionStorage.getRefreshToken().catch(() => null);
-    const cached = await sessionStorage.getUser().then((raw) => raw ? JSON.parse(raw) : null).catch(() => null);
+    const refreshToken = await sessionStorage
+      .getRefreshToken()
+      .catch(() => null);
+    const cached = await sessionStorage
+      .getUser()
+      .then((raw) => (raw ? JSON.parse(raw) : null))
+      .catch(() => null);
     const unregister = cached?.deviceId
       ? apiRequest('/notifications/devices', {
-          method: 'DELETE', body: JSON.stringify({ deviceId: cached.deviceId })
+          method: 'DELETE',
+          body: JSON.stringify({ deviceId: cached.deviceId }),
         }).catch(() => undefined)
       : Promise.resolve();
     // Logout must always work offline: remove local credentials and update UI
     // first, then revoke the server session as a best-effort background task.
     await sessionStorage.clear().catch(() => undefined);
-    await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
+    await keyValueStorage
+      .removeItem('moneymate-query-cache')
+      .catch(() => undefined);
     setAccessToken(null);
     set({ user: null, loading: false, error: null });
-    if (refreshToken || mobilePlatform === 'web') void apiRequest('/auth/logout', {
-      method: 'POST', body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
-    }, false).catch(() => undefined);
+    if (refreshToken || mobilePlatform === 'web')
+      void apiRequest(
+        '/auth/logout',
+        {
+          method: 'POST',
+          body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
+        },
+        false,
+      ).catch(() => undefined);
     void unregister;
   },
   deleteAccount: async (password) => {
-    await apiRequest('/users/profile', { method: 'DELETE', body: JSON.stringify({ password }) });
+    await apiRequest('/users/profile', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    });
     await sessionStorage.clear();
     await keyValueStorage.removeItem('moneymate-query-cache');
     setAccessToken(null);
     set({ user: null });
   },
   unlockWithBiometrics: async () => {
-    if (!await LocalAuthentication.hasHardwareAsync() || !await LocalAuthentication.isEnrolledAsync()) return false;
+    if (
+      !(await LocalAuthentication.hasHardwareAsync()) ||
+      !(await LocalAuthentication.isEnrolledAsync())
+    )
+      return false;
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: 'Mở khóa MoneyMate',
       cancelLabel: 'Hủy',
-      disableDeviceFallback: false
+      disableDeviceFallback: false,
     });
     return result.success;
   },
   updateCachedUser: async (user) => {
     const currentDeviceId = await getDeviceId();
-    await sessionStorage.setUser(JSON.stringify({ user, deviceId: currentDeviceId }));
+    await sessionStorage.setUser(
+      JSON.stringify({ user, deviceId: currentDeviceId }),
+    );
     set({ user });
   },
   expireSession: async () => {
     await sessionStorage.clear().catch(() => undefined);
-    await keyValueStorage.removeItem('moneymate-query-cache').catch(() => undefined);
+    await keyValueStorage
+      .removeItem('moneymate-query-cache')
+      .catch(() => undefined);
     setAccessToken(null);
-    set({ user: null, initialized: true, loading: false, error: 'Phiên đăng nhập đã hết hạn' });
+    set({
+      user: null,
+      initialized: true,
+      loading: false,
+      error: 'Phiên đăng nhập đã hết hạn',
+    });
   },
 }));

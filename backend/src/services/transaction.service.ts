@@ -67,6 +67,12 @@ export class TransactionService {
     if (!wallet || wallet.userId !== userId) {
       throw new AppError('Wallet not found or unauthorized', 404);
     }
+    if (
+      data.type === TransactionType.EXPENSE &&
+      Number(wallet.initialBalance) < data.amount
+    ) {
+      throw new AppError('Số dư không đủ', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
+    }
 
     // 2. Verify category ownership/existence
     const category = await this.categoryRepository.findById(data.categoryId);
@@ -128,7 +134,7 @@ export class TransactionService {
   }
 
   async getTransactions(userId: string, query: Omit<TransactionFilter, 'userId'>) {
-    const filter: TransactionFilter = { ...query, userId };
+    const filter: TransactionFilter = { ...query, userId, excludeTransfers: true };
     const transactions = await this.transactionRepository.findAll(filter);
     const total = await this.transactionRepository.count(filter);
 
@@ -216,11 +222,9 @@ export class TransactionService {
       throw new AppError('Transfers must be changed through the transfer workflow', 400);
     }
 
-    {
-      const wallet = await this.walletRepository.findById(targetWalletId);
-      if (!wallet || wallet.userId !== userId) {
-        throw new AppError('Target wallet not found or unauthorized', 404);
-      }
+    const targetWallet = await this.walletRepository.findById(targetWalletId);
+    if (!targetWallet || targetWallet.userId !== userId) {
+      throw new AppError('Target wallet not found or unauthorized', 404);
     }
 
     const category = await this.categoryRepository.findById(targetCategoryId);
@@ -235,8 +239,19 @@ export class TransactionService {
     }
 
     const oldAmount = new Prisma.Decimal(oldTx.amount);
-    const newAmount = data.amount ? new Prisma.Decimal(data.amount) : oldAmount;
+    const newAmount = data.amount !== undefined ? new Prisma.Decimal(data.amount) : oldAmount;
     const oldType = oldTx.type;
+    const availableBalance = Number(targetWallet.initialBalance) - (
+      oldType === TransactionType.INCOME && oldTx.walletId === targetWalletId
+        ? Number(oldTx.amount)
+        : 0
+    );
+    if (
+      newType === TransactionType.EXPENSE &&
+      availableBalance < Number(newAmount)
+    ) {
+      throw new AppError('Số dư không đủ', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
+    }
 
     const updatedTransaction = await prisma.$transaction(async (tx) => {
       // 1. Reverse an old income credit. Expenses never mutate wallet amounts.
@@ -378,6 +393,7 @@ export class TransactionService {
     // Top 5 recent transactions
     const recentTransactions = await this.transactionRepository.findAll({
       userId,
+      excludeTransfers: true,
       take: 5,
       sortBy: 'transactionDate',
       order: 'desc'

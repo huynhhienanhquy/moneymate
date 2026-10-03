@@ -1,4 +1,7 @@
-const storage = typeof globalThis.localStorage === 'undefined' ? null : globalThis.localStorage;
+const storage =
+  typeof globalThis.localStorage === 'undefined'
+    ? null
+    : globalThis.localStorage;
 
 export const keyValueStorage = {
   getItem: (key: string) => Promise.resolve(storage?.getItem(key) ?? null),

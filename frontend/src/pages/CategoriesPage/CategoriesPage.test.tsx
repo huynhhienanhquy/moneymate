@@ -14,6 +14,6 @@ describe('CategoriesPage', () => {
   it('opens the category form', () => {
     renderPage(CategoriesPage);
     act(() => fireEvent.click(screen.getByRole('button', { name: /Thêm danh mục/ })));
-    expect(screen.getAllByText('Thêm danh mục').length).toBeGreaterThan(1);
+    expect(screen.getByRole('heading', { name: 'Thêm danh mục' })).toBeInTheDocument();
   });
 });

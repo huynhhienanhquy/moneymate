@@ -10,15 +10,25 @@ function isExpoGo(): boolean {
   return Constants.executionEnvironment === 'storeClient';
 }
 
-async function getNotifications(): Promise<typeof import('expo-notifications')> {
+async function getNotifications(): Promise<
+  typeof import('expo-notifications')
+> {
   if (_Notifications) return _Notifications;
-  if (isExpoGo()) throw new Error('expo-notifications không hỗ trợ trên Expo Go. Hãy dùng development build.');
+  if (isExpoGo())
+    throw new Error(
+      'expo-notifications không hỗ trợ trên Expo Go. Hãy dùng development build.',
+    );
   const Notifications = await import('expo-notifications');
   _Notifications = Notifications;
   if (!_initialized) {
     _initialized = true;
     Notifications.setNotificationHandler({
-      handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: true })
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: false,
+        shouldSetBadge: true,
+      }),
     });
   }
   return Notifications;
@@ -32,17 +42,19 @@ export async function registerForPushNotifications() {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('money-alerts', {
       name: 'Cảnh báo tài chính',
-      importance: Notifications.AndroidImportance.HIGH
+      importance: Notifications.AndroidImportance.HIGH,
     });
   }
   const permission = await Notifications.requestPermissionsAsync();
   if (!permission.granted) throw new Error('Bạn chưa cấp quyền thông báo');
-  const projectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID
-    || Constants.expoConfig?.extra?.eas?.projectId
-    || Constants.easConfig?.projectId;
+  const projectId =
+    process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||
+    Constants.expoConfig?.extra?.eas?.projectId ||
+    Constants.easConfig?.projectId;
   if (!projectId) throw new Error('Thiếu EXPO_PUBLIC_EAS_PROJECT_ID');
-  const pushToken = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-  const cached = JSON.parse(await sessionStorage.getUser() || '{}');
+  const pushToken = (await Notifications.getExpoPushTokenAsync({ projectId }))
+    .data;
+  const cached = JSON.parse((await sessionStorage.getUser()) || '{}');
   if (!cached.deviceId) throw new Error('Không tìm thấy mã thiết bị');
   await apiRequest('/notifications/devices', {
     method: 'POST',
@@ -53,8 +65,8 @@ export async function registerForPushNotifications() {
       provider: 'expo',
       appVersion: '1.0.0',
       locale: Intl.DateTimeFormat().resolvedOptions().locale,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    })
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    }),
   });
   return pushToken;
 }

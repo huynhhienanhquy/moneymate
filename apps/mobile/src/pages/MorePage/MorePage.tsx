@@ -1,34 +1,134 @@
 import { useMemo } from 'react';
-import { Link, type Href } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Card, Screen, SectionTitle, useUiStyles } from '@/components/ui';
+import { AppIcon, type AppIconName } from '@/components/app-icon';
+import { Screen } from '@/components/ui';
 import { useAppTheme, type AppTheme } from '@/theme';
-import { useAuthStore } from '@/stores/auth.store';
 
-const items = [
-  { href: '/wallets', label: 'Ví tài khoản', caption: 'Số dư và chuyển tiền', icon: 'wallet-outline' },
-  { href: '/categories', label: 'Danh mục', caption: 'Phân loại thu và chi', icon: 'shape-outline' },
-  { href: '/saving-goals', label: 'Mục tiêu', caption: 'Theo dõi kế hoạch tiết kiệm', icon: 'target' },
-  { href: '/recurring', label: 'Định kỳ', caption: 'Tự động hóa giao dịch', icon: 'calendar-sync-outline' },
-  { href: '/reports', label: 'Báo cáo', caption: 'Xu hướng và phân tích', icon: 'chart-box-outline' },
-  { href: '/monthly-balance', label: 'Tiết kiệm tháng', caption: 'Dòng tiền theo từng tháng', icon: 'chart-timeline-variant' },
-  { href: '/notifications', label: 'Thông báo', caption: 'Cảnh báo và nhắc việc', icon: 'bell-outline' },
-  { href: '/(tabs)/profile', label: 'Hồ sơ & bảo mật', caption: 'Tài khoản và thiết bị', icon: 'account-cog-outline' }
-] as const;
+type MenuItem = {
+  href: Href;
+  label: string;
+  icon: AppIconName;
+  pro?: boolean;
+  sectionStart?: boolean;
+};
+
+const items: MenuItem[] = [
+  { href: '/(tabs)', label: 'Tổng quan', icon: 'view-grid-outline' },
+  { href: '/wallets', label: 'Ví tài khoản', icon: 'wallet-outline' },
+  {
+    href: '/(tabs)/transactions',
+    label: 'Giao dịch',
+    icon: 'receipt-text-outline',
+  },
+  { href: '/categories', label: 'Danh mục', icon: 'tag-outline' },
+  { href: '/(tabs)/budgets', label: 'Ngân sách', icon: 'piggy-bank-outline' },
+  {
+    href: '/saving-goals',
+    label: 'Mục tiêu',
+    icon: 'bullseye-arrow',
+    sectionStart: true,
+  },
+  { href: '/recurring', label: 'Định kỳ', icon: 'sync' },
+  { href: '/reports', label: 'Báo cáo', icon: 'chart-bar' },
+  {
+    href: '/monthly-balance',
+    label: 'Tiết kiệm tháng',
+    icon: 'wallet-plus-outline',
+  },
+  {
+    href: '/(tabs)/advisor',
+    label: 'AI Tài chính',
+    icon: 'creation',
+    pro: true,
+    sectionStart: true,
+  },
+  { href: '/(tabs)/profile', label: 'Hồ sơ', icon: 'account-outline' },
+];
 
 export default function MorePage() {
-  const ui = useUiStyles();
   const { theme } = useAppTheme();
-  const user = useAuthStore((state) => state.user);
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const visibleItems = user?.role === 'ADMIN' ? [...items, { href: '/admin', label: 'Quản trị', caption: 'Người dùng và phân quyền', icon: 'shield-account-outline' } as const] : items;
-  return <Screen title="Khám phá"><SectionTitle title="Tất cả tính năng" caption="Cùng hệ thống chức năng với MoneyMate Web" /><View style={styles.grid}>{visibleItems.map((item) => <Link key={item.href} href={item.href as Href} asChild><Pressable style={styles.item}><View style={styles.icon}><MaterialCommunityIcons name={item.icon} size={25} color={theme.colors.primary} /></View><Text style={ui.text}>{item.label}</Text><Text style={[ui.muted, styles.center]}>{item.caption}</Text></Pressable></Link>)}</View><Card><View style={ui.row}><MaterialCommunityIcons name="shield-check-outline" size={24} color={theme.colors.success} /><View style={{ flex: 1 }}><Text style={ui.text}>Dữ liệu luôn được bảo vệ</Text><Text style={ui.muted}>SecureStore, khóa sinh trắc học và đồng bộ đa thiết bị.</Text></View></View></Card></Screen>;
+  const router = useRouter();
+
+  return (
+    <Screen title="Thêm" showTopBar={false} bottomNav={false} decorated={false}>
+      <View style={styles.menu}>
+        {items.map((item) => (
+          <Pressable
+            key={item.label}
+            accessibilityRole="button"
+            onPress={() => router.push(item.href)}
+            style={({ pressed }) => [
+              styles.item,
+              item.sectionStart && styles.sectionStart,
+              item.pro && styles.proItem,
+              pressed && styles.pressed,
+            ]}
+          >
+            <AppIcon
+              name={item.icon}
+              size={24}
+              color={item.pro ? theme.colors.primary : theme.colors.muted}
+            />
+            <Text style={[styles.label, item.pro && styles.proLabel]}>
+              {item.label}
+            </Text>
+            {item.pro && (
+              <View style={styles.proBadge}>
+                <Text style={styles.proBadgeText}>PRO</Text>
+              </View>
+            )}
+          </Pressable>
+        ))}
+      </View>
+    </Screen>
+  );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md },
-  item: { width: '48%', minHeight: 150, padding: theme.spacing.lg, gap: theme.spacing.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.lg, shadowColor: theme.colors.shadow, shadowOpacity: theme.dark ? 0.18 : 0.07, shadowRadius: 10, shadowOffset: { width: 0, height: 6 } },
-  icon: { width: theme.sizes.featureTile, height: theme.sizes.featureTile, borderRadius: theme.radius.lg, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primarySoft },
-  center: { textAlign: 'center' }
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    menu: {
+      marginHorizontal: -theme.sizes.screenGutter,
+      paddingVertical: theme.spacing.xs,
+      backgroundColor: theme.colors.surface,
+    },
+    item: {
+      minHeight: 60,
+      paddingHorizontal: theme.spacing.md + 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+    },
+    sectionStart: { marginTop: theme.spacing.sm + 3 },
+    proItem: {
+      marginLeft: theme.spacing.xs,
+      marginRight: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md - 2,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.primarySoft,
+    },
+    label: {
+      flex: 1,
+      color: theme.colors.muted,
+      fontSize: theme.typography.body + 1,
+      fontWeight: '700',
+    },
+    proLabel: { color: theme.colors.primaryStrong, fontWeight: '900' },
+    proBadge: {
+      minWidth: 48,
+      height: 30,
+      paddingHorizontal: theme.spacing.sm + 2,
+      borderRadius: theme.radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.dark ? theme.colors.primaryBorder : '#CFD9FF',
+    },
+    proBadgeText: {
+      color: theme.colors.primary,
+      fontSize: theme.typography.caption,
+      fontWeight: '900',
+    },
+    pressed: { opacity: 0.62 },
+  });

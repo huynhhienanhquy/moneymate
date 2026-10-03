@@ -27,6 +27,9 @@
   body {
     @apply antialiased text-slate-800 dark:text-slate-100 selection:bg-brand-500/20 selection:text-brand-600 dark:selection:text-brand-400;
     min-height: 100vh;
+    font-family: theme('fontFamily.sans');
+    font-size: 14px;
+    line-height: 1.5;
     background: theme('colors.background');
   }
 
@@ -151,7 +154,7 @@
 
   /* Standard Component Cards */
   .app-card {
-    @apply rounded-2xl border border-outline-variant/55 bg-surface-container-lowest shadow-md shadow-surface-dim/25 transition-all duration-slow dark:border-slate-800/80 dark:bg-slate-900 dark:shadow-black/30;
+    @apply rounded-card border border-outline-variant/55 bg-surface-container-lowest shadow-summary transition-all duration-slow dark:border-slate-800/80 dark:bg-slate-900 dark:shadow-black/30;
   }
 
   .app-card-hover {
@@ -201,20 +204,20 @@
 
   /* Form Elements */
   .app-input {
-    @apply w-full rounded-xl border border-slate-200/90 bg-white/90 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition-all duration-normal focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-400 dark:focus:bg-slate-800 dark:focus:ring-brand-500/20;
+    @apply min-h-11 w-full rounded-xl border border-outline-variant/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 placeholder:font-normal placeholder:text-slate-400 shadow-sm transition-all duration-normal focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-400 dark:focus:bg-slate-800 dark:focus:ring-brand-500/20;
   }
 
   .app-select {
-    @apply w-full rounded-xl border border-slate-200/90 bg-white/90 px-4 py-2.5 text-sm text-slate-800 shadow-sm transition-all duration-normal focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-brand-400 dark:focus:bg-slate-800 dark:focus:ring-brand-500/20;
+    @apply min-h-11 w-full rounded-xl border border-outline-variant/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition-all duration-normal focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-brand-400 dark:focus:bg-slate-800 dark:focus:ring-brand-500/20;
   }
 
   /* Buttons */
   .app-primary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition-all duration-normal hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-blue-600/30 active:translate-y-0 active:scale-press disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-action-button transition-all duration-normal hover:-translate-y-0.5 hover:bg-primary-hover active:translate-y-0 active:scale-press disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
   }
 
   .app-secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/90 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-normal hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 active:translate-y-0 active:scale-press dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-outline-variant/70 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-normal hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-primary active:translate-y-0 active:scale-press dark:border-slate-700/80 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-100;
   }
 
   .app-danger-button {
@@ -247,8 +250,10 @@
   }
 
   .app-page-header {
-    @apply relative flex min-h-[154px] flex-col justify-between gap-5 overflow-hidden rounded-[18px] border border-blue-400/20 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-900 p-6 text-white shadow-hero md:flex-row md:items-center md:p-8;
+    @apply relative flex min-h-[162px] flex-col justify-between gap-6 overflow-hidden rounded-hero border border-blue-400/20 bg-gradient-to-r from-primary-container via-blue-700 to-on-primary-fixed-variant p-6 text-white shadow-hero md:flex-row md:items-center md:px-8 md:py-7;
   }
+
+  .app-page-header-hero { @apply min-h-[248px] md:px-8 md:py-9; }
 
   .app-page-header::after {
     content: '';
@@ -262,7 +267,7 @@
 
   .app-page-header h1 { @apply text-white; }
   .app-page-header .app-title-eyebrow {
-    @apply inline-flex w-fit items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-blue-100;
+    @apply inline-flex w-fit items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-badge font-bold uppercase tracking-wider text-blue-100;
   }
   .app-page-header .app-title-eyebrow::before {
     content: '';
@@ -271,12 +276,17 @@
   .app-page-header .app-primary-button,
   .app-page-header [class*="bg-action"],
   .app-page-header [class*="bg-accent"] {
-    @apply min-h-11 rounded-xl bg-white px-5 font-bold text-blue-700 shadow-lg shadow-blue-950/20 hover:bg-blue-50;
+    @apply min-h-11 rounded-xl bg-white px-5 font-bold text-primary shadow-lg shadow-blue-950/20 hover:bg-blue-50;
   }
   .app-page-header .app-secondary-button,
   .app-page-header button[class*="border"] {
     @apply min-h-11 border-white/20 bg-white/10 text-white hover:border-white/40 hover:bg-white/15 hover:text-white;
   }
+
+  .app-section-title { @apply text-section-title font-bold tracking-tight text-on-surface dark:text-white; }
+  .app-card-title { @apply text-card-title font-bold tracking-tight text-on-surface dark:text-slate-100; }
+  .app-overline { @apply text-xs font-bold uppercase tracking-wide text-on-surface-variant dark:text-slate-400; }
+  .app-caption { @apply text-xs leading-5 text-on-surface-variant dark:text-slate-400; }
 
   .app-empty-state {
     @apply flex flex-col items-center justify-center py-20 text-slate-500 dark:text-slate-400;
@@ -524,4 +534,5 @@ input:-webkit-autofill:focus {
 
 @media (max-width: theme('screens.md')) {
   .app-page-header { min-height: 142px; }
+  .app-page-header-hero { min-height: 220px; }
 }

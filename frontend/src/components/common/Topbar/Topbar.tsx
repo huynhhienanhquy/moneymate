@@ -28,7 +28,7 @@ const Topbar = ({ user, theme, currentPage, onMenuOpen, onThemeToggle }: TopbarP
       <NotificationBell />
       <Link to={APP_ROUTES.profile} aria-label="Mở hồ sơ" className="flex items-center gap-2 rounded-xl p-1 pr-2 transition hover:bg-slate-50 dark:hover:bg-slate-800">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-sm font-extrabold text-white shadow-sm">{user?.fullName ? user.fullName[0].toUpperCase() : <UserIcon className="size-icon-small" />}</span>
-        <span className="hidden min-w-0 text-left lg:block"><strong className="block max-w-32 truncate text-xs font-bold text-slate-900 dark:text-white">{user?.fullName || 'Người dùng'}</strong><small className="block text-[10px] text-slate-500">Premium Plan</small></span>
+        <span className="hidden min-w-0 text-left lg:block"><strong className="block max-w-32 truncate text-body-small font-bold text-slate-900 dark:text-white">{user?.fullName || 'Người dùng'}</strong><small className="block text-caption text-slate-500">Premium Plan</small></span>
       </Link>
     </div>
   </header>

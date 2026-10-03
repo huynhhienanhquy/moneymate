@@ -24,6 +24,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { ExpenseTool } from '@/components/MoneyMateCopilot/ExpenseTool';
 import { AppControlTools } from '@/components/MoneyMateCopilot/AppControlTools';
+import { DataMutationTools } from '@/components/MoneyMateCopilot/DataMutationTools';
 import { toLocalDateInputValue } from '@/utils/dateInput';
 
 type CopilotKitErrorEvent = Parameters<
@@ -45,6 +46,14 @@ interface MoneyMateCopilotProviderProps {
 
 const COPILOT_SUGGESTIONS = [
   { title: 'Ghi khoản chi', message: 'Hôm nay ăn uống hết 12 đ.' },
+  {
+    title: 'Thêm giao dịch định kỳ',
+    message: 'Tạo khoản chi tiền Internet 250 nghìn hàng tháng.',
+  },
+  {
+    title: 'Thêm danh mục',
+    message: 'Tạo danh mục chi tiêu tên Thú cưng.',
+  },
   {
     title: 'Chi tiêu nổi bật',
     message: 'Tháng này tôi chi nhiều nhất ở đâu?',
@@ -73,12 +82,18 @@ const MoneyMateCopilotStatusContext = createContext<MoneyMateCopilotStatus>({
 });
 
 export const getCopilotErrorMessage = (event: CopilotKitErrorEvent): string => {
-  const eventError = event.error as { code?: unknown; message?: unknown } | undefined;
+  const eventError = event.error as
+    | { code?: unknown; message?: unknown }
+    | undefined;
   const code = String(eventError?.code ?? '').toLowerCase();
   const detail = `${code} ${String(eventError?.message ?? '')}`.toLowerCase();
   const source = event.context.source;
 
-  if (/insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/.test(detail)) {
+  if (
+    /insufficient_quota|credit_balance_exhausted|no credits remaining|exceeded your current quota/.test(
+      detail,
+    )
+  ) {
     return 'MoneyMate AI chưa hoạt động vì tài khoản API đã hết credit. Vui lòng cập nhật thanh toán API rồi thử lại.';
   }
   if (/invalid_api_key|incorrect api key/.test(detail)) {
@@ -90,7 +105,12 @@ export const getCopilotErrorMessage = (event: CopilotKitErrorEvent): string => {
   if (code.includes('agent') || source === 'agent') {
     return 'MoneyMate AI chưa thể xử lý yêu cầu này. Vui lòng thử lại.';
   }
-  if (code.includes('runtime') || code.includes('connect') || code.includes('network') || source === 'network') {
+  if (
+    code.includes('runtime') ||
+    code.includes('connect') ||
+    code.includes('network') ||
+    source === 'network'
+  ) {
     return 'Không thể kết nối MoneyMate AI. Vui lòng kiểm tra kết nối và thử lại.';
   }
   return 'MoneyMate AI đang gặp sự cố tạm thời. Vui lòng thử lại sau.';
@@ -101,7 +121,10 @@ const MoneyMateCopilotBindings = () => {
   const theme = useThemeStore((state) => state.theme);
   const [localDate, setLocalDate] = useState(() => toLocalDateInputValue());
   useEffect(() => {
-    const timer = setInterval(() => setLocalDate(toLocalDateInputValue()), 60_000);
+    const timer = setInterval(
+      () => setLocalDate(toLocalDateInputValue()),
+      60_000,
+    );
     return () => clearInterval(timer);
   }, []);
   const appContext = useMemo(
@@ -117,7 +140,8 @@ const MoneyMateCopilotBindings = () => {
   );
 
   useAgentContext({
-    description: 'Ngữ cảnh giao diện MoneyMate hiện tại; không dùng để xác thực người dùng.',
+    description:
+      'Ngữ cảnh giao diện MoneyMate hiện tại; không dùng để xác thực người dùng.',
     value: appContext,
   });
 
@@ -133,12 +157,14 @@ const MoneyMateCopilotBindings = () => {
   return (
     <>
       <ExpenseTool />
+      <DataMutationTools />
       <AppControlTools />
     </>
   );
 };
 
-export const useMoneyMateCopilotStatus = () => useContext(MoneyMateCopilotStatusContext);
+export const useMoneyMateCopilotStatus = () =>
+  useContext(MoneyMateCopilotStatusContext);
 
 export const MoneyMateCopilotProvider = ({
   children,
@@ -168,20 +194,27 @@ export const MoneyMateCopilotProvider = ({
     errorTimer.current = setTimeout(() => setErrorMessage(null), 8000);
   }, []);
 
-  useEffect(() => () => {
-    if (errorTimer.current) clearTimeout(errorTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (errorTimer.current) clearTimeout(errorTimer.current);
+    },
+    [],
+  );
 
   if (!enabled || isInitializing || !isAuthenticated || !accessToken) {
     return (
-      <MoneyMateCopilotStatusContext.Provider value={{ mode: enabled ? 'waiting' : 'fallback', errorMessage: null }}>
+      <MoneyMateCopilotStatusContext.Provider
+        value={{ mode: enabled ? 'waiting' : 'fallback', errorMessage: null }}
+      >
         {children}
       </MoneyMateCopilotStatusContext.Provider>
     );
   }
 
   return (
-    <MoneyMateCopilotStatusContext.Provider value={{ mode: 'copilot', errorMessage }}>
+    <MoneyMateCopilotStatusContext.Provider
+      value={{ mode: 'copilot', errorMessage }}
+    >
       <CopilotKit
         runtimeUrl={runtimeUrl}
         headers={headers}

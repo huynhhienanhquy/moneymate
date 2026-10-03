@@ -52,6 +52,15 @@ const TransactionModal: React.FC<{
   }, [wallets, tx, prefill]);
 
   const filteredCats = categories.filter((c: any) => c.type === form.type);
+  const selectedWallet = wallets.find((wallet: any) => wallet.id === form.walletId);
+  const availableBalance = selectedWallet
+    ? Number(selectedWallet.initialBalance) - (
+      tx?.type === 'INCOME' && tx.walletId === form.walletId ? Number(tx.amount) : 0
+    )
+    : 0;
+  const insufficientBalance = form.type === 'EXPENSE'
+    && !!selectedWallet
+    && Number(form.amount) > availableBalance;
 
   const handleSave = async () => {
     if (!form.walletId || !form.categoryId || !form.amount) {
@@ -59,6 +68,10 @@ const TransactionModal: React.FC<{
       return;
     }
     const amount = Number(form.amount);
+    if (insufficientBalance) {
+      setSaveError('Số dư không đủ');
+      return;
+    }
     setSaveError('');
     try {
       await onSave({ ...form, amount, transactionDate: new Date(form.transactionDate) }, receiptFile || undefined);
@@ -189,7 +202,7 @@ const TransactionModal: React.FC<{
             {loading ? 'Đang xử lý...' : tx ? 'Lưu' : 'Thêm giao dịch'}
           </AppButton>
         </div>
-        {saveError && <p role="alert" className="text-xs text-rose-400 text-center mt-2">{saveError}</p>}
+        {(saveError || insufficientBalance) && <p role="alert" className="text-xs text-rose-400 text-center mt-2">{insufficientBalance ? 'Số dư không đủ' : saveError}</p>}
         {!loading && !saveError && (!form.walletId || !form.categoryId || !form.amount) && (
           <p className="text-xs text-amber-400 text-center mt-2">
             {!form.walletId ? 'Vui lòng chọn ví' : !form.categoryId ? 'Vui lòng chọn danh mục' : 'Vui lòng nhập số tiền'}
@@ -293,7 +306,7 @@ const TransactionsPage: React.FC = () => {
     setShowModal(true);
   };
 
-  const transactions: any[] = data?.transactions || [];
+  const transactions: any[] = (data?.transactions || []).filter((transaction: any) => transaction.type !== 'TRANSFER');
   const total: number = data?.pagination?.total || 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -326,7 +339,7 @@ const TransactionsPage: React.FC = () => {
 
       <div className="mt-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <PeriodNavigator label={`Tháng ${month}/${year}`} onPrevious={previousMonth} onNext={nextMonth} previousLabel="Tháng trước" nextLabel="Tháng sau" />
-        <div className="hidden text-right sm:block"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Giao dịch đã ghi</p><p className="text-lg font-extrabold text-slate-900 dark:text-white">{total} bản ghi</p></div>
+        <div className="hidden text-right sm:block"><p className="text-badge font-bold uppercase tracking-wider text-slate-400">Giao dịch đã ghi</p><p className="text-lg font-extrabold text-slate-900 dark:text-white">{total} bản ghi</p></div>
       </div>
 
       {/* Filters */}
@@ -379,10 +392,10 @@ const TransactionsPage: React.FC = () => {
               <table className="w-full min-w-table-compact table-fixed">
                 <thead>
                   <tr className="border-b border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-900">
-                    <th className="w-transaction-description px-3 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Giao dịch</th>
-                    <th className="w-transaction-wallet px-2 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ví</th>
-                    <th className="w-transaction-date px-2 py-2.5 text-left text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ngày</th>
-                    <th className="w-transaction-amount px-3 py-2.5 text-right text-micro font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Số tiền</th>
+                    <th className="w-transaction-description px-3 py-3 text-left text-badge font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Giao dịch</th>
+                    <th className="w-transaction-wallet px-2 py-3 text-left text-badge font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ví</th>
+                    <th className="w-transaction-date px-2 py-3 text-left text-badge font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Ngày</th>
+                    <th className="w-transaction-amount px-3 py-3 text-right text-badge font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Số tiền</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -393,30 +406,30 @@ const TransactionsPage: React.FC = () => {
                       <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
                         <td className="px-3 py-2.5">
                           <div className="flex items-center gap-2">
-                            <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-100 dark:bg-rose-500/10'}`}>
-                              <TransactionIcon  className={"size-icon-tiny " + (isIncome ? 'text-emerald-600' : 'text-rose-500')} />
+                            <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${isIncome ? 'bg-emerald-100 dark:bg-emerald-500/10' : 'bg-rose-100 dark:bg-rose-500/10'}`}>
+                              <TransactionIcon  className={"size-icon-caption " + (isIncome ? 'text-emerald-600' : 'text-rose-500')} />
                             </div>
                             <div className="min-w-0">
                               {tx.type === 'TRANSFER' ? (
-                                <p className="block max-w-full truncate py-0.5 text-left text-mini font-bold leading-heading text-slate-950 dark:text-slate-100">{tx.note || 'Chuyển tiền'}</p>
+                                <p className="block max-w-full truncate py-0.5 text-left text-body-small font-bold leading-heading text-slate-950 dark:text-slate-100">{tx.note || 'Chuyển tiền'}</p>
                               ) : (
-                                <AppButton unstyled type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-mini font-bold leading-heading text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</AppButton>
+                                <AppButton unstyled type="button" onClick={() => setEditTx(tx)} className="block max-w-full truncate py-0.5 text-left text-body-small font-bold leading-heading text-slate-950 hover:text-blue-600 dark:text-slate-100">{tx.note || tx.category?.name}</AppButton>
                               )}
                               <div className="mt-0.5 flex items-center gap-1">
                                 <span className="inline-block h-1 w-1 rounded-full" style={{ background: tx.category?.color || 'rgb(var(--ui-muted))' }}></span>
-                                <p className="truncate text-micro leading-section text-slate-500">{tx.category?.name}</p>
+                                <p className="truncate text-caption leading-section text-slate-500">{tx.category?.name}</p>
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-2 py-2.5">
-                          <span className="inline-flex max-w-full truncate rounded bg-slate-100 px-2 py-1 text-micro font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{tx.wallet?.name}</span>
+                          <span className="inline-flex max-w-full truncate rounded-md bg-slate-100 px-2.5 py-1 text-caption font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{tx.wallet?.name}</span>
                         </td>
                         <td className="px-2 py-2.5">
-                          <span className="whitespace-nowrap text-tiny text-slate-600 dark:text-slate-400">{new Date(tx.transactionDate).toLocaleDateString('vi-VN')}</span>
+                          <span className="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{new Date(tx.transactionDate).toLocaleDateString('vi-VN')}</span>
                         </td>
                         <td className="relative px-3 py-2.5 text-right">
-                          <span className={`whitespace-nowrap text-mini font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          <span className={`whitespace-nowrap text-body-small font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-500'}`}>
                             {isIncome ? '↑ +' : '↓ -'}{formatVND(Number(tx.amount))}
                           </span>
                           {tx.type !== 'TRANSFER' && <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 bg-white pl-2 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 dark:bg-slate-900">

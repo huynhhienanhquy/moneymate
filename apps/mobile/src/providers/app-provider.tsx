@@ -14,9 +14,12 @@ import { keyValueStorage } from '@/storage/key-value';
 import { OfflineProvider } from '@/providers/offline-provider';
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } }
+  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
 });
-const queryPersister = createAsyncStoragePersister({ storage: keyValueStorage, key: 'moneymate-query-cache' });
+const queryPersister = createAsyncStoragePersister({
+  storage: keyValueStorage,
+  key: 'moneymate-query-cache',
+});
 
 function SessionBootstrap({ children }: PropsWithChildren) {
   const initialize = useAuthStore((state) => state.initialize);
@@ -26,7 +29,9 @@ function SessionBootstrap({ children }: PropsWithChildren) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [privateScreen, setPrivateScreen] = useState(false);
 
-  useEffect(() => { initialize(); }, [initialize]);
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
   useEffect(() => {
     setSessionExpiredHandler(async () => {
       await expireSession();
@@ -35,11 +40,17 @@ function SessionBootstrap({ children }: PropsWithChildren) {
     return () => setSessionExpiredHandler(null);
   }, [expireSession, queryClient]);
   useEffect(() => {
-    ScreenCapture.preventScreenCaptureAsync('moneymate-private-data').catch(() => undefined);
-    const subscription = AppState.addEventListener('change', (state) => setPrivateScreen(state !== 'active'));
+    ScreenCapture.preventScreenCaptureAsync('moneymate-private-data').catch(
+      () => undefined,
+    );
+    const subscription = AppState.addEventListener('change', (state) =>
+      setPrivateScreen(state !== 'active'),
+    );
     return () => {
       subscription.remove();
-      ScreenCapture.allowScreenCaptureAsync('moneymate-private-data').catch(() => undefined);
+      ScreenCapture.allowScreenCaptureAsync('moneymate-private-data').catch(
+        () => undefined,
+      );
     };
   }, []);
 
@@ -47,9 +58,14 @@ function SessionBootstrap({ children }: PropsWithChildren) {
     <>
       {children}
       {privateScreen && (
-        <View style={styles.privacyShield} accessibilityLabel="Nội dung tài chính đã được ẩn">
+        <View
+          style={styles.privacyShield}
+          accessibilityLabel="Nội dung tài chính đã được ẩn"
+        >
           <Text style={styles.privacyTitle}>MoneyMate</Text>
-          <Text style={styles.privacyText}>Dữ liệu của bạn đang được bảo vệ</Text>
+          <Text style={styles.privacyText}>
+            Dữ liệu của bạn đang được bảo vệ
+          </Text>
         </View>
       )}
     </>
@@ -62,16 +78,26 @@ function NotificationNavigation() {
     if (Constants.executionEnvironment === 'storeClient') return;
     let cancelled = false;
     let subscription: { remove: () => void } | null = null;
-    void import('expo-notifications').then((Notifications) => {
-      if (cancelled) return;
-      const redirect = (response: import('expo-notifications').NotificationResponse | null) => {
-        if (!response) return;
-        const path = response.notification.request.content.data?.path;
-        if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) router.push(path as never);
-      };
-      redirect(Notifications.getLastNotificationResponse());
-      subscription = Notifications.addNotificationResponseReceivedListener(redirect);
-    }).catch(() => undefined);
+    void import('expo-notifications')
+      .then((Notifications) => {
+        if (cancelled) return;
+        const redirect = (
+          response: import('expo-notifications').NotificationResponse | null,
+        ) => {
+          if (!response) return;
+          const path = response.notification.request.content.data?.path;
+          if (
+            typeof path === 'string' &&
+            path.startsWith('/') &&
+            !path.startsWith('//')
+          )
+            router.push(path as never);
+        };
+        redirect(Notifications.getLastNotificationResponse());
+        subscription =
+          Notifications.addNotificationResponseReceivedListener(redirect);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
       subscription?.remove();
@@ -93,7 +119,11 @@ function AuthNavigation() {
       router.replace('/login');
     } else if (user && onAuthScreen) {
       router.replace('/(tabs)');
-    } else if (user && (segments[0] as string) === 'admin' && user.role !== 'ADMIN') {
+    } else if (
+      user &&
+      (segments[0] as string) === 'admin' &&
+      user.role !== 'ADMIN'
+    ) {
       router.replace('/(tabs)');
     }
   }, [initialized, queryClient, router, segments, user]);
@@ -102,7 +132,14 @@ function AuthNavigation() {
 
 export function AppProvider({ children }: PropsWithChildren) {
   return (
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: 24 * 60 * 60 * 1000, buster: 'v1' }}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: queryPersister,
+        maxAge: 24 * 60 * 60 * 1000,
+        buster: 'v1',
+      }}
+    >
       <OfflineProvider>
         <SessionBootstrap>
           <MobileChatbotProvider>
@@ -116,18 +153,19 @@ export function AppProvider({ children }: PropsWithChildren) {
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  privacyShield: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: theme.colors.background,
-    zIndex: 9999,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  privacyTitle: { color: theme.colors.text, fontSize: 30, fontWeight: '800' },
-  privacyText: { color: theme.colors.muted, marginTop: 8 }
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    privacyShield: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      backgroundColor: theme.colors.background,
+      zIndex: 9999,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    privacyTitle: { color: theme.colors.text, fontSize: 30, fontWeight: '800' },
+    privacyText: { color: theme.colors.muted, marginTop: 8 },
+  });

@@ -31,7 +31,7 @@ const NavigationLinks = ({ user, currentPath, onNavigate, mobile = false }: Pick
         >
           <Icon className={`${mobile ? 'size-4.5' : 'size-[18px]'} ${active ? 'text-blue-600 dark:text-blue-300' : 'text-slate-500 group-hover:text-slate-800 dark:text-slate-400'}`} />
           <span className="min-w-0 flex-1">{item.name}</span>
-          {item.name === 'AI Tài chính' && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">Pro</span>}
+          {item.name === 'AI Tài chính' && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-mini font-extrabold uppercase tracking-wide text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">Pro</span>}
         </Link>
       );
     })}
@@ -45,7 +45,7 @@ const Sidebar = ({ user, currentPath, theme, mobileOpen, onMobileOpenChange, onT
         <img src={APP_IMAGES.logo} alt="" className="h-9 w-9 rounded-xl object-cover shadow-sm" />
         <div>
           <span className="text-base font-extrabold tracking-tight text-blue-700 dark:text-blue-300">MoneyMate</span>
-          <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-slate-500 dark:text-slate-400">Smart Finance</p>
+          <p className="text-mini font-bold uppercase tracking-[0.13em] text-slate-500 dark:text-slate-400">Smart Finance</p>
         </div>
       </div>
 
@@ -57,7 +57,7 @@ const Sidebar = ({ user, currentPath, theme, mobileOpen, onMobileOpenChange, onT
             {theme === 'dark' ? <Sun className="size-4.5 text-amber-400" /> : <Sun className="size-4.5 text-slate-500" />}
             <span>{theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}</span>
           </div>
-          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-extrabold text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-300">{theme === 'dark' ? 'DARK' : 'LIGHT'}</span>
+          <span className="rounded-full bg-white px-2 py-0.5 text-badge font-extrabold text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-300">{theme === 'dark' ? 'DARK' : 'LIGHT'}</span>
         </button>
         <button onClick={onLogout} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10">
           <LogOut className="size-4.5" /><span>Đăng xuất</span>

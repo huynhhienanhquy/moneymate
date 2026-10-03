@@ -8,7 +8,8 @@ function getExpoDevHost() {
   if (!hostUri) return null;
 
   try {
-    return new URL(hostUri.includes('://') ? hostUri : `http://${hostUri}`).hostname;
+    return new URL(hostUri.includes('://') ? hostUri : `http://${hostUri}`)
+      .hostname;
   } catch {
     return null;
   }
@@ -34,7 +35,11 @@ let refreshPromise: Promise<string> | null = null;
 let sessionExpiredHandler: (() => void | Promise<void>) | null = null;
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public details?: unknown) {
+  constructor(
+    public status: number,
+    message: string,
+    public details?: unknown,
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -42,7 +47,12 @@ export class ApiError extends Error {
 
 async function parseResponse<T>(response: Response): Promise<T> {
   const payload = await response.json().catch(() => null);
-  if (!response.ok) throw new ApiError(response.status, payload?.message || 'Không thể kết nối máy chủ', payload?.errors);
+  if (!response.ok)
+    throw new ApiError(
+      response.status,
+      payload?.message || 'Không thể kết nối máy chủ',
+      payload?.errors,
+    );
   return payload.data as T;
 }
 
@@ -59,26 +69,37 @@ async function refreshSession() {
     try {
       const response = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
-        headers: refreshToken ? { 'Content-Type': 'application/json' } : undefined,
+        headers: refreshToken
+          ? { 'Content-Type': 'application/json' }
+          : undefined,
         body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
         credentials: Platform.OS === 'web' ? 'include' : undefined,
       });
-      const tokens = await parseResponse<{ accessToken: string; refreshToken?: string }>(response);
+      const tokens = await parseResponse<{
+        accessToken: string;
+        refreshToken?: string;
+      }>(response);
       if (Platform.OS !== 'web' && !tokens.refreshToken) {
         throw new ApiError(401, 'Máy chủ không trả refresh token cho thiết bị');
       }
       accessToken = tokens.accessToken;
-      if (tokens.refreshToken) await sessionStorage.setRefreshToken(tokens.refreshToken);
+      if (tokens.refreshToken)
+        await sessionStorage.setRefreshToken(tokens.refreshToken);
       return tokens.accessToken;
     } catch (error) {
-      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      if (
+        error instanceof ApiError &&
+        (error.status === 401 || error.status === 403)
+      ) {
         accessToken = null;
         await sessionStorage.clear().catch(() => undefined);
         await sessionExpiredHandler?.();
       }
       throw error;
     }
-  })().finally(() => { refreshPromise = null; });
+  })().finally(() => {
+    refreshPromise = null;
+  });
   return refreshPromise;
 }
 
@@ -86,20 +107,35 @@ export function setAccessToken(token: string | null) {
   accessToken = token;
 }
 
-export function setSessionExpiredHandler(handler: (() => void | Promise<void>) | null) {
+export function setSessionExpiredHandler(
+  handler: (() => void | Promise<void>) | null,
+) {
   sessionExpiredHandler = handler;
 }
 
-export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  init: RequestInit = {},
+  retry = true,
+): Promise<T> {
   const headers = new Headers(init.headers);
-  if (!(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+  if (!(init.body instanceof FormData))
+    headers.set('Content-Type', 'application/json');
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   const credentials = Platform.OS === 'web' ? 'include' : init.credentials;
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers, credentials });
+  const response = await fetch(`${API_URL}${path}`, {
+    ...init,
+    headers,
+    credentials,
+  });
   if (response.status === 401 && retry && !path.startsWith('/auth/')) {
     const token = await refreshSession();
     headers.set('Authorization', `Bearer ${token}`);
-    const retriedResponse = await fetch(`${API_URL}${path}`, { ...init, headers, credentials });
+    const retriedResponse = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers,
+      credentials,
+    });
     if (retriedResponse.status === 401 || retriedResponse.status === 403) {
       accessToken = null;
       await sessionStorage.clear().catch(() => undefined);
@@ -110,8 +146,29 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}, retry 
   return parseResponse<T>(response);
 }
 
-export const mobilePlatform: ClientPlatform = Platform.OS === 'ios'
-  ? 'ios'
-  : Platform.OS === 'android'
-    ? 'android'
-    : 'web';
+export async function apiDownload(
+  path: string,
+  retry = true,
+): Promise<Uint8Array> {
+  const headers = new Headers();
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+  const credentials = Platform.OS === 'web' ? 'include' : undefined;
+  let response = await fetch(`${API_URL}${path}`, { headers, credentials });
+  if (response.status === 401 && retry) {
+    const token = await refreshSession();
+    headers.set('Authorization', `Bearer ${token}`);
+    response = await fetch(`${API_URL}${path}`, { headers, credentials });
+  }
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new ApiError(
+      response.status,
+      payload?.message || 'Không thể tải báo cáo',
+      payload?.errors,
+    );
+  }
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+export const mobilePlatform: ClientPlatform =
+  Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'web';

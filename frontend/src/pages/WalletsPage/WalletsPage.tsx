@@ -86,7 +86,7 @@ const WalletsPage: React.FC = () => {
             <div className="flex flex-wrap gap-2">
               {wallets.map((wallet: any) => {
                 const share = totalBalance > 0 ? Math.round(Number(wallet.initialBalance) / totalBalance * 100) : 0;
-                return <span key={wallet.id} className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{wallet.name} ({share}%)</span>;
+                return <span key={wallet.id} className="rounded-full bg-slate-100 px-2.5 py-1 text-caption font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{wallet.name} ({share}%)</span>;
               })}
             </div>
           </div>
@@ -123,7 +123,7 @@ const WalletsPage: React.FC = () => {
                     <Icon className="size-5 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/65">{meta.label}</p>
+                    <p className="text-badge font-bold uppercase tracking-wider text-white/65">{meta.label}</p>
                     <p className="mt-1 truncate text-base font-extrabold text-white">{wallet.name}</p>
                   </div>
                   <div className="absolute right-3 top-3 flex gap-0.5 rounded-lg bg-slate-950/20 opacity-0 shadow-sm backdrop-blur transition group-hover:opacity-100 focus-within:opacity-100">
@@ -146,7 +146,7 @@ const WalletsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="relative mt-auto border-t border-white/15 pt-4">
-                  <p className="mb-1 text-[11px] font-semibold text-white/65">Số dư hiện tại</p>
+                  <p className="mb-1 text-caption font-semibold text-white/65">Số dư hiện tại</p>
                   <p className="text-2xl font-extrabold leading-none text-white">
                     {formatVND(Number(wallet.initialBalance))}
                   </p>

@@ -144,36 +144,34 @@ const ReportsPage: React.FC = () => {
         eyebrow="Thống kê"
         title="Báo cáo tài chính"
         actions={(
-          <div className="flex flex-wrap items-stretch gap-3">
-            <div className="flex rounded-xl bg-blue-950/25 p-1">
-              {(['monthly', 'yearly'] as const).map((t) => (
-                <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-20 rounded-lg px-4 py-2 text-sm font-semibold transition ${reportType === t ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-100 hover:bg-white/10'}`}>
-                  {t === 'monthly' ? 'Theo tháng' : 'Theo năm'}
-                </AppButton>
-              ))}
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="flex rounded-xl bg-blue-950/25 p-1">
+                {(['monthly', 'yearly'] as const).map((t) => (
+                  <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-24 rounded-lg px-4 py-2 text-sm font-bold transition ${reportType === t ? 'bg-white text-primary shadow-sm' : 'text-blue-100 hover:bg-white/10'}`}>
+                    {t === 'monthly' ? 'Theo tháng' : 'Theo năm'}
+                  </AppButton>
+                ))}
+              </div>
+              <PeriodNavigator label={reportType === 'monthly' ? `${MONTHS[month - 1]}, ${year}` : `Năm ${year}`} onPrevious={prevPeriod} onNext={nextPeriod} />
             </div>
             {reportType === 'monthly' && (
-              <>
+              <div className="flex items-center justify-end gap-2">
                 <AppButton unstyled onClick={() => handleExport('pdf')} disabled={!!exporting || isFuturePeriod}
                   className="app-secondary-button">
                   {exporting === 'pdf' ? <Loader2  className="size-icon-small animate-spin" /> : <FileText className="size-icon-small" />}
-                  <span>Xuất<br />PDF</span>
+                  <span>Xuất PDF</span>
                 </AppButton>
                 <AppButton unstyled onClick={() => handleExport('excel')} disabled={!!exporting || isFuturePeriod}
                   className="app-secondary-button">
                   {exporting === 'excel' ? <Loader2  className="size-icon-small animate-spin" /> : <FileSpreadsheet className="size-icon-small" />}
-                  <span>Xuất<br />Excel</span>
+                  <span>Xuất Excel</span>
                 </AppButton>
-              </>
+              </div>
             )}
           </div>
         )}
       />
-
-      {/* Period Navigator */}
-      <div className="flex items-center justify-end">
-        <PeriodNavigator label={reportType === 'monthly' ? `${MONTHS[month - 1]}, ${year}` : `Năm ${year}`} onPrevious={prevPeriod} onNext={nextPeriod} />
-      </div>
 
       {isFuturePeriod ? (
         <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 text-center shadow-summary dark:border-slate-700 dark:bg-slate-900/70">

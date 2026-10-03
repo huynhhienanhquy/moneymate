@@ -134,16 +134,14 @@ const BudgetsPage: React.FC = () => {
         eyebrow="Quản lý chi tiêu"
         title="Ngân sách"
         actions={(
-          <AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button">
-            <Plus className="size-4" /> Thêm Ngân sách
-          </AppButton>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <PeriodNavigator label={`Tháng ${month}, ${year}`} onPrevious={prev} onNext={next} previousLabel="Tháng trước" nextLabel="Tháng sau" />
+            <AppButton unstyled onClick={() => setShowModal(true)} className="app-primary-button">
+              <Plus className="size-4" /> Thêm ngân sách
+            </AppButton>
+          </div>
         )}
       />
-
-      {/* Period Navigator */}
-      <div className="mt-5 flex items-center justify-end">
-        <PeriodNavigator label={`Tháng ${month}, ${year}`} onPrevious={prev} onNext={next} previousLabel="Tháng trước" nextLabel="Tháng sau" />
-      </div>
 
       {isLoading ? (
         <div className="mt-6"><LoadingState /></div>
@@ -161,7 +159,7 @@ const BudgetsPage: React.FC = () => {
       ) : (
         <>
           {/* Summary cards */}
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <SummaryCard icon={<WalletCards className="size-4.5" />} label="Tổng ngân sách" value={formatVND(totalBudget)} tone="blue" variant="solid" caption={`${budgets.length} danh mục đã thiết lập`} />
             <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Đã chi" value={formatVND(totalSpent)} tone="red" variant="solid" caption={`${Math.round((totalSpent / Math.max(totalBudget, 1)) * 100)}% tổng ngân sách`} />
             <SummaryCard icon={<PiggyBank className="size-4.5" />} label="Còn lại" value={formatVND(totalRemaining)} tone="green" variant="solid" caption={`${Math.max(0, Math.round((totalRemaining / Math.max(totalBudget, 1)) * 100))}% khả dụng`} />

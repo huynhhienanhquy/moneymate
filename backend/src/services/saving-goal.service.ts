@@ -92,7 +92,7 @@ export class SavingGoalService {
     const wallet = await this.walletRepository.findById(data.walletId);
     if (!wallet || wallet.userId !== userId) throw new AppError('Wallet not found', 404);
     if (Number(wallet.initialBalance) < data.amount) {
-      throw new AppError('Insufficient wallet balance', 400);
+      throw new AppError('Số dư không đủ', 400, [], 'INSUFFICIENT_WALLET_BALANCE');
     }
 
     await this.savingGoalRepository.addGoalTransaction({
