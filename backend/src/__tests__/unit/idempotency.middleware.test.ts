@@ -111,4 +111,34 @@ describe('idempotency middleware', () => {
     expect(response.json).toHaveBeenCalledWith({ code: 'INTERNAL_ERROR', message: 'Unexpected failure' });
     expect(next).not.toHaveBeenCalled();
   });
+
+  it.each(['PUT', 'DELETE'])('replays a confirmed %s without repeating the mutation', async method => {
+    const request = {
+      header: () => 'copilot-operation', user: { id: 'owner-user' }, method,
+      baseUrl: '/api/transactions', path: '/tx-1',
+      body: method === 'PUT' ? { amount: 150000, version: 3 } : undefined,
+      query: method === 'DELETE' ? { version: 3 } : {},
+    };
+    const requestHash = createHash('sha256').update(JSON.stringify({
+      method, path: '/api/transactions/tx-1', body: request.body,
+      ...(method === 'DELETE' ? { query: request.query } : {}),
+    })).digest('hex');
+    mockPrisma.idempotencyRecord.create.mockRejectedValue(new Prisma.PrismaClientKnownRequestError('duplicate', { code: 'P2002', clientVersion: '5.12.1' }));
+    const body = { success: true, data: method === 'PUT' ? { id: 'tx-1', version: 4 } : null };
+    mockPrisma.idempotencyRecord.findUnique.mockResolvedValue({
+      key: 'copilot-operation', userId: 'owner-user', requestHash, status: 'COMPLETED', statusCode: 200,
+      responseBody: body, expiresAt: new Date(Date.now() + 60000),
+    });
+    const response = { status: jest.fn(), json: jest.fn() };
+    response.status.mockReturnValue(response);
+    const next = jest.fn();
+    await idempotency(request as never, response as never, next);
+    expect(response.status).toHaveBeenCalledWith(200);
+    expect(response.json).toHaveBeenCalledWith(body);
+    expect(next).not.toHaveBeenCalled();
+    if (method === 'DELETE') {
+      await idempotency({ ...request, query: { version: 4 } } as never, response as never, next);
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 409 }));
+    }
+  });
 });

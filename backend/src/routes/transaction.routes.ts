@@ -34,7 +34,7 @@ router.get('/', validateRequest(transactionListSchema), controller.getTransactio
 
 // Parameterized paths last
 router.get('/:id', controller.getTransaction);
-router.put('/:id', validateRequest(updateTransactionSchema), controller.updateTransaction);
-router.delete('/:id', validateRequest(deleteTransactionSchema), controller.deleteTransaction);
+router.put('/:id', validateRequest(updateTransactionSchema), idempotency, controller.updateTransaction);
+router.delete('/:id', validateRequest(deleteTransactionSchema), idempotency, controller.deleteTransaction);
 
 export default router;

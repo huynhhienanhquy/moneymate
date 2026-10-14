@@ -1,16 +1,29 @@
+import { Text } from '@/components/design-text';
 import { useMemo, type PropsWithChildren, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { AppIcon, type AppIconName } from '@/components/app-icon';
 import { Card, useUiStyles } from './ui';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+/**
+ * Format a monetary amount for display in Vietnamese dong.
+ *
+ * Use it to keep the finance workflow's presentation and interactions in one reusable UI boundary.
+ * @param value - The value to transform or evaluate.
+ * @returns The resulting finance value for the caller.
+ */
 export const money = (value: number | string = 0) =>
   Number(value).toLocaleString('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
     maximumFractionDigits: 0,
-  });
+  }) + ' đ';
 
+/**
+ * Render the icon tile interface.
+ *
+ * Use it to keep the finance workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered icon tile interface.
+ */
 export function IconTile({
   name,
   color,
@@ -29,15 +42,18 @@ export function IconTile({
         { backgroundColor: background || theme.colors.primarySoft },
       ]}
     >
-      <AppIcon
-        name={name}
-        size={theme.sizes.icon}
-        color={color || theme.colors.primary}
-      />
+      <AppIcon name={name} size={25} color={color || theme.colors.primary} />
     </View>
   );
 }
 
+/**
+ * Render the entity card interface.
+ *
+ * Use it to keep the finance workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered entity card interface.
+ */
 export function EntityCard({
   icon,
   title,
@@ -97,6 +113,13 @@ export function EntityCard({
   );
 }
 
+/**
+ * Render the action link interface.
+ *
+ * Use it to keep the finance workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered action link interface.
+ */
 export function ActionLink({
   label,
   icon,
@@ -130,11 +153,18 @@ export function ActionLink({
   );
 }
 
+/**
+ * Create theme-aware style definitions for the finance interface.
+ *
+ * Use it to keep the finance workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     icon: {
-      width: theme.touchTarget,
-      height: theme.touchTarget,
+      width: 50,
+      height: 50,
       borderRadius: theme.radius.md,
       alignItems: 'center',
       justifyContent: 'center',
@@ -147,7 +177,7 @@ const createStyles = (theme: AppTheme) =>
     value: {
       color: theme.colors.text,
       fontSize: theme.typography.body,
-      fontWeight: '900',
+      fontWeight: '700',
       maxWidth: 135,
     },
     action: {

@@ -2,6 +2,14 @@ import prisma from '../config/db';
 import { NotificationType, Prisma } from '@prisma/client';
 
 export class NotificationRepository {
+  /**
+   * Register device for the notification workflow.
+   *
+   * Use it from services that need notification persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to register device for the notification workflow.
+   * @returns A promise containing the resulting notification value.
+   */
   async registerDevice(userId: string, data: {
     deviceId: string;
     token: string;
@@ -30,6 +38,14 @@ export class NotificationRepository {
     });
   }
 
+  /**
+   * Unregister device for notification.
+   *
+   * Use it from services that need notification persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param deviceId - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting notification value.
+   */
   async unregisterDevice(userId: string, deviceId: string) {
     return prisma.deviceToken.updateMany({
       where: { userId, deviceId, isActive: true },
@@ -37,6 +53,13 @@ export class NotificationRepository {
     });
   }
 
+  /**
+   * Find active device tokens in the notification data source.
+   *
+   * Use it from services that need notification persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting notification value.
+   */
   async findActiveDeviceTokens(userId: string) {
     return prisma.deviceToken.findMany({
       where: { userId, isActive: true, provider: 'expo' },
@@ -44,10 +67,24 @@ export class NotificationRepository {
     });
   }
 
+  /**
+   * Deactivate device token for notification.
+   *
+   * Use it from services that need notification persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting notification value.
+   */
   async deactivateDeviceToken(id: string) {
     return prisma.deviceToken.updateMany({ where: { id }, data: { isActive: false } });
   }
 
+  /**
+   * Create notification for the notification workflow.
+   *
+   * Use it from services that need notification persistence.
+   * @param data - The input data required to create notification for the notification workflow.
+   * @returns A promise containing the resulting notification value.
+   */
   async create(data: {
     userId: string;
     title: string;
@@ -57,6 +94,14 @@ export class NotificationRepository {
     return prisma.notification.create({ data });
   }
 
+  /**
+   * Find all by user id in the notification data source.
+   *
+   * Use it from services that need notification persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param options - Settings that customize how the operation runs.
+   * @returns A promise containing the resulting notification value.
+   */
   async findAllByUserId(userId: string, options?: { unreadOnly?: boolean; take?: number }) {
     const where: Prisma.NotificationWhereInput = { userId };
     if (options?.unreadOnly) where.isRead = false;
@@ -68,10 +113,25 @@ export class NotificationRepository {
     });
   }
 
+  /**
+   * Count unread for notification.
+   *
+   * Use it from services that need notification persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting notification value.
+   */
   async countUnread(userId: string) {
     return prisma.notification.count({ where: { userId, isRead: false } });
   }
 
+  /**
+   * Mark as read for notification.
+   *
+   * Use it from services that need notification persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting notification value.
+   */
   async markAsRead(id: string, userId: string) {
     return prisma.notification.updateMany({
       where: { id, userId },
@@ -79,6 +139,13 @@ export class NotificationRepository {
     });
   }
 
+  /**
+   * Mark all as read for notification.
+   *
+   * Use it from services that need notification persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting notification value.
+   */
   async markAllAsRead(userId: string) {
     return prisma.notification.updateMany({
       where: { userId, isRead: false },
@@ -86,6 +153,14 @@ export class NotificationRepository {
     });
   }
 
+  /**
+   * Delete notification through the notification workflow.
+   *
+   * Use it from services that need notification persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting notification value.
+   */
   async delete(id: string, userId: string) {
     return prisma.notification.deleteMany({ where: { id, userId } });
   }

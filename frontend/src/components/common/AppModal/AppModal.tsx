@@ -17,6 +17,13 @@ interface AppModalProps {
  */
 const AppModal = ({ title, children, footer, onClose, className = '' }: AppModalProps) => {
   useEffect(() => {
+    /**
+     * Handle key down for the app modal workflow.
+     *
+     * Use it to keep the app modal workflow's presentation and interactions in one reusable UI boundary.
+     * @param event - The UI or runtime event that initiated the operation.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };

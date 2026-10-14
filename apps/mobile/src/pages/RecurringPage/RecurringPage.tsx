@@ -1,29 +1,26 @@
-import { useMemo, useState } from 'react';
 import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+  SummaryTile,
+  SectionHeading,
+  IconButton,
+  categoryAppearance,
+} from '@/components/design';
+import { Text, TextInput } from '@/components/design-text';
+import { useMemo, useState } from 'react';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AppIcon, type AppIconName } from '@/components/app-icon';
+import { AppIcon } from '@/components/app-icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Badge,
   Button,
   ChoiceChips,
   EmptyState,
   Field,
-  MetricCard,
   Screen,
-  SectionTitle,
   Sheet,
   StateMessage,
   useUiStyles,
 } from '@/components/ui';
-import { ActionLink, EntityCard, IconTile, money } from '@/components/finance';
+import { money } from '@/components/finance';
 import { apiRequest } from '@/lib/api';
 import type { Category, Wallet } from '@/types/api';
 import { useAppTheme, type AppTheme } from '@/theme';
@@ -43,6 +40,12 @@ interface Recurring {
   category: Category;
 }
 
+/**
+ * Render the recurring page interface.
+ *
+ * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered recurring page interface.
+ */
 export default function RecurringPage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
@@ -52,6 +55,7 @@ export default function RecurringPage() {
   const [editing, setEditing] = useState<Recurring | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [ascending, setAscending] = useState(true);
   const [type, setType] = useState('EXPENSE');
   const [frequency, setFrequency] = useState('MONTHLY');
   const [amount, setAmount] = useState('');
@@ -63,19 +67,50 @@ export default function RecurringPage() {
   const [categoryId, setCategoryId] = useState('');
   const query = useQuery({
     queryKey: ['recurring'],
+    /**
+     * Load recurring page data for the query cache.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     queryFn: () => apiRequest<Recurring[]>('/recurring-transactions'),
   });
   const wallets = useQuery({
     queryKey: ['wallets'],
+    /**
+     * Load recurring page data for the query cache.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     queryFn: () => apiRequest<Wallet[]>('/wallets'),
   });
   const categories = useQuery({
     queryKey: ['categories'],
+    /**
+     * Load recurring page data for the query cache.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     queryFn: () => apiRequest<Category[]>('/categories'),
   });
+  /**
+   * Mutation error for recurring page.
+   *
+   * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+   * @param title - The title value required by the operation.
+   * @returns The resulting recurring page value for the caller.
+   */
   const mutationError = (title: string) => (error: Error) =>
     Alert.alert(title, error.message || 'Vui lòng thử lại.');
   const save = useMutation({
+    /**
+     * Execute the recurring page mutation requested by the client.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     mutationFn: () =>
       apiRequest(
         editing
@@ -94,6 +129,12 @@ export default function RecurringPage() {
           }),
         },
       ),
+    /**
+     * Finalize the recurring page workflow after a successful operation.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['recurring'] });
       setOpen(false);
@@ -102,14 +143,40 @@ export default function RecurringPage() {
     onError: mutationError('Không thể lưu giao dịch định kỳ'),
   });
   const toggle = useMutation({
+    /**
+     * Execute the recurring page mutation requested by the client.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting recurring page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/recurring-transactions/${id}/toggle`, { method: 'PATCH' }),
+    /**
+     * Finalize the recurring page workflow after a successful operation.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['recurring'] }),
     onError: mutationError('Không thể đổi trạng thái'),
   });
   const remove = useMutation({
+    /**
+     * Execute the recurring page mutation requested by the client.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting recurring page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/recurring-transactions/${id}`, { method: 'DELETE' }),
+    /**
+     * Finalize the recurring page workflow after a successful operation.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['recurring'] }),
     onError: mutationError('Không thể xóa giao dịch định kỳ'),
   });
@@ -117,24 +184,38 @@ export default function RecurringPage() {
     categories.data?.filter((item) => item.type === type) || [];
   const items = query.data || [];
   const active = items.filter((item) => item.isActive);
-  const income = active
+  const income = items
     .filter((item) => item.type === 'INCOME')
     .reduce((sum, item) => sum + Number(item.amount), 0);
-  const expense = active
+  const expense = items
     .filter((item) => item.type === 'EXPENSE')
     .reduce((sum, item) => sum + Number(item.amount), 0);
-  const visibleItems = items.filter((item) => {
-    const keyword = search.trim().toLowerCase();
-    const matchesSearch =
-      !keyword ||
-      `${item.note || ''} ${item.category?.name || ''} ${item.wallet?.name || ''}`
-        .toLowerCase()
-        .includes(keyword);
-    const matchesStatus =
-      statusFilter === 'ALL' ||
-      (statusFilter === 'ACTIVE' ? item.isActive : !item.isActive);
-    return matchesSearch && matchesStatus;
-  });
+  const visibleItems = items
+    .filter((item) => {
+      const keyword = search.trim().toLowerCase();
+      const matchesSearch =
+        !keyword ||
+        `${item.note || ''} ${item.category?.name || ''} ${item.wallet?.name || ''}`
+          .toLowerCase()
+          .includes(keyword);
+      const matchesStatus =
+        statusFilter === 'ALL' ||
+        (statusFilter === 'ACTIVE' ? item.isActive : !item.isActive);
+      return matchesSearch && matchesStatus;
+    })
+    .sort(
+      (a, b) =>
+        (ascending ? 1 : -1) *
+        (new Date(a.nextExecutionDate).getTime() -
+          new Date(b.nextExecutionDate).getTime()),
+    );
+  /**
+   * Start recurring page for the recurring page workflow.
+   *
+   * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+   * @param item - The item value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const start = (item?: Recurring) => {
     setEditing(item || null);
     setType(item?.type || 'EXPENSE');
@@ -150,6 +231,13 @@ export default function RecurringPage() {
     setCategoryId(item?.categoryId || item?.category?.id || '');
     setOpen(true);
   };
+  /**
+   * Frequency label for recurring page.
+   *
+   * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+   * @param value - The value to transform or evaluate.
+   * @returns The resulting recurring page value for the caller.
+   */
   const frequencyLabel = (value: string) =>
     ({
       DAILY: 'Hàng ngày',
@@ -159,7 +247,7 @@ export default function RecurringPage() {
     })[value] || value;
 
   return (
-    <Screen title="Định kỳ">
+    <Screen title="Định kỳ" bottomNav={false}>
       <LinearGradient
         colors={theme.gradients.brand}
         start={{ x: 0, y: 0 }}
@@ -192,25 +280,33 @@ export default function RecurringPage() {
       </LinearGradient>
       {!!items.length && (
         <View style={styles.metrics}>
-          <MetricCard
+          <SummaryTile
+            tinted
             label="Tổng số"
             value={String(items.length)}
-            icon="swap-horizontal"
-            caption={`${items.length - active.length} tắt · ${active.length} bật`}
+            caption={
+              items.length - active.length + ' tắt • ' + active.length + ' bật'
+            }
           />
-          <MetricCard
+          <SummaryTile
+            tinted
             label="Thu nhập"
             value={money(income)}
-            icon="arrow-bottom-left"
-            tone="success"
-            caption={`${active.filter((item) => item.type === 'INCOME').length} lịch thu`}
+            color={theme.colors.success}
+            caption={
+              items.filter((item) => item.type === 'INCOME').length +
+              ' lịch thu'
+            }
           />
-          <MetricCard
+          <SummaryTile
+            tinted
             label="Chi tiêu"
-            value={money(expense)}
-            icon="arrow-top-right"
-            tone="danger"
-            caption={`${active.filter((item) => item.type === 'EXPENSE').length} lịch chi`}
+            value={'−' + money(expense)}
+            color={theme.colors.danger}
+            caption={
+              items.filter((item) => item.type === 'EXPENSE').length +
+              ' lịch chi'
+            }
           />
         </View>
       )}
@@ -244,9 +340,19 @@ export default function RecurringPage() {
           />
         </Pressable>
       </View>
-      <SectionTitle
+      <SectionHeading
         title="Danh sách chu kỳ"
-        caption={`${visibleItems.length} mục`}
+        pill
+        caption={visibleItems.length + ' mục'}
+        action={
+          <Pressable
+            onPress={() => setAscending((value) => !value)}
+            style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}
+          >
+            <Text style={styles.sort}>Sắp xếp</Text>
+            <AppIcon name="sort" size={17} color={theme.colors.primaryStrong} />
+          </Pressable>
+        }
       />
       {query.isLoading && (
         <StateMessage loading message="Đang tải lịch định kỳ…" />
@@ -264,104 +370,183 @@ export default function RecurringPage() {
           }
         />
       )}
-      {visibleItems.map((item) => (
-        <EntityCard
-          key={item.id}
-          icon={
-            <IconTile
-              name={
-                (item.category?.icon as AppIconName) || 'calendar-sync-outline'
-              }
-              color={item.isActive ? theme.colors.primary : theme.colors.muted}
-              background={
-                item.isActive
-                  ? theme.colors.successSoft
-                  : theme.colors.neutralSoft
-              }
-            />
-          }
-          title={item.note || item.category?.name || 'Giao dịch định kỳ'}
-          subtitle={`Danh mục: ${item.category?.name || 'Chưa phân loại'}`}
-          value={`${item.type === 'EXPENSE' ? '-' : '+'}${money(item.amount)}`}
-          badge={
-            <Badge
-              label={item.isActive ? 'Hoạt động' : 'Tạm dừng'}
-              tone={item.isActive ? 'success' : 'neutral'}
-            />
-          }
-        >
-          <View style={styles.schedule}>
-            <View style={styles.scheduleInfo}>
-              <AppIcon
-                name="clock-outline"
-                size={16}
-                color={theme.colors.muted}
-              />
-              <Text style={ui.muted}>{frequencyLabel(item.frequency)}</Text>
-              <AppIcon
-                name="wallet-outline"
-                size={16}
-                color={theme.colors.muted}
-              />
-              <Text numberOfLines={1} style={[ui.muted, styles.walletName]}>
-                {item.wallet?.name}
-              </Text>
-            </View>
-            <Badge
-              label={new Date(item.nextExecutionDate).toLocaleDateString(
-                'vi-VN',
-              )}
-              tone={item.isActive ? 'success' : 'info'}
-            />
-          </View>
-          <View style={ui.between}>
-            <View style={styles.statusRow}>
+      {visibleItems.map((item) => {
+        const appearance = categoryAppearance(item.category?.name);
+        return (
+          <View
+            key={item.id}
+            style={[styles.recurringCard, item.isActive && styles.activeCard]}
+          >
+            <View style={styles.recurringHeader}>
               <View
                 style={[
-                  styles.statusDot,
+                  styles.categoryIcon,
                   {
                     backgroundColor: item.isActive
-                      ? theme.colors.success
-                      : theme.colors.subtle,
+                      ? '#AFF8DC'
+                      : theme.colors.primarySoft,
                   },
                 ]}
-              />
-              <Text style={item.isActive ? ui.positive : ui.muted}>
-                {item.isActive ? 'Chu kỳ tự động kế tiếp' : 'Đã tạm dừng'}
+              >
+                <AppIcon
+                  name={appearance.icon}
+                  size={25}
+                  color={
+                    item.isActive
+                      ? theme.colors.success
+                      : theme.colors.primaryStrong
+                  }
+                />
+              </View>
+              <View style={styles.flex}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 8,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <Text style={styles.recurringTitle}>
+                    {item.note || item.category?.name || 'Giao dịch định kỳ'}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.recurringBadge,
+                      {
+                        backgroundColor: item.isActive
+                          ? theme.colors.successSoft
+                          : theme.colors.primarySoft,
+                        color: item.isActive
+                          ? theme.colors.success
+                          : theme.colors.muted,
+                      },
+                    ]}
+                  >
+                    {item.isActive ? '● HOẠT ĐỘNG' : 'TẠM DỪNG'}
+                  </Text>
+                </View>
+                <Text numberOfLines={1} style={ui.muted}>
+                  Danh mục: {item.category?.name || 'Chưa phân loại'}
+                </Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: '500',
+                    color:
+                      item.type === 'EXPENSE'
+                        ? theme.colors.danger
+                        : theme.colors.success,
+                  }}
+                >
+                  {item.type === 'EXPENSE' ? '−' : '+'}
+                  {money(item.amount)}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: theme.colors.subtle,
+                    marginTop: 4,
+                  }}
+                >
+                  Định kỳ
+                </Text>
+              </View>
+            </View>
+            <View style={styles.schedule}>
+              <View style={styles.scheduleInfo}>
+                <AppIcon
+                  name="clock-outline"
+                  size={17}
+                  color={theme.colors.subtle}
+                />
+                <Text style={{ fontSize: 14, color: theme.colors.text }}>
+                  {frequencyLabel(item.frequency)}
+                </Text>
+                <Text style={{ color: '#C3C6D7' }}>•</Text>
+                <AppIcon
+                  name="wallet-outline"
+                  size={17}
+                  color={theme.colors.subtle}
+                />
+                <Text numberOfLines={1} style={[ui.muted, styles.walletName]}>
+                  {item.wallet?.name}
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.datePill,
+                  {
+                    color: item.isActive
+                      ? theme.colors.success
+                      : theme.colors.primaryStrong,
+                    backgroundColor: item.isActive
+                      ? '#AFF8DC'
+                      : theme.colors.primarySoft,
+                  },
+                ]}
+              >
+                {new Date(item.nextExecutionDate).toLocaleDateString('vi-VN')}
               </Text>
             </View>
-            <View style={styles.itemActions}>
-              <ActionLink
-                label={item.isActive ? 'Dừng' : 'Bật'}
-                icon={
-                  item.isActive ? 'pause-circle-outline' : 'play-circle-outline'
-                }
-                onPress={() => toggle.mutate(item.id)}
-              />
-              <ActionLink
-                label="Sửa"
-                icon="pencil-outline"
-                onPress={() => start(item)}
-              />
-              <ActionLink
-                danger
-                label="Xóa"
-                icon="trash-can-outline"
-                onPress={() =>
-                  Alert.alert('Xóa lịch định kỳ?', undefined, [
-                    { text: 'Hủy' },
-                    {
-                      text: 'Xóa',
-                      style: 'destructive',
-                      onPress: () => remove.mutate(item.id),
-                    },
-                  ])
-                }
-              />
+            <View style={ui.between}>
+              <View style={styles.statusRow}>
+                <AppIcon
+                  name={
+                    item.isActive ? 'clock-outline' : 'calendar-blank-outline'
+                  }
+                  size={17}
+                  color={theme.colors.success}
+                />
+                <Text
+                  style={{
+                    flex: 1,
+                    color: theme.colors.success,
+                    fontSize: 13,
+                    fontWeight: '500',
+                  }}
+                >
+                  {item.isActive ? 'Chu kỳ tự động kế tiếp' : 'Còn lịch chạy'}
+                </Text>
+              </View>
+              <View style={styles.itemActions}>
+                <IconButton
+                  icon={
+                    item.isActive
+                      ? 'pause-circle-outline'
+                      : 'play-circle-outline'
+                  }
+                  label={item.isActive ? 'Tạm dừng' : 'Bật lịch'}
+                  color={theme.colors.primaryStrong}
+                  onPress={() => toggle.mutate(item.id)}
+                />
+                <IconButton
+                  icon="pencil-outline"
+                  label="Sửa lịch"
+                  onPress={() => start(item)}
+                />
+                <IconButton
+                  icon="dots-vertical"
+                  label="Tùy chọn lịch"
+                  onPress={() =>
+                    Alert.alert('Lịch định kỳ', undefined, [
+                      { text: 'Chỉnh sửa', onPress: () => start(item) },
+                      {
+                        text: 'Xóa',
+                        style: 'destructive',
+                        onPress: () => remove.mutate(item.id),
+                      },
+                      { text: 'Hủy', style: 'cancel' },
+                    ])
+                  }
+                />
+              </View>
             </View>
           </View>
-        </EntityCard>
-      ))}
+        );
+      })}
       <Pressable style={styles.addRecurring} onPress={() => start()}>
         <AppIcon name="plus" size={22} color={theme.colors.primaryStrong} />
         <Text style={styles.addRecurringText}>Thêm giao dịch định kỳ mới</Text>
@@ -437,8 +622,51 @@ export default function RecurringPage() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the recurring page interface.
+ *
+ * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    flex: { flex: 1, minWidth: 0 },
+    recurringCard: {
+      padding: 20,
+      gap: 15,
+      borderRadius: 16,
+      backgroundColor: theme.colors.surface,
+      overflow: 'hidden',
+      boxShadow: '0px 2px 2px rgba(19,27,46,.035)',
+    },
+    activeCard: { borderTopWidth: 5, borderTopColor: theme.colors.success },
+    recurringHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    categoryIcon: {
+      width: 55,
+      height: 55,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    recurringTitle: {
+      color: theme.colors.text,
+      fontSize: 20,
+      fontWeight: '500',
+    },
+    recurringBadge: {
+      borderRadius: 15,
+      paddingHorizontal: 9,
+      paddingVertical: 4,
+      fontSize: 11,
+    },
+    datePill: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 15,
+      fontSize: 13,
+      fontWeight: '500',
+    },
     recurringHero: {
       minHeight: 248,
       padding: 30,
@@ -463,7 +691,7 @@ const createStyles = (theme: AppTheme) =>
     smartBadgeText: {
       color: theme.colors.onBrand,
       fontSize: 12,
-      fontWeight: '900',
+      fontWeight: '600',
       letterSpacing: 0.3,
     },
     heroTitle: {
@@ -471,7 +699,7 @@ const createStyles = (theme: AppTheme) =>
       color: theme.colors.onBrand,
       fontSize: 30,
       lineHeight: 35,
-      fontWeight: '900',
+      fontWeight: '600',
       letterSpacing: -0.7,
     },
     heroSubtitle: {
@@ -495,11 +723,11 @@ const createStyles = (theme: AppTheme) =>
     heroActionText: {
       color: theme.colors.primaryStrong,
       fontSize: 17,
-      fontWeight: '900',
+      fontWeight: '600',
     },
     heroDecoration: { position: 'absolute', right: 22, bottom: 17 },
     metrics: { flexDirection: 'row', gap: 8 },
-    sort: { color: theme.colors.primaryStrong, fontWeight: '800' },
+    sort: { color: theme.colors.primaryStrong, fontWeight: '500' },
     searchRow: { flexDirection: 'row', gap: 8 },
     searchBox: {
       flex: 1,
@@ -550,19 +778,19 @@ const createStyles = (theme: AppTheme) =>
       gap: 7,
     },
     statusDot: { width: 8, height: 8, borderRadius: 4 },
-    itemActions: { flexDirection: 'row' },
+    itemActions: { flexDirection: 'row', gap: 5 },
     addRecurring: {
-      minHeight: 68,
+      minHeight: 80,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
       borderRadius: 17,
-      backgroundColor: theme.colors.primarySoft,
+      backgroundColor: theme.colors.surfaceRaised,
     },
     addRecurringText: {
       color: theme.colors.primaryStrong,
       fontSize: 16,
-      fontWeight: '900',
+      fontWeight: '600',
     },
   });

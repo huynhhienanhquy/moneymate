@@ -1,5 +1,7 @@
+import { SectionHeading } from '@/components/design';
+import { Text } from '@/components/design-text';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppIcon } from '@/components/app-icon';
@@ -9,9 +11,7 @@ import {
   ChoiceChips,
   EmptyState,
   Field,
-  PageHero,
   Screen,
-  SectionTitle,
   Sheet,
   StateMessage,
   useUiStyles,
@@ -32,6 +32,12 @@ const walletPalettes = {
   E_WALLET: ['#D92350', '#B9003A'],
 } as const;
 
+/**
+ * Render the wallets page interface.
+ *
+ * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered wallets page interface.
+ */
 export default function WalletsPage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
@@ -49,8 +55,20 @@ export default function WalletsPage() {
   const [balance, setBalance] = useState('0');
   const wallets = useQuery({
     queryKey: ['wallets'],
+    /**
+     * Load wallets page data for the query cache.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting wallets page value for the caller.
+     */
     queryFn: () => apiRequest<Wallet[]>('/wallets'),
   });
+  /**
+   * Refresh wallet data used by the wallets page workflow.
+   *
+   * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns The resulting wallets page value for the caller.
+   */
   const refreshWalletData = () =>
     Promise.all(
       [
@@ -64,6 +82,12 @@ export default function WalletsPage() {
       ].map((queryKey) => client.invalidateQueries({ queryKey: [queryKey] })),
     );
   const save = useMutation({
+    /**
+     * Execute the wallets page mutation requested by the client.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting wallets page value for the caller.
+     */
     mutationFn: () =>
       apiRequest(editing ? `/wallets/${editing.id}` : '/wallets', {
         method: editing ? 'PUT' : 'POST',
@@ -74,10 +98,23 @@ export default function WalletsPage() {
           ...(!editing ? { currency: 'VND' } : {}),
         }),
       }),
+    /**
+     * Finalize the wallets page workflow after a successful operation.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns A promise that resolves after the operation completes.
+     */
     onSuccess: async () => {
       await refreshWalletData();
       setOpen(false);
     },
+    /**
+     * Map a failed wallets page operation into user-visible state.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param e - The e value required by the operation.
+     * @returns The resulting wallets page value for the caller.
+     */
     onError: (e) =>
       Alert.alert(
         'Không thể lưu ví',
@@ -85,17 +122,43 @@ export default function WalletsPage() {
       ),
   });
   const remove = useMutation({
+    /**
+     * Execute the wallets page mutation requested by the client.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting wallets page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/wallets/${id}`, { method: 'DELETE' }),
+    /**
+     * Finalize the wallets page workflow after a successful operation.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       void refreshWalletData();
     },
+    /**
+     * Map a failed wallets page operation into user-visible state.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param e - The e value required by the operation.
+     * @returns The resulting wallets page value for the caller.
+     */
     onError: (e) =>
       Alert.alert(
         'Không thể xóa ví',
         e instanceof Error ? e.message : 'Vui lòng thử lại',
       ),
   });
+  /**
+   * Show create for wallets page.
+   *
+   * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const showCreate = () => {
     setEditing(null);
     setName('');
@@ -103,6 +166,13 @@ export default function WalletsPage() {
     setBalance('0');
     setOpen(true);
   };
+  /**
+   * Show edit for wallets page.
+   *
+   * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+   * @param wallet - The wallet value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const showEdit = (wallet: Wallet) => {
     setEditing(wallet);
     setName(wallet.name);
@@ -122,51 +192,70 @@ export default function WalletsPage() {
         : 0,
   );
 
+  const allocation = [...data].sort(
+    (a, b) => Number(b.initialBalance) - Number(a.initialBalance),
+  );
+  const assetColor = (wallet: Wallet) =>
+    wallet.type === 'CASH'
+      ? theme.colors.success
+      : wallet.type === 'E_WALLET'
+        ? '#D51A4C'
+        : wallet.name.toLowerCase().includes('vpbank')
+          ? theme.colors.primaryDeep
+          : theme.colors.primary;
   return (
-    <Screen title="Ví tài khoản">
-      <PageHero
-        eyebrow="VÍ TÀI KHOẢN"
-        title={hidden ? '•••••• ₫' : money(total)}
-        subtitle="Tổng tài sản hiện có"
-        icon="wallet-outline"
-        action={
+    <Screen title="Ví tài khoản" gutter={25}>
+      <LinearGradient
+        colors={theme.gradients.brand}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.walletHero}
+      >
+        <View style={styles.heroTop}>
+          <View style={ui.row}>
+            <View style={styles.heroIcon}>
+              <AppIcon name="wallet-outline" size={24} color="#FFFFFF" />
+            </View>
+            <Text style={styles.heroLabel}>VÍ TÀI KHOẢN</Text>
+          </View>
           <Pressable
+            accessibilityLabel={hidden ? 'Hiện số dư' : 'Ẩn số dư'}
             onPress={() => setHidden((value) => !value)}
             style={styles.hideButton}
           >
             <AppIcon
               name={hidden ? 'eye-outline' : 'eye-off-outline'}
               size={18}
-              color={theme.colors.onBrand}
+              color="#FFFFFF"
             />
             <Text style={styles.hideText}>{hidden ? 'Hiện' : 'Ẩn'}</Text>
           </Pressable>
-        }
-      >
+        </View>
+        <Text style={styles.heroCaption}>Tổng tài sản hiện có</Text>
+        <Text adjustsFontSizeToFit numberOfLines={1} style={styles.heroBalance}>
+          {hidden ? '●●●●●● đ' : money(total)}
+        </Text>
         <View style={styles.heroActions}>
           <Pressable
             style={styles.secondaryHeroButton}
             onPress={() => router.push('/transfer' as Href)}
           >
-            <AppIcon
-              name="swap-horizontal"
-              size={21}
-              color={theme.colors.onBrand}
-            />
+            <AppIcon name="swap-horizontal" size={22} color="#FFFFFF" />
             <Text style={styles.secondaryHeroText}>Chuyển tiền</Text>
           </Pressable>
           <Pressable style={styles.primaryHeroButton} onPress={showCreate}>
             <AppIcon
               name="plus-circle-outline"
-              size={21}
+              size={22}
               color={theme.colors.primaryStrong}
             />
-            <Text style={styles.primaryHeroText}>Thêm ví</Text>
+            <Text style={styles.primaryHeroText}>+ Thêm ví</Text>
           </Pressable>
         </View>
-      </PageHero>
-      <SectionTitle
+      </LinearGradient>
+      <SectionHeading
         title="Danh sách ví"
+        pill
         caption={`${data.length} tài khoản`}
         action={
           <Pressable
@@ -214,6 +303,12 @@ export default function WalletsPage() {
                 {
                   text: 'Xóa',
                   style: 'destructive',
+                  /**
+                   * Handle press for the wallets page workflow.
+                   *
+                   * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+                   * @returns The resulting wallets page value for the caller.
+                   */
                   onPress: () => remove.mutate(wallet.id),
                 },
               ])
@@ -251,16 +346,24 @@ export default function WalletsPage() {
                     </Text>
                   </View>
                 </View>
-                <AppIcon
-                  name="credit-card-chip-outline"
-                  size={31}
-                  color="rgba(255,255,255,.75)"
-                />
+                {wallet.type === 'CASH' ? (
+                  <View style={styles.walletLock}>
+                    <AppIcon name="lock-outline" size={19} color="#FFFFFF" />
+                  </View>
+                ) : wallet.name.toLowerCase().includes('techcombank') ? (
+                  <View style={styles.cardChip} />
+                ) : (
+                  <Text style={styles.walletTypeBadge}>
+                    {wallet.type === 'E_WALLET' ? 'E-Wallet' : 'Tài khoản'}
+                  </Text>
+                )}
               </View>
               <Text style={styles.walletNumber}>
                 {wallet.type === 'CASH'
-                  ? 'VÍ TIỀN MẶT TRỰC TIẾP'
-                  : '••••  ' + wallet.id.slice(-4).toUpperCase()}
+                  ? 'Ví tiền mặt trực tiếp'
+                  : wallet.type === 'E_WALLET'
+                    ? 'Ví điện tử cá nhân'
+                    : '••••  ' + wallet.id.slice(-4).toUpperCase()}
               </Text>
               <View style={styles.walletBalanceRow}>
                 <Text style={styles.walletBalance}>
@@ -276,6 +379,10 @@ export default function WalletsPage() {
           </Pressable>
         );
       })}
+      <Pressable style={styles.addWallet} onPress={showCreate}>
+        <AppIcon name="plus" size={24} color={theme.colors.primaryStrong} />
+        <Text style={styles.addWalletText}>Tạo tài khoản / ví mới</Text>
+      </Pressable>
       {!!data.length && (
         <View style={styles.assetCard}>
           <View style={styles.assetHeader}>
@@ -283,29 +390,19 @@ export default function WalletsPage() {
             <Text style={ui.muted}>{data.length} nguồn tiền</Text>
           </View>
           <View style={styles.assetBar}>
-            {data.map((wallet, index) => (
+            {allocation.map((wallet) => (
               <View
                 key={wallet.id}
                 style={{
                   flex: Math.max(Number(wallet.initialBalance), 1),
-                  backgroundColor:
-                    index % 3 === 0
-                      ? theme.colors.success
-                      : index % 3 === 1
-                        ? theme.colors.primaryDeep
-                        : theme.colors.danger,
+                  backgroundColor: assetColor(wallet),
                 }}
               />
             ))}
           </View>
           <View style={styles.assetLegend}>
-            {data.map((wallet, index) => {
-              const color =
-                index % 3 === 0
-                  ? theme.colors.success
-                  : index % 3 === 1
-                    ? theme.colors.primaryDeep
-                    : theme.colors.danger;
+            {allocation.map((wallet) => {
+              const color = assetColor(wallet);
               const percentage =
                 total > 0
                   ? Math.round((Number(wallet.initialBalance) / total) * 100)
@@ -322,10 +419,6 @@ export default function WalletsPage() {
           </View>
         </View>
       )}
-      <Pressable style={styles.addWallet} onPress={showCreate}>
-        <AppIcon name="plus" size={24} color={theme.colors.primaryStrong} />
-        <Text style={styles.addWalletText}>Tạo tài khoản / ví mới</Text>
-      </Pressable>
       <Sheet
         visible={open}
         title={editing ? 'Chỉnh sửa ví' : 'Tạo ví mới'}
@@ -351,8 +444,48 @@ export default function WalletsPage() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the wallets page interface.
+ *
+ * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    walletHero: {
+      marginTop: 10,
+      minHeight: 237,
+      padding: 20,
+      borderRadius: 16,
+      boxShadow: '0px 4px 7px rgba(19,27,46,.12)',
+    },
+    heroTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    heroIcon: {
+      width: 33,
+      height: 33,
+      borderRadius: 9,
+      backgroundColor: 'rgba(255,255,255,.2)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heroLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '500' },
+    heroCaption: {
+      marginTop: 18,
+      color: '#C4D4FF',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    heroBalance: {
+      marginTop: 15,
+      color: '#FFFFFF',
+      fontSize: 34,
+      fontWeight: '600',
+    },
     hideButton: {
       minHeight: 36,
       paddingHorizontal: 12,
@@ -362,7 +495,7 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: 99,
       backgroundColor: 'rgba(255,255,255,.17)',
     },
-    hideText: { color: theme.colors.onBrand, fontWeight: '800' },
+    hideText: { color: theme.colors.onBrand, fontWeight: '500' },
     heroActions: { marginTop: 17, flexDirection: 'row', gap: 10 },
     secondaryHeroButton: {
       flex: 1,
@@ -374,7 +507,7 @@ const createStyles = (theme: AppTheme) =>
       gap: 7,
       backgroundColor: 'rgba(255,255,255,.18)',
     },
-    secondaryHeroText: { color: theme.colors.onBrand, fontWeight: '900' },
+    secondaryHeroText: { color: theme.colors.onBrand, fontWeight: '600' },
     primaryHeroButton: {
       flex: 1,
       minHeight: 50,
@@ -385,25 +518,50 @@ const createStyles = (theme: AppTheme) =>
       gap: 7,
       backgroundColor: theme.colors.onBrand,
     },
-    primaryHeroText: { color: theme.colors.primaryStrong, fontWeight: '900' },
+    primaryHeroText: { color: theme.colors.primaryStrong, fontWeight: '600' },
     sortButton: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    sort: { color: theme.colors.primaryStrong, fontWeight: '800' },
+    sort: { color: theme.colors.primaryStrong, fontWeight: '500' },
+    walletLock: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: 'rgba(255,255,255,.17)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cardChip: {
+      width: 40,
+      height: 30,
+      borderRadius: 6,
+      backgroundColor: '#D7B456',
+      borderTopWidth: 7,
+      borderTopColor: '#C69F40',
+    },
+    walletTypeBadge: {
+      color: '#FFFFFF',
+      backgroundColor: 'rgba(255,255,255,.18)',
+      borderRadius: 14,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      fontSize: 13,
+      fontWeight: '500',
+    },
     walletCard: {
-      minHeight: 170,
+      minHeight: 182,
       padding: 19,
       borderRadius: 17,
       justifyContent: 'space-between',
       shadowColor: theme.colors.primaryDeep,
-      shadowOpacity: 0.2,
+      shadowOpacity: 0.035,
       shadowRadius: 11,
       shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
+      elevation: 1,
     },
     walletHeader: { flexDirection: 'row', justifyContent: 'space-between' },
     walletIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     walletIcon: {
-      width: 46,
-      height: 46,
+      width: 50,
+      height: 50,
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
@@ -411,14 +569,14 @@ const createStyles = (theme: AppTheme) =>
     },
     walletName: {
       color: theme.colors.onBrand,
-      fontSize: 18,
-      fontWeight: '900',
+      fontSize: 20,
+      fontWeight: '600',
     },
-    walletType: { color: 'rgba(255,255,255,.82)', fontSize: 12, marginTop: 2 },
+    walletType: { color: 'rgba(255,255,255,.82)', fontSize: 15, marginTop: 2 },
     walletNumber: {
       color: 'rgba(255,255,255,.8)',
       fontSize: 11,
-      fontWeight: '800',
+      fontWeight: '500',
       letterSpacing: 0.7,
     },
     walletBalanceRow: {
@@ -428,8 +586,8 @@ const createStyles = (theme: AppTheme) =>
     },
     walletBalance: {
       color: theme.colors.onBrand,
-      fontSize: 27,
-      fontWeight: '900',
+      fontSize: 28,
+      fontWeight: '600',
     },
     assetCard: {
       padding: 18,
@@ -439,7 +597,7 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.dark ? theme.colors.border : '#ECECF4',
     },
     assetHeader: { flexDirection: 'row', justifyContent: 'space-between' },
-    assetTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '900' },
+    assetTitle: { color: theme.colors.text, fontSize: 18, fontWeight: '600' },
     assetBar: {
       height: 13,
       marginTop: 15,
@@ -461,19 +619,19 @@ const createStyles = (theme: AppTheme) =>
       gap: 7,
     },
     assetDot: { width: 9, height: 9, borderRadius: 5 },
-    assetLegendText: { flex: 1, color: theme.colors.muted, fontSize: 11 },
+    assetLegendText: { flex: 1, color: theme.colors.muted, fontSize: 14 },
     addWallet: {
-      minHeight: 68,
+      minHeight: 80,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 9,
       borderRadius: 17,
-      backgroundColor: theme.colors.primarySoft,
+      backgroundColor: theme.colors.surfaceRaised,
     },
     addWalletText: {
       color: theme.colors.primaryStrong,
       fontSize: 16,
-      fontWeight: '900',
+      fontWeight: '600',
     },
   });

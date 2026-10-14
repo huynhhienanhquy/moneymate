@@ -5,6 +5,15 @@ import { CategoryType } from '@prisma/client';
 export class CategoryService {
   private categoryRepository = new CategoryRepository();
 
+  /**
+   * Create category for the category workflow.
+   *
+   * Use it from controllers or jobs that run the category business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to create category for the category workflow.
+   * @returns A promise containing the resulting category value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async createCategory(userId: string, data: { name: string; type: CategoryType; color?: string; icon?: string }) {
     // Check if user already has a category with this name and type
     const existing = await this.categoryRepository.findByNameAndUser(data.name, userId, data.type);
@@ -27,10 +36,26 @@ export class CategoryService {
     });
   }
 
+  /**
+   * Return categories required by the category workflow.
+   *
+   * Use it from controllers or jobs that run the category business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting category value.
+   */
   async getCategories(userId: string) {
     return this.categoryRepository.findAllByUserId(userId);
   }
 
+  /**
+   * Return category required by the category workflow.
+   *
+   * Use it from controllers or jobs that run the category business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param categoryId - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting category value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async getCategory(userId: string, categoryId: string) {
     const category = await this.categoryRepository.findById(categoryId);
     // User can access if it's their own OR if it's a global category (userId is null)
@@ -40,6 +65,16 @@ export class CategoryService {
     return category;
   }
 
+  /**
+   * Update category while preserving the category workflow's rules.
+   *
+   * Use it from controllers or jobs that run the category business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param categoryId - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to update category while preserving the category workflow's rules.
+   * @returns A promise containing the resulting category value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async updateCategory(userId: string, categoryId: string, data: { name?: string; color?: string; icon?: string }) {
     const category = await this.getCategory(userId, categoryId);
     if (category.userId === null) {
@@ -48,6 +83,15 @@ export class CategoryService {
     return this.categoryRepository.update(category.id, data);
   }
 
+  /**
+   * Delete category through the category workflow.
+   *
+   * Use it from controllers or jobs that run the category business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param categoryId - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting category value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async deleteCategory(userId: string, categoryId: string) {
     const category = await this.getCategory(userId, categoryId);
     if (category.userId === null) {

@@ -12,27 +12,57 @@ import AiInsightCard from '@/components/AiInsightCard/AiInsightCard';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import { formatVND } from '@/utils/formatCurrency';
 
+/**
+ * Render the ai advisor page interface.
+ *
+ * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered ai advisor page interface.
+ */
 const AiAdvisorPage: React.FC = () => {
   const { data: advisor, isLoading: advisorLoading } = useQuery({
     queryKey: ['ai-advisor'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => api.get('/ai/advisor/insights').then(r => r.data.data),
     staleTime: 120_000,
   });
 
   const { data: analysis, isLoading: analysisLoading } = useQuery({
     queryKey: ['ai-analysis'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => api.get('/ai/analyze/expenses').then(r => r.data.data),
     staleTime: 120_000,
   });
 
   const { data: forecast, isLoading: forecastLoading } = useQuery({
     queryKey: ['ai-forecast'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => api.get('/ai/budget/forecast').then(r => r.data.data),
     staleTime: 120_000,
   });
 
   const { data: status } = useQuery({
     queryKey: ['ai-status'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => api.get('/ai/status').then(r => r.data.data),
     staleTime: 300_000,
   });

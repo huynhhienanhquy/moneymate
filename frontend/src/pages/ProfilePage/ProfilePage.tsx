@@ -9,6 +9,12 @@ import api from '@/services/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 
+/**
+ * Render the profile page interface.
+ *
+ * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered profile page interface.
+ */
 const ProfilePage: React.FC = () => {
   const { user, setUser } = useAuthStore();
   const qc = useQueryClient();
@@ -28,6 +34,12 @@ const ProfilePage: React.FC = () => {
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
+    /**
+     * Load profile page data for the query cache.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting profile page value for the caller.
+     */
     queryFn: () => api.get('/users/profile').then(r => r.data.data),
     staleTime: 60_000,
   });
@@ -42,11 +54,25 @@ const ProfilePage: React.FC = () => {
   }, [profile]);
 
   const updateProfileMutation = useMutation({
+    /**
+     * Execute the profile page mutation requested by the client.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param data - The input data required to execute the profile page mutation requested by the client.
+     * @returns The resulting profile page value for the caller.
+     */
     mutationFn: (data: { fullName: string; avatarUrl?: string | null }) =>
       api.put('/users/profile', {
         fullName: data.fullName,
         avatarUrl: data.avatarUrl || null,
       }),
+    /**
+     * Finalize the profile page workflow after a successful operation.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param res - The response object used to return the operation result.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: (res) => {
       setUser(res.data.data);
       qc.invalidateQueries({ queryKey: ['profile'] });
@@ -56,26 +82,60 @@ const ProfilePage: React.FC = () => {
   });
 
   const changePasswordMutation = useMutation({
+    /**
+     * Execute the profile page mutation requested by the client.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param data - The input data required to execute the profile page mutation requested by the client.
+     * @returns The resulting profile page value for the caller.
+     */
     mutationFn: (data: { currentPassword: string; newPassword: string }) =>
       api.put('/users/change-password', data),
+    /**
+     * Finalize the profile page workflow after a successful operation.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setPasswordMsg('Đổi mật khẩu thành công!');
       setPasswordError('');
       setTimeout(() => setPasswordMsg(''), 3000);
     },
+    /**
+     * Map a failed profile page operation into user-visible state.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param err - The err value required by the operation.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onError: (err: any) => {
       setPasswordError(err.response?.data?.message || 'Đổi mật khẩu thất bại');
       setPasswordMsg('');
     },
   });
 
+  /**
+   * Handle profile submit for the profile page workflow.
+   *
+   * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+   * @param e - The e value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileForm.fullName.trim()) return;
     updateProfileMutation.mutate(profileForm);
   };
 
+  /**
+   * Handle password submit for the profile page workflow.
+   *
+   * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+   * @param e - The e value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');

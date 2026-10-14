@@ -39,26 +39,68 @@ const { navigateMock, authLogoutMock } = vi.hoisted(() => ({
   authLogoutMock: vi.fn(),
 }));
 
+/**
+ * Set page query mode used by the page test workflow.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param mode - The mode value required by the operation.
+ * @returns Nothing; the operation is complete when the function returns.
+ */
 export const setPageQueryMode = (mode: PageQueryMode) => {
   queryMode = mode;
 };
 
+/**
+ * Render page for page test.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param Page - The page value required by the operation.
+ * @param mode - The mode value required by the operation.
+ * @returns The resulting page test value for the caller.
+ */
 export const renderPage = (Page: ComponentType, mode: PageQueryMode = 'populated') => {
   setPageQueryMode(mode);
   return render(<Page />);
 };
 
 vi.mock('react-router-dom', () => ({
+  /**
+   * Render the link interface.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @param props - The properties that configure this React component.
+   * @returns The rendered link interface.
+   */
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
+  /**
+   * Provide navigate state and actions to React consumers.
+   *
+   * Use it in React components that need this shared behavior.
+   * @returns The current navigate state and the actions that operate on it.
+   */
   useNavigate: () => navigateMock,
 }));
 vi.mock('@/stores/auth.store', () => ({
+  /**
+   * Provide auth store state and actions to React consumers.
+   *
+   * Use it in React components that need this shared behavior.
+   * @param selector - The selector value required by the operation.
+   * @returns The current auth store state and the actions that operate on it.
+   */
   useAuthStore: (selector?: (state: unknown) => unknown) => {
     const state = { user: { id: 'user-1', fullName: 'Money Mate', email: 'user@moneymate.vn', role: 'USER' }, login: vi.fn(), logout: authLogoutMock, setUser: vi.fn() };
     return selector ? selector(state) : state;
   },
 }));
 vi.mock('@/services/api/client', () => ({
+  /**
+   * Run auth session transition for page test.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @param operation - The operation value required by the operation.
+   * @returns The resulting page test value for the caller.
+   */
   runAuthSessionTransition: (operation: () => Promise<unknown>) => operation(),
   default: {
     get: vi.fn().mockResolvedValue({ data: { data: {} } }),
@@ -71,6 +113,13 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@tanstack/react-query')>();
   return {
     ...actual,
+    /**
+     * Provide query state and actions to React consumers.
+     *
+     * Use it in React components that need this shared behavior.
+     * @param props - The properties that configure this React component.
+     * @returns The current query state and the actions that operate on it.
+     */
     useQuery: ({ queryKey, queryFn }: { queryKey: unknown[]; queryFn?: () => Promise<unknown> }) => {
       void queryFn?.();
       const fixture = queryFixtures[String(queryKey[0])];
@@ -82,6 +131,13 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
         refetch: vi.fn(),
       };
     },
+    /**
+     * Provide mutation state and actions to React consumers.
+     *
+     * Use it in React components that need this shared behavior.
+     * @param options - Settings that customize how the operation runs.
+     * @returns The current mutation state and the actions that operate on it.
+     */
     useMutation: (options: { mutationFn?: (variables: unknown) => unknown; onSuccess?: (data?: unknown) => void; onError?: () => void }) => ({
       mutate: vi.fn((variables: unknown) => {
         try {
@@ -94,10 +150,23 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
       mutateAsync: vi.fn(async (variables: unknown) => options.mutationFn?.(variables)),
       isPending: false,
     }),
+    /**
+     * Provide query client state and actions to React consumers.
+     *
+     * Use it in React components that need this shared behavior.
+     * @returns The current query client state and the actions that operate on it.
+     */
     useQueryClient: () => ({ invalidateQueries: vi.fn(), clear: vi.fn() }),
   };
 });
 vi.mock('recharts', () => {
+  /**
+   * Render the chart interface.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @param props - The properties that configure this React component.
+   * @returns The rendered chart interface.
+   */
   const Chart = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
   return { BarChart: Chart, Bar: Chart, XAxis: Chart, YAxis: Chart, CartesianGrid: Chart, Tooltip: Chart, ResponsiveContainer: Chart, LineChart: Chart, Line: Chart, LabelList: Chart, PieChart: Chart, Pie: Chart, Cell: Chart, Legend: Chart };
 });

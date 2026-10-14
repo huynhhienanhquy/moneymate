@@ -20,6 +20,13 @@ const FREQ_LABELS: Record<string, string> = {
   DAILY: 'Hàng ngày', WEEKLY: 'Hàng tuần', MONTHLY: 'Hàng tháng', YEARLY: 'Hàng năm',
 };
 
+/**
+ * Render the recurring modal interface.
+ *
+ * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered recurring modal interface.
+ */
 const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({
   item, wallets, categories, onClose, onSave, loading,
 }) => {
@@ -88,6 +95,12 @@ const RecurringModal: React.FC<{ item?: any; wallets: any[]; categories: any[]; 
   );
 };
 
+/**
+ * Render the recurring page interface.
+ *
+ * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered recurring page interface.
+ */
 const RecurringPage: React.FC = () => {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
@@ -98,6 +111,12 @@ const RecurringPage: React.FC = () => {
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['recurring'],
+    /**
+     * Load recurring page data for the query cache.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     queryFn: () => api.get('/recurring-transactions').then(r => r.data.data),
   });
 
@@ -105,22 +124,74 @@ const RecurringPage: React.FC = () => {
   const { data: categories = [] } = useCategories();
 
   const createMutation = useMutation({
+    /**
+     * Execute the recurring page mutation requested by the client.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @param d - The d value required by the operation.
+     * @returns The resulting recurring page value for the caller.
+     */
     mutationFn: (d: any) => api.post('/recurring-transactions', d),
+    /**
+     * Finalize the recurring page workflow after a successful operation.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['recurring'] }); setShowModal(false); },
   });
 
   const updateMutation = useMutation({
+    /**
+     * Execute the recurring page mutation requested by the client.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting recurring page value for the caller.
+     */
     mutationFn: ({ id, data }: any) => api.put(`/recurring-transactions/${id}`, data),
+    /**
+     * Finalize the recurring page workflow after a successful operation.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['recurring'] }); setEditItem(null); },
   });
 
   const deleteMutation = useMutation({
+    /**
+     * Execute the recurring page mutation requested by the client.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting recurring page value for the caller.
+     */
     mutationFn: (id: string) => api.delete(`/recurring-transactions/${id}`),
+    /**
+     * Finalize the recurring page workflow after a successful operation.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
   });
 
   const toggleMutation = useMutation({
+    /**
+     * Execute the recurring page mutation requested by the client.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting recurring page value for the caller.
+     */
     mutationFn: (id: string) => api.patch(`/recurring-transactions/${id}/toggle`),
+    /**
+     * Finalize the recurring page workflow after a successful operation.
+     *
+     * Use it to keep the recurring page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting recurring page value for the caller.
+     */
     onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
   });
 

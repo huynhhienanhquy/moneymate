@@ -14,6 +14,14 @@ import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
 
+/**
+ * Download file produced by the reports page workflow.
+ *
+ * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+ * @param url - The endpoint or resource location used by the operation.
+ * @param filename - The file-system location or file value used by the operation.
+ * @returns A promise that resolves after the operation completes.
+ */
 const downloadFile = async (url: string, filename: string) => {
   const [path, query] = url.split('?');
   const params = Object.fromEntries(new URLSearchParams(query || ''));
@@ -30,6 +38,16 @@ const CATEGORY_COLORS = chartTheme.palette;
 
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 
+/**
+ * Determine whether future report period applies.
+ *
+ * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+ * @param reportType - The operation or report variant to process.
+ * @param month - The date or reporting period used by the operation.
+ * @param year - The date or reporting period used by the operation.
+ * @param now - The reference time used to make the calculation deterministic.
+ * @returns `true` when the condition is satisfied; otherwise `false`.
+ */
 export const isFutureReportPeriod = (
   reportType: 'monthly' | 'yearly',
   month: number,
@@ -38,6 +56,16 @@ export const isFutureReportPeriod = (
 ) => year > now.getFullYear()
   || (reportType === 'monthly' && year === now.getFullYear() && month > now.getMonth() + 1);
 
+/**
+ * Build yearly chart data used by the reports page workflow.
+ *
+ * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+ * @param items - The records to process in this operation.
+ * @param year - The date or reporting period used by the operation.
+ * @param accountCreatedAt - The account creation time that bounds available report history.
+ * @param now - The reference time used to make the calculation deterministic.
+ * @returns The resulting reports page value for the caller.
+ */
 export const buildYearlyChartData = (
   items: any[],
   year: number,
@@ -62,6 +90,12 @@ export const buildYearlyChartData = (
     }));
 };
 
+/**
+ * Render the reports page interface.
+ *
+ * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered reports page interface.
+ */
 const ReportsPage: React.FC = () => {
   const now = new Date();
   const [reportType, setReportType] = useState<'monthly' | 'yearly'>('monthly');
@@ -70,6 +104,13 @@ const ReportsPage: React.FC = () => {
   const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
   const isFuturePeriod = isFutureReportPeriod(reportType, month, year, now);
 
+  /**
+   * Handle export for the reports page workflow.
+   *
+   * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+   * @param type - The operation or report variant to process.
+   * @returns A promise that resolves after the operation completes.
+   */
   const handleExport = async (type: 'pdf' | 'excel') => {
     if (isFuturePeriod) return;
     setExporting(type);
@@ -86,6 +127,12 @@ const ReportsPage: React.FC = () => {
 
   const { data: monthlyReport, isLoading: monthlyLoading } = useQuery({
     queryKey: ['monthly-report', month, year],
+    /**
+     * Load reports page data for the query cache.
+     *
+     * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting reports page value for the caller.
+     */
     queryFn: () => api.get('/transactions/report', { params: { month, year } }).then(r => r.data.data),
     enabled: reportType === 'monthly' && !isFuturePeriod,
     staleTime: 60_000,
@@ -93,6 +140,12 @@ const ReportsPage: React.FC = () => {
 
   const { data: yearlyReport, isLoading: yearlyLoading } = useQuery({
     queryKey: ['yearly-report', year],
+    /**
+     * Load reports page data for the query cache.
+     *
+     * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting reports page value for the caller.
+     */
     queryFn: () => api.get('/transactions/report/yearly', { params: { year } }).then(r => r.data.data),
     enabled: reportType === 'yearly' && !isFuturePeriod,
     staleTime: 60_000,
@@ -100,6 +153,12 @@ const ReportsPage: React.FC = () => {
 
   const isLoading = !isFuturePeriod && (reportType === 'monthly' ? monthlyLoading : yearlyLoading);
 
+  /**
+   * Move the selected reports page period backward.
+   *
+   * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const prevPeriod = () => {
     if (reportType === 'monthly') {
       if (month === 1) { setMonth(12); setYear(y => y - 1); }
@@ -109,6 +168,12 @@ const ReportsPage: React.FC = () => {
     }
   };
 
+  /**
+   * Move the selected reports page period forward.
+   *
+   * Use it to keep the reports page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const nextPeriod = () => {
     if (reportType === 'monthly') {
       if (month === 12) { setMonth(1); setYear(y => y + 1); }

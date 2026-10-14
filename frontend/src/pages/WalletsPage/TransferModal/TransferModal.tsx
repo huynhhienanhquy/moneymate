@@ -15,6 +15,12 @@ type TransferModalProps = {
   loading: boolean;
 };
 
+/**
+ * Create empty transfer for the transfer modal workflow.
+ *
+ * Use it to keep the transfer modal workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The resulting transfer modal value for the caller.
+ */
 const createEmptyTransfer = () => ({
   sourceWalletId: '',
   destinationWalletId: '',
@@ -23,9 +29,22 @@ const createEmptyTransfer = () => ({
   transferDate: toLocalDateInputValue(),
 });
 
+/**
+ * Render the transfer modal interface.
+ *
+ * Use it to keep the transfer modal workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered transfer modal interface.
+ */
 const TransferModal = ({ wallets, onClose, onSave, loading }: TransferModalProps) => {
   const [form, setForm] = useState(createEmptyTransfer);
 
+  /**
+   * Handle save for the transfer modal workflow.
+   *
+   * Use it to keep the transfer modal workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const handleSave = () => {
     if (!form.sourceWalletId || !form.destinationWalletId || !form.amount) return;
     onSave({ ...form, amount: parseFloat(form.amount), transferDate: new Date(form.transferDate) });

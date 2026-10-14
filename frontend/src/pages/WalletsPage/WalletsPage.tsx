@@ -10,6 +10,12 @@ import TransferModal from './TransferModal/TransferModal';
 import WalletModal from './WalletModal/WalletModal';
 import { WALLET_TYPES } from './wallets.data';
 
+/**
+ * Render the wallets page interface.
+ *
+ * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered wallets page interface.
+ */
 const WalletsPage: React.FC = () => {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
@@ -19,38 +25,116 @@ const WalletsPage: React.FC = () => {
 
   const { data: wallets = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['wallets'],
+    /**
+     * Load wallets page data for the query cache.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting wallets page value for the caller.
+     */
     queryFn: () => api.get('/wallets').then(r => r.data.data),
   });
 
   const createMutation = useMutation({
+    /**
+     * Execute the wallets page mutation requested by the client.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param data - The input data required to execute the wallets page mutation requested by the client.
+     * @returns The resulting wallets page value for the caller.
+     */
     mutationFn: (data: any) => api.post('/wallets', data),
+    /**
+     * Finalize the wallets page workflow after a successful operation.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['wallets'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); setShowModal(false); },
   });
 
   const updateMutation = useMutation({
+    /**
+     * Execute the wallets page mutation requested by the client.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting wallets page value for the caller.
+     */
     mutationFn: ({ id, data }: { id: string; data: any }) => api.put(`/wallets/${id}`, data),
+    /**
+     * Finalize the wallets page workflow after a successful operation.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['wallets'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); setEditWallet(null); },
   });
 
   const deleteMutation = useMutation({
+    /**
+     * Execute the wallets page mutation requested by the client.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting wallets page value for the caller.
+     */
     mutationFn: (id: string) => api.delete(`/wallets/${id}`),
+    /**
+     * Finalize the wallets page workflow after a successful operation.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       for (const queryKey of ['wallets', 'dashboard', 'monthly-report', 'yearly-report', 'monthly-trend', 'monthly-balance-v7']) {
         qc.invalidateQueries({ queryKey: [queryKey] });
       }
       setDeletingId(null);
     },
+    /**
+     * Map a failed wallets page operation into user-visible state.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting wallets page value for the caller.
+     */
     onError: () => setDeletingId(null),
   });
 
   const transferMutation = useMutation({
+    /**
+     * Execute the wallets page mutation requested by the client.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param data - The input data required to execute the wallets page mutation requested by the client.
+     * @returns The resulting wallets page value for the caller.
+     */
     mutationFn: (data: any) => api.post('/transactions/transfer', data),
+    /**
+     * Finalize the wallets page workflow after a successful operation.
+     *
+     * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['wallets'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); setShowTransfer(false); },
   });
 
   const totalBalance = wallets.reduce((s: number, w: any) => s + Number(w.initialBalance), 0);
 
+  /**
+   * Return wallet meta required by the wallets page workflow.
+   *
+   * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+   * @param type - The operation or report variant to process.
+   * @returns The resulting wallets page value for the caller.
+   */
   const getWalletMeta = (type: string) => WALLET_TYPES.find(wt => wt.value === type) || WALLET_TYPES[0];
+  /**
+   * Wallet visual for wallets page.
+   *
+   * Use it to keep the wallets page workflow's presentation and interactions in one reusable UI boundary.
+   * @param type - The operation or report variant to process.
+   * @returns The resulting wallets page value for the caller.
+   */
   const walletVisual = (type: string) => ({
     CASH: 'from-emerald-500 to-emerald-800',
     BANK: 'from-blue-500 to-blue-900',

@@ -7,6 +7,15 @@ import { AppError } from '../common/app-error';
 export class SavingGoalController {
   private savingGoalService = new SavingGoalService();
 
+  /**
+   * Create goal for the saving goal workflow.
+   *
+   * Use it as the HTTP boundary for the saving goal route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public createGoal = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -16,6 +25,15 @@ export class SavingGoalController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Return goals required by the saving goal workflow.
+   *
+   * Use it as the HTTP boundary for the saving goal route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getGoals = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -25,6 +43,15 @@ export class SavingGoalController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Return goal required by the saving goal workflow.
+   *
+   * Use it as the HTTP boundary for the saving goal route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getGoal = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -34,6 +61,15 @@ export class SavingGoalController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Update goal while preserving the saving goal workflow's rules.
+   *
+   * Use it as the HTTP boundary for the saving goal route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public updateGoal = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -43,6 +79,15 @@ export class SavingGoalController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Delete goal through the saving goal workflow.
+   *
+   * Use it as the HTTP boundary for the saving goal route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deleteGoal = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -52,6 +97,15 @@ export class SavingGoalController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Deposit for saving goal.
+   *
+   * Use it as the HTTP boundary for the saving goal route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deposit = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -61,6 +115,15 @@ export class SavingGoalController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Withdraw for saving goal.
+   *
+   * Use it as the HTTP boundary for the saving goal route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public withdraw = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

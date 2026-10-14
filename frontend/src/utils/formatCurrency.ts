@@ -1,6 +1,20 @@
+/**
+ * Format a monetary amount for display in Vietnamese dong.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param value - The value to transform or evaluate.
+ * @returns The resulting format currency value for the caller.
+ */
 export const formatVND = (value: number) =>
   `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(value)} đ`;
 
+/**
+ * Format chart value for the format currency workflow.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param value - The value to transform or evaluate.
+ * @returns The resulting format currency value for the caller.
+ */
 export const formatChartValue = (value: number) => {
   if (Math.abs(value) >= 1_000_000) return `${Number((value / 1_000_000).toFixed(1))}tr`;
   if (Math.abs(value) >= 1_000) return `${Number((value / 1_000).toFixed(1))}k`;

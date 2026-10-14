@@ -13,6 +13,12 @@ import {
 } from '@/storage/database';
 import { useAuthStore } from '@/stores/auth.store';
 
+/**
+ * Render the outbox sync interface.
+ *
+ * Use it near the application root so descendants share the same offline provider lifecycle.
+ * @returns The rendered outbox sync interface.
+ */
 function OutboxSync() {
   const database = useSQLiteContext();
   const user = useAuthStore((state) => state.user);
@@ -77,6 +83,13 @@ function OutboxSync() {
   return null;
 }
 
+/**
+ * Provide offline provider state and services to descendant components.
+ *
+ * Use it near the application root so descendants share the same offline provider lifecycle.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered offline provider interface.
+ */
 export function OfflineProvider({ children }: PropsWithChildren) {
   return (
     <SQLiteProvider databaseName="moneymate.db" onInit={migrateDatabase}>

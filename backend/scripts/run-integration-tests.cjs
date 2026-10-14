@@ -5,6 +5,12 @@ const dotenv = require('dotenv');
 
 dotenv.config({ path: path.join(process.cwd(), '.env.test') });
 
+/**
+ * Determine whether reach database applies.
+ *
+ * Use it while running the run integration tests maintenance workflow.
+ * @returns `true` when the condition is satisfied; otherwise `false`.
+ */
 const canReachDatabase = async () => {
   if (!process.env.DATABASE_URL) return false;
 
@@ -20,6 +26,13 @@ const canReachDatabase = async () => {
       host: databaseUrl.hostname,
       port: Number(databaseUrl.port || 3306),
     });
+    /**
+     * Finish the database reachability probe and report whether integration tests may start.
+     *
+     * Use it while running the run integration tests maintenance workflow.
+     * @param reachable - The reachable value required by the operation.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     const finish = (reachable) => {
       socket.destroy();
       resolve(reachable);
@@ -31,6 +44,12 @@ const canReachDatabase = async () => {
   });
 };
 
+/**
+ * Run the run integration tests command-line workflow.
+ *
+ * Use it while running the run integration tests maintenance workflow.
+ * @returns A promise that resolves after the operation completes.
+ */
 const main = async () => {
   const databaseAvailable = await canReachDatabase();
   const databaseRequired = process.env.REQUIRE_DATABASE_INTEGRATION === 'true' || process.env.CI === 'true';

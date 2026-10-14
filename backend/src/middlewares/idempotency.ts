@@ -5,6 +5,15 @@ import prisma from '../config/db';
 import { AppError } from '../common/app-error';
 import { AuthenticatedRequest } from './auth';
 
+/**
+ * Idempotency for idempotency.
+ *
+ * Use it in the request pipeline when idempotency processing is required.
+ * @param req - The incoming request and its authenticated or validated input.
+ * @param res - The response object used to return the operation result.
+ * @param next - The callback that continues the middleware pipeline or receives an error.
+ * @returns A promise containing the resulting idempotency value.
+ */
 export async function idempotency(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const key = req.header('Idempotency-Key');
   if (!key) return next();
@@ -12,7 +21,12 @@ export async function idempotency(req: AuthenticatedRequest, res: Response, next
   if (key.length > 100) return next(new AppError('Idempotency key is too long', 400));
 
   const requestHash = createHash('sha256')
-    .update(JSON.stringify({ method: req.method, path: req.baseUrl + req.path, body: req.body }))
+    .update(JSON.stringify({
+      method: req.method,
+      path: req.baseUrl + req.path,
+      body: req.body,
+      ...(req.query && Object.keys(req.query).length ? { query: req.query } : {}),
+    }))
     .digest('hex');
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 

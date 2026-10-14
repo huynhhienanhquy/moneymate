@@ -8,6 +8,13 @@ interface AppTitleProps extends Omit<HTMLAttributes<HTMLHeadingElement>, 'childr
   unstyled?: boolean;
 }
 
+/**
+ * Render the app title interface.
+ *
+ * Use it to keep the app title workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered app title interface.
+ */
 const AppTitle = ({ children, level = 1, eyebrow, description, unstyled = false, className = '', ...headingProps }: AppTitleProps) => {
   const Heading = level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3';
   const size = level === 1 ? 'text-[30px] sm:text-page-title' : level === 2 ? 'text-section-title' : 'text-card-title';

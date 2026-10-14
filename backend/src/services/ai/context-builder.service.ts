@@ -33,6 +33,15 @@ export class ContextBuilderService {
   private walletRepository = new WalletRepository();
   private recurringRepository = new RecurringRepository();
 
+  /**
+   * Build context builder used by the context builder workflow.
+   *
+   * Use it from controllers or jobs that run the context builder business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting context builder value.
+   */
   async build(userId: string, month?: number, year?: number): Promise<FinancialContext> {
     const now = new Date();
     const m = month || now.getMonth() + 1;
@@ -109,6 +118,13 @@ export class ContextBuilderService {
     };
   }
 
+  /**
+   * To prompt text for context builder.
+   *
+   * Use it from controllers or jobs that run the context builder business workflow.
+   * @param ctx - The ctx value required by the operation.
+   * @returns The resulting context builder value for the caller.
+   */
   toPromptText(ctx: FinancialContext): string {
     const lines = [
       `Tháng ${ctx.month}/${ctx.year}:`,

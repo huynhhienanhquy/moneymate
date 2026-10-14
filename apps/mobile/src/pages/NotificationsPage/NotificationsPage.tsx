@@ -23,30 +23,80 @@ interface NotificationItem {
   createdAt: string;
 }
 
+/**
+ * Render the notifications page interface.
+ *
+ * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered notifications page interface.
+ */
 export default function NotificationsPage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
   const client = useQueryClient();
   const query = useQuery({
     queryKey: ['notifications'],
+    /**
+     * Load notifications page data for the query cache.
+     *
+     * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting notifications page value for the caller.
+     */
     queryFn: () =>
       apiRequest<{ notifications: NotificationItem[] }>(
         '/notifications?take=50',
       ),
   });
   const read = useMutation({
+    /**
+     * Execute the notifications page mutation requested by the client.
+     *
+     * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting notifications page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/notifications/${id}/read`, { method: 'PATCH' }),
+    /**
+     * Finalize the notifications page workflow after a successful operation.
+     *
+     * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting notifications page value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
   const readAll = useMutation({
+    /**
+     * Execute the notifications page mutation requested by the client.
+     *
+     * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting notifications page value for the caller.
+     */
     mutationFn: () =>
       apiRequest('/notifications/read-all', { method: 'PATCH' }),
+    /**
+     * Finalize the notifications page workflow after a successful operation.
+     *
+     * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting notifications page value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
   const remove = useMutation({
+    /**
+     * Execute the notifications page mutation requested by the client.
+     *
+     * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting notifications page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/notifications/${id}`, { method: 'DELETE' }),
+    /**
+     * Finalize the notifications page workflow after a successful operation.
+     *
+     * Use it to keep the notifications page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting notifications page value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
   const items = query.data?.notifications || [];

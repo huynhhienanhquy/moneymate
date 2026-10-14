@@ -1,183 +1,173 @@
 # MoneyMate Backend
 
-The backend is a TypeScript/Express API for MoneyMate. It owns authentication, financial business rules, persistence, attachments, exports, AI services, and the authenticated CopilotKit runtime.
+> Tài liệu theo working tree ngày 2026-10-13. Đây là API TypeScript/Express của MoneyMate, quản lý authentication, dữ liệu tài chính, recurring scheduler, notifications, attachments/export, AI REST và CopilotKit runtime tùy chọn.
 
-## Stack
+## Đọc tài liệu
 
-- Node.js and Express
-- TypeScript and Zod
-- MySQL 8 and Prisma ORM
-- JWT access/refresh sessions
-- OpenAI, CopilotKit v2, and Tesseract.js
-- Local or S3-compatible attachment storage
-- Jest, ts-jest, and Supertest
+| Nội dung | Tài liệu |
+| --- | --- |
+| Danh mục toàn project | [Docs index](../docs/README.md) |
+| Cài đặt local và cấu hình các app | [Environment Setup](../docs/environment-setup.md) |
+| Toàn bộ endpoints, request/response/errors, sync | [API Documentation](../docs/api.md) |
+| JWT, web cookie, native refresh, roles/sessions | [Authentication & Authorization](../docs/auth_sessions.md) |
+| Quy tắc số dư, reports, recurring, budget/goal | [Business Logic](../docs/business_rules.md) |
+| Entities, ERD, FK/index và migration history | [Database Design](../docs/erd.md) |
+| Unit/integration và giới hạn kiểm thử | [Testing](../docs/testing.md) |
+| Docker, CI/CD, production | [Deployment](../docs/deployment.md) |
+| Lỗi và cách chẩn đoán | [Troubleshooting](../docs/troubleshooting.md) |
 
-## Architecture
+## Stack và cấu trúc
+
+Node.js ≥ 22.13 theo [root package.json](../package.json); Docker dùng Node 22. Backend dùng Express 4, TypeScript 5, Prisma 5 với MySQL, Zod 3, bcryptjs, jsonwebtoken, Multer 2. AI dùng OpenAI SDK và CopilotKit runtime 1.69.0, OCR dùng pdf-parse/Tesseract. Export dùng ExcelJS/PDFKit; object storage là local hoặc AWS S3 SDK. Jest/ts-jest/Supertest kiểm thử backend. Phiên bản cài đặt chính xác xem [package-lock](../package-lock.json), ranges xem [package.json](package.json).
 
 ```text
 backend/
-├── prisma/                 # Schema, migrations, and system-category seed
-├── scripts/                # Startup, integration, and live Copilot checks
+├── prisma/
+│   ├── schema.prisma        # MySQL model, relation, enum, indexes
+│   ├── migrations/          # Lịch sử SQL
+│   └── seed.ts              # 14 category global, không tạo account
+├── scripts/                 # Startup/integration/live Copilot checks
 └── src/
-    ├── common/             # Errors, responses, recurrence, and utilities
-    ├── config/             # Database, CORS, Swagger, AI, and Copilot config
-    ├── controllers/        # HTTP request/response handling
-    ├── copilotkit/         # Runtime, prompt, auth, security, and tools
-    ├── middlewares/        # Auth, rate limits, validation, upload, and errors
-    ├── repositories/       # Prisma data access
-    ├── routes/             # Express route registration
-    ├── services/           # Business logic, exports, OCR, AI, and storage
-    ├── validators/         # Request schemas
-    └── __tests__/          # Unit and integration tests
+    ├── app.ts               # Express middleware và mount routes
+    ├── server.ts            # Listen, env validation, recurring interval
+    ├── common/              # Response, AppError, recurrence, utilities
+    ├── config/              # DB, CORS, env, Swagger, AI/Copilot config
+    ├── routes/              # HTTP routes, middleware và validator
+    ├── controllers/         # HTTP input/output và lỗi
+    ├── services/            # Nghiệp vụ; một số service dùng Prisma trực tiếp
+    │   └── ai/              # Context, rules, LLM, OCR, forecast, advisor/chat
+    ├── repositories/        # Truy vấn và DB transactions
+    ├── validators/          # Zod request schemas
+    ├── middlewares/         # Auth/admin, validation, request ID, rate limit, upload
+    ├── copilotkit/          # Runtime/agent/tools/auth/security/prompt
+    └── __tests__/           # Unit và integration tests
 ```
 
-The normal request flow is route → middleware → controller → service → repository → Prisma. Business rules belong in services; database access belongs in repositories.
+Luồng thông thường: route → middleware → controller → service → repository/Prisma. Services giữ business invariants; repository và một số services thực hiện DB transaction trực tiếp. `@moneymate/validation` được import từ workspace package; build các packages trước khi build backend.
 
-## Setup
+## Chạy local
 
-Install all workspace dependencies from the repository root:
+Từ root repository:
 
 ```bash
 npm ci
+npm run build:packages
 ```
 
-Create the backend environment file:
+Tạo file cấu hình nếu chưa có. PowerShell:
 
 ```powershell
-Copy-Item backend/.env.example backend/.env
+if (-not (Test-Path backend/.env)) {
+    Copy-Item backend/.env.example backend/.env
+}
 ```
 
-```bash
-cp backend/.env.example backend/.env
-```
-
-Create the `moneymate` MySQL database, update `DATABASE_URL`, and use independent JWT secrets. Then prepare Prisma:
+Tạo database MySQL `moneymate`, chỉnh DATABASE_URL trong file riêng, cấu hình cả hai JWT secrets. Giá trị example không dùng cho production. Không commit `.env` chứa secrets. Khi dùng MySQL bằng Docker, xem [Environment Setup](../docs/environment-setup.md) để khớp port và credentials.
 
 ```bash
 npm run prisma:generate --workspace=moneymate-backend
 npm run prisma:migrate --workspace=moneymate-backend
 npm run prisma:seed --workspace=moneymate-backend
-```
-
-Start the API:
-
-```bash
 npm run dev:backend
 ```
 
-- API base: <http://localhost:5000/api>
-- Health check: <http://localhost:5000/health>
-- Swagger UI: <http://localhost:5000/api-docs>
+Mặc định [API](http://localhost:5000/api), [health](http://localhost:5000/health), [Swagger UI](http://localhost:5000/api-docs). Health chỉ báo tiến trình HTTP trả lời. Swagger có cấu hình OpenAPI nhưng route/controller hiện không có endpoint annotations, nên xem [API docs](../docs/api.md) để có danh mục đầy đủ.
 
-## API groups
+## API theo module
 
-| Prefix | Responsibility |
+| Prefix | Nhiệm vụ |
 | --- | --- |
-| `/api/auth` | Registration, login, refresh, logout, and device sessions |
-| `/api/users` | Profile and account operations |
-| `/api/wallets` | Wallet lifecycle and balances |
-| `/api/categories` | System and user categories |
-| `/api/transactions` | Income, expenses, transfers, reports, and exports |
-| `/api/budgets` | Monthly budgets and utilization |
-| `/api/saving-goals` | Savings goals and contributions |
-| `/api/recurring-transactions` | Recurring schedules and execution |
-| `/api/notifications` | Notification inbox and device registration |
-| `/api/attachments` | Transaction attachment upload and access |
-| `/api/ai` | AI analysis, advice, forecasting, chat, and OCR |
-| `/api/admin` | Administrator-only operations |
-| `/api/copilotkit` | Authenticated CopilotKit v2 runtime when enabled |
+| `/api/auth` | Register, login, refresh, logout, list/revoke sessions |
+| `/api/users` | Profile, password, self-delete account |
+| `/api/wallets` | Ví active, cập nhật số dư, archive |
+| `/api/categories` | Category riêng và global |
+| `/api/transactions` | CRUD thu/chi, transfer, dashboard/reports/trend, transaction sync |
+| `/api/budgets` | Ngân sách global/category theo tháng và utilization |
+| `/api/saving-goals` | Goal CRUD, deposit/withdraw |
+| `/api/recurring-transactions` | Recurring CRUD/toggle; execution do server scheduler |
+| `/api/notifications` | Inbox và Expo device registration |
+| `/api/attachments` | Upload/list/download/delete file; export monthly XLSX/PDF |
+| `/api/ai` | Analysis/advisor/forecast/chat/OCR với rule fallback |
+| `/api/admin` | User management, yêu cầu ADMIN |
+| `/api/copilotkit` | Runtime protocol POST single-route, chỉ mount khi enabled |
 
-Use Swagger UI for the complete and current endpoint schemas.
+Response JSON REST dùng `{success,message,data,requestId}`; error dùng `{success:false,code,message,errors,requestId}`. Export/content và Copilot stream có định dạng riêng. [API docs](../docs/api.md) ghi validator nào thật sự gắn trên mỗi route; không phải mọi query/param đều có Zod.
 
-## Environment variables
+## Cấu hình môi trường
 
-| Variable | Required | Description |
+Nguồn mẫu: [.env.example](.env.example). Các default dưới đây lấy từ code, không phải credential của môi trường đang chạy.
+
+| Biến | Mặc định / yêu cầu | Công dụng |
 | --- | --- | --- |
-| `PORT` | No | API port; defaults to `5000` |
-| `DATABASE_URL` | Yes | MySQL connection URL used by Prisma |
-| `JWT_ACCESS_SECRET` | Yes | Access-token signing secret |
-| `JWT_REFRESH_SECRET` | Yes | Refresh-token signing secret |
-| `NODE_ENV` | No | `development`, `test`, or `production` |
-| `FRONTEND_URL` | Yes in production | Comma-separated browser origins allowed by CORS |
-| `STORAGE_DRIVER` | No | `local` by default, or `s3` |
-| `S3_BUCKET` | For S3 | Attachment bucket |
-| `S3_REGION` | For S3 | Bucket region |
-| `S3_PUBLIC_URL` | For S3 | Public attachment base URL |
-| `S3_ENDPOINT` | No | Custom S3-compatible endpoint |
-| `S3_FORCE_PATH_STYLE` | No | Enable path-style S3 requests |
-| `OPENAI_API_KEY` | For AI/Copilot | Enables OpenAI-backed features |
-| `AI_MODEL` | No | Legacy AI model; defaults to `gpt-4o-mini` |
-| `AI_MAX_TOKENS` | No | Legacy AI response limit; defaults to `1500` |
-| `COPILOTKIT_ENABLED` | No | Enables the Copilot runtime; defaults to `false` |
-| `COPILOT_MODEL` | When Copilot is enabled | OpenAI provider/model; defaults to `openai/gpt-4o-mini` |
-| `COPILOT_MAX_STEPS` | No | Agent step limit from `1` to `8` |
-| `COPILOT_MAX_OUTPUT_TOKENS` | No | Output-token limit from `256` to `4096` |
-| `COPILOT_MAX_MESSAGE_CHARS` | No | Maximum characters per user message |
-| `COPILOT_MODEL_TIMEOUT_MS` | No | Timeout for a model run |
-| `COPILOT_RATE_LIMIT_MAX_REQUESTS` | No | Requests allowed in each Copilot rate-limit window |
-| `COPILOT_RATE_LIMIT_WINDOW_MS` | No | Copilot rate-limit window length |
-| `COPILOTKIT_TELEMETRY_DISABLED` | No | Disables anonymous SDK telemetry; defaults to `true` |
-| `AUTH_LOGIN_RATE_LIMIT_MAX` | No | Login attempts per rate-limit window |
-| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | No | Login rate-limit window length |
-| `AUTH_REGISTER_RATE_LIMIT_MAX` | No | Registration attempts per rate-limit window |
-| `AUTH_REGISTER_RATE_LIMIT_WINDOW_MS` | No | Registration rate-limit window length |
+| PORT | 5000 | HTTP port |
+| DATABASE_URL | Bắt buộc để dùng Prisma/MySQL | Connection URL, không chia sẻ giá trị thật |
+| JWT_ACCESS_SECRET | Bắt buộc | Ký/verify access JWT HS256 |
+| JWT_REFRESH_SECRET | Bắt buộc bởi startup validation | Giữ contract cấu hình; opaque refresh hiện không ký bằng secret này |
+| NODE_ENV | Không đặt default trong server | Production bật secure cookie, trust proxy và giới hạn CORS/secret |
+| FRONTEND_URL | http://localhost:5173 | Danh sách origins comma-separated; production đặt exact HTTPS origins |
+| STORAGE_DRIVER | Local khi khác s3 | Chọn local uploads hoặc S3 |
+| S3_BUCKET, S3_REGION, S3_PUBLIC_URL | Bắt buộc nếu driver=s3 | Bucket/region và prefix URL lưu metadata; file vẫn đọc qua API xác thực |
+| S3_ENDPOINT | Tùy chọn | Endpoint S3-compatible |
+| S3_FORCE_PATH_STYLE | false | `true` để bật path-style |
+| OPENAI_API_KEY | Tùy chọn; bắt buộc nếu Copilot enabled | Bật LLM/vision và cung cấp credential Copilot |
+| AI_MODEL | gpt-4o-mini | Model AI REST |
+| AI_MAX_TOKENS | 1500 | Response token limit AI REST |
+| COPILOTKIT_ENABLED | false; chỉ true/false | Mount runtime |
+| COPILOT_MODEL | openai/gpt-4o-mini | Khi enabled phải có prefix openai/ |
+| COPILOT_MAX_STEPS | 3; 1–8 | Agent step limit |
+| COPILOT_MAX_OUTPUT_TOKENS | 1500; 256–4096 | Agent output limit |
+| COPILOT_MAX_MESSAGE_CHARS | 4000; 256–20000 | Giới hạn user message |
+| COPILOT_MODEL_TIMEOUT_MS | 45000; 5000–120000 | Timeout model run |
+| COPILOT_RATE_LIMIT_MAX_REQUESTS | 60; 5–600 | Request/IP trong window |
+| COPILOT_RATE_LIMIT_WINDOW_MS | 60000; 10000–3600000 | Rate window |
+| COPILOTKIT_TELEMETRY_DISABLED | Server đặt true nếu chưa có | Telemetry flag SDK |
+| AUTH_LOGIN_RATE_LIMIT_MAX | 10 | Login attempts/IP/window |
+| AUTH_LOGIN_RATE_LIMIT_WINDOW_MS | 900000 | Login fixed window |
+| AUTH_REGISTER_RATE_LIMIT_MAX | 5 | Register attempts/IP/window |
+| AUTH_REGISTER_RATE_LIMIT_WINDOW_MS | 3600000 | Register fixed window |
 
-Both JWT secrets are mandatory. Production startup also rejects known example values and secrets shorter than 32 characters.
+S3 credentials dùng cơ chế credential provider của AWS SDK (environment/role), không hardcode trong source. Local uploads nằm dưới `process.cwd()/uploads`; các npm workspace commands chạy backend với cwd phù hợp. Server không public serve `/uploads`. Nếu container storage không durable, cần storage phù hợp và backup riêng.
 
-## Authentication and security
+## Các behavior cần biết khi tích hợp
 
-- Access tokens are sent as `Authorization: Bearer <token>`.
-- Refresh sessions use secure rotation and device-aware records.
-- Login and registration have configurable in-memory rate limits.
-- Production CORS accepts only origins listed in `FRONTEND_URL`.
-- Request IDs are attached for tracing and safe error responses.
-- File uploads are validated before local or S3-compatible storage.
-- Idempotency keys protect supported mutation flows from duplicate writes.
+- Access JWT 15 phút; refresh random token 7 ngày, DB chỉ lưu hash, rotation atomic và reuse revoke family. Web refresh qua HttpOnly cookie; native refresh qua SecureStore/body. Revoke refresh không invalidate JWT đã cấp ngay.
+- `Wallet.initialBalance` là số dư mutable: INCOME tăng ví; EXPENSE ghi báo cáo, **không trừ ví**. Transfer/goal funding mới debit/credit tiền. Reports có các công thức income/savings khác nhau theo màn hình, mô tả trong [business rules](../docs/business_rules.md).
+- Wallet/transaction DELETE là soft delete; sync trả transaction tombstones. PUT/DELETE transaction nhận version để client tránh ghi đè dữ liệu cũ.
+- Idempotency-Key trên POST tạo transaction/transfer, PUT sửa và DELETE giao dịch; không tự áp dụng cho tất cả mutations.
+- Scheduler chạy startup và mỗi 24 giờ, catch-up tối đa 100 lần/schedule/run. Không có durable queue. Notification side effects lỗi được log sau commit.
+- Rule-based AI và parser OCR hoạt động khi thiếu key; Copilot enabled cần key, endpoint không tồn tại khi disabled.
 
-## CopilotKit runtime
+## CopilotKit
 
-Enable the runtime only when `OPENAI_API_KEY` is configured:
+Server đăng ký 6 tools chỉ đọc: `getFinancialOverview`, `getExpenseBreakdown`, `getBudgetStatus`, `getSavingGoals`, `compareMonthlySpending`, `findTransactions`. Tool tìm giao dịch trả tối đa 20 bản ghi mỗi trang, hỗ trợ ID, nội dung ghi chú/tên ví/tên danh mục, loại và khoảng ngày. User scope được bind từ JWT, không do model/client chọn userId. [Frontend README](../frontend/README.md) mô tả tools mutation/UI phía browser sau xác nhận.
 
-```dotenv
-COPILOTKIT_ENABLED=true
-OPENAI_API_KEY=...
-COPILOT_MODEL=openai/gpt-4o-mini
-```
+`findTransactions` cho phép các bộ lọc nhận `null`: tìm danh sách phải dùng `transactionId=null`, tránh model tự điền ID khi provider yêu cầu đủ trường. ID không tồn tại/không thuộc user trả `TRANSACTION_NOT_FOUND`; ngày tìm không hợp lệ trả `INVALID_TOOL_INPUT`, phân biệt với lỗi database/timeout. Danh sách rỗng vẫn là kết quả thành công.
 
-The runtime provides five read-only financial tools scoped to the authenticated user:
+`npm run test:copilot-lookup-live --workspace=moneymate-backend` kiểm tra đúng câu hỏi tìm khoản chi ăn uống bằng model đã cấu hình cho danh sách rỗng và hai giao dịch mẫu. Lệnh có provider usage/network; toàn bộ dữ liệu là giả, không đọc tài chính người dùng hoặc ghi database.
 
-- `getFinancialOverview`
-- `getExpenseBreakdown`
-- `getBudgetStatus`
-- `getSavingGoals`
-- `compareMonthlySpending`
+Runtime chỉ chấp nhận Bearer; check origin, production HTTPS, payload 64kb, message/rate limits, thread ownership, model timeout và tool limits. Thread/run state nằm trong InMemoryAgentRunner, không lưu bền vững qua restart hay chia sẻ giữa replicas. Agent không forward system/developer messages client hoặc credential headers.
 
-The runtime validates thread ownership, message size, model/provider configuration, tool-step limits, request rate limits, timeouts, HTTPS/origin requirements in production, and client disconnect cancellation. Browser-side mutation and UI tools are documented in the [frontend README](../frontend/README.md).
+## Build và kiểm thử
 
-## Scripts
+Chạy từ root:
 
-Run these from the repository root:
-
-| Command | Purpose |
+| Lệnh | Tác dụng |
 | --- | --- |
-| `npm run dev:backend` | Start the API with Nodemon |
-| `npm run build --workspace=moneymate-backend` | Compile TypeScript to `backend/dist` |
-| `npm run prisma:generate --workspace=moneymate-backend` | Generate the Prisma client |
-| `npm run prisma:migrate --workspace=moneymate-backend` | Apply development migrations |
-| `npm run prisma:seed --workspace=moneymate-backend` | Seed system categories |
-| `npm run test:unit --workspace=moneymate-backend` | Run unit tests |
-| `npm run test:integration --workspace=moneymate-backend` | Run integration tests |
-| `npm run test:all --workspace=moneymate-backend` | Run unit and integration tests |
-| `npm run test:coverage --workspace=moneymate-backend` | Generate Jest coverage |
-| `npm run test:dev-startup --workspace=moneymate-backend` | Start the API, check `/health`, and stop it |
-| `npm run test:copilot-live --workspace=moneymate-backend` | Call the configured model to validate the Copilot schema |
+| `npm run build:packages` | Build packages dùng chung |
+| `npm run build --workspace=moneymate-backend` | Compile backend TypeScript sang dist |
+| `npm run start --workspace=moneymate-backend` | Chạy dist/server.js sau build |
+| `npm run test --workspace=moneymate-backend` | Alias test:unit |
+| `npm run test:unit --workspace=moneymate-backend` | Jest unit, bỏ integration |
+| `npm run test:integration --workspace=moneymate-backend` | Integration runner và DB probe |
+| `npm run test:all --workspace=moneymate-backend` | Unit rồi integration |
+| `npm run test:coverage --workspace=moneymate-backend` | Jest coverage theo config |
+| `npm run test:dev-startup --workspace=moneymate-backend` | Start server, probe health, stop |
+| `npm run test:copilot-live --workspace=moneymate-backend` | Gọi model đã cấu hình để kiểm tra Copilot tool schema; có network/provider usage |
 
-Integration tests read `backend/.env.test`. If MySQL is unavailable, database-dependent tests are skipped locally; set `REQUIRE_DATABASE_INTEGRATION=true` to fail instead. CI always requires the integration database. Never use a production database for tests.
+Integration runner đọc `backend/.env.test`, probe TCP MySQL. Khi DB local không reachable, runner vẫn chạy integration Copilot không cần DB và bỏ auth.api.test; `REQUIRE_DATABASE_INTEGRATION=true` hoặc `CI=true` buộc fail khi thiếu DB. Đừng coi local integration exit 0 là DB tests đã chạy. Tài liệu này không khẳng định các suite đã chạy ở mọi môi trường; xem [Testing](../docs/testing.md) để tái hiện.
 
-## Production notes
+## Production
 
-- The backend Docker image runs `prisma migrate deploy` before starting the compiled server.
-- Set `FRONTEND_URL` to the exact HTTPS origins that may call the API.
-- Ensure the reverse proxy forwards `X-Forwarded-Proto` correctly.
-- Use S3-compatible storage when local container storage is not durable.
-- Back up and test database restore procedures before applying production migrations.
+[Dockerfile](Dockerfile) build từ **root context**, cài workspace dependencies, generate Prisma, build packages/backend, rồi runtime chạy `prisma migrate deploy && node dist/server.js`. Migration deploy không gọi seed script, nhưng migration recurring/categories đã provision global categories cho fresh DB.
+
+Cấu hình production cần MySQL reachable, JWT secrets phù hợp, exact CORS origins, HTTPS/proxy forwarding, object storage durable và backup. Health không là DB readiness; rate limiting/scheduler/Copilot memory có giới hạn khi scale nhiều replica. Xem [Deployment](../docs/deployment.md) và [Troubleshooting](../docs/troubleshooting.md) để kiểm tra theo topology hiện có.

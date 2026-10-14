@@ -22,6 +22,12 @@ const defaultCategories = [
   { name: 'Khác (Chi tiêu)', type: CategoryType.EXPENSE, color: '#607D8B', icon: 'more-horizontal' }
 ];
 
+/**
+ * Run the seed command-line workflow.
+ *
+ * Use it while running the seed maintenance workflow.
+ * @returns A promise that resolves after the operation completes.
+ */
 async function main() {
   console.log('Start seeding standard system categories...');
 

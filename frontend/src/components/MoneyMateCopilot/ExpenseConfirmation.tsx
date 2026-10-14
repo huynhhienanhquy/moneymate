@@ -39,8 +39,22 @@ interface ExpenseSubmission {
   };
 }
 
+/**
+ * Normalize expense confirmation into the expense confirmation workflow's canonical form.
+ *
+ * Use it to keep the expense confirmation workflow's presentation and interactions in one reusable UI boundary.
+ * @param value - The value to transform or evaluate.
+ * @returns The resulting expense confirmation value for the caller.
+ */
 const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').trim();
 
+/**
+ * Render the expense confirmation interface.
+ *
+ * Use it to keep the expense confirmation workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered expense confirmation interface.
+ */
 export function ExpenseConfirmation({ draft, toolCallId, respond }: {
   draft: ExpenseDraft;
   toolCallId: string;
@@ -76,11 +90,24 @@ export function ExpenseConfirmation({ draft, toolCallId, respond }: {
     if (matchingCategories.length === 1) setCategoryId(matchingCategories[0].id);
   }, [walletsQuery.data, categoriesQuery.data, draft.walletName, draft.categoryName]);
 
+  /**
+   * Complete the pending expense action with the supplied result payload.
+   *
+   * Use it to keep the expense confirmation workflow's presentation and interactions in one reusable UI boundary.
+   * @param result - The result value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   const finish = async (result: Record<string, unknown>) => {
     try { await respond(result); }
     catch { setError(result.success ? 'Đã lưu giao dịch. Nhấn Hoàn tất để cập nhật cuộc trò chuyện.' : 'Chưa thể cập nhật cuộc trò chuyện. Vui lòng thử lại.'); }
   };
 
+  /**
+   * Save expense confirmation for the expense confirmation workflow.
+   *
+   * Use it to keep the expense confirmation workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const save = async () => {
     if (busyRef.current) return;
     let pending = submission;
@@ -130,6 +157,12 @@ export function ExpenseConfirmation({ draft, toolCallId, respond }: {
     }
   };
 
+  /**
+   * Cancel the pending expense without persisting a transaction.
+   *
+   * Use it to keep the expense confirmation workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const cancel = async () => {
     if (busyRef.current || locked) return;
     busyRef.current = true;

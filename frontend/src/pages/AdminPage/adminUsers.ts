@@ -8,12 +8,33 @@ export interface AdminUser {
 }
 
 const avatarColors = ['bg-blue-500', 'bg-violet-600', 'bg-emerald-500', 'bg-amber-500', 'bg-pink-500', 'bg-indigo-950'];
+/**
+ * Avatar color for admin users.
+ *
+ * Use it to keep the admin users workflow's presentation and interactions in one reusable UI boundary.
+ * @param id - The stable identifier of the record targeted by the operation.
+ * @returns The resulting admin users value for the caller.
+ */
 export function avatarColor(id: string) {
   const hash = Array.from(id).reduce((value, character) => ((value * 31 + character.charCodeAt(0)) >>> 0), 0);
   return avatarColors[hash % avatarColors.length];
 }
 
+/**
+ * Users csv for admin users.
+ *
+ * Use it to keep the admin users workflow's presentation and interactions in one reusable UI boundary.
+ * @param users - The users value required by the operation.
+ * @returns The resulting admin users value for the caller.
+ */
 export function usersCsv(users: AdminUser[]) {
+  /**
+   * Escape a value so it can be written safely to the admin users export.
+   *
+   * Use it to keep the admin users workflow's presentation and interactions in one reusable UI boundary.
+   * @param value - The value to transform or evaluate.
+   * @returns The resulting admin users value for the caller.
+   */
   const escapeCell = (value: string | number) => {
     const text = String(value);
     // Quoting alone does not prevent spreadsheet applications executing formulas.
@@ -27,6 +48,13 @@ export function usersCsv(users: AdminUser[]) {
   return '\uFEFF' + rows.map((row) => row.map(escapeCell).join(',')).join('\r\n');
 }
 
+/**
+ * Export users from the admin users workflow.
+ *
+ * Use it to keep the admin users workflow's presentation and interactions in one reusable UI boundary.
+ * @param users - The users value required by the operation.
+ * @returns Nothing; the operation is complete when the function returns.
+ */
 export function exportUsers(users: AdminUser[]) {
   const url = URL.createObjectURL(new Blob([usersCsv(users)], { type: 'text/csv;charset=utf-8;' }));
   const link = document.createElement('a');

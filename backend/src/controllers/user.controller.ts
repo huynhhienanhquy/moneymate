@@ -7,6 +7,15 @@ import { AppError } from '../common/app-error';
 export class UserController {
   private userService = new UserService();
 
+  /**
+   * Return profile required by the user workflow.
+   *
+   * Use it as the HTTP boundary for the user route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getProfile = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -20,6 +29,15 @@ export class UserController {
     }
   };
 
+  /**
+   * Update profile while preserving the user workflow's rules.
+   *
+   * Use it as the HTTP boundary for the user route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public updateProfile = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -33,6 +51,15 @@ export class UserController {
     }
   };
 
+  /**
+   * Change password for user.
+   *
+   * Use it as the HTTP boundary for the user route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public changePassword = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -47,6 +74,15 @@ export class UserController {
     }
   };
 
+  /**
+   * Delete account through the user workflow.
+   *
+   * Use it as the HTTP boundary for the user route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deleteAccount = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

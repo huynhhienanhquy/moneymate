@@ -40,6 +40,13 @@ const icons: Record<string, LucideIcon> = {
   'more-horizontal': MoreHorizontal,
 };
 
+/**
+ * Render the category icon interface.
+ *
+ * Use it to keep the category icon workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered category icon interface.
+ */
 const CategoryIcon = ({ name, className = 'size-5' }: CategoryIconProps) => {
   const Icon = icons[(name || 'tag').toLowerCase()] || Tag;
   return <Icon aria-hidden="true" className={className} />;

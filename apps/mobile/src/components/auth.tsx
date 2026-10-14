@@ -17,11 +17,24 @@ import { AppIcon, type AppIconName } from '@/components/app-icon';
 import { useAppTheme, type AppTheme } from '@/theme';
 
 type IconName = AppIconName;
+/**
+ * Create theme-aware auth styles for the auth interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The style map derived from the active theme.
+ */
 const useAuthStyles = () => {
   const { theme } = useAppTheme();
   return useMemo(() => createStyles(theme), [theme]);
 };
 
+/**
+ * Render the auth shell interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered auth shell interface.
+ */
 export function AuthShell({ children }: PropsWithChildren) {
   const styles = useAuthStyles();
   return (
@@ -44,6 +57,13 @@ export function AuthShell({ children }: PropsWithChildren) {
   );
 }
 
+/**
+ * Render the auth card interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered auth card interface.
+ */
 export function AuthCard({
   title,
   subtitle,
@@ -68,6 +88,13 @@ export function AuthCard({
   );
 }
 
+/**
+ * Render the auth field interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered auth field interface.
+ */
 export function AuthField({
   label,
   icon,
@@ -123,6 +150,13 @@ export function AuthField({
   );
 }
 
+/**
+ * Render the auth button interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered auth button interface.
+ */
 export function AuthButton({
   label,
   loading,
@@ -171,6 +205,12 @@ export function AuthButton({
   );
 }
 
+/**
+ * Render the auth footer interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered auth footer interface.
+ */
 export function AuthFooter() {
   const styles = useAuthStyles();
   return (
@@ -187,6 +227,13 @@ export function AuthFooter() {
     </View>
   );
 }
+/**
+ * Render the auth error interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered auth error interface.
+ */
 export function AuthError({
   children,
   success = false,
@@ -208,10 +255,23 @@ export function AuthError({
     </View>
   );
 }
+/**
+ * Create theme-aware auth text styles for the auth interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The style map derived from the active theme.
+ */
 export function useAuthTextStyles() {
   return useAuthStyles();
 }
 
+/**
+ * Create theme-aware style definitions for the auth interface.
+ *
+ * Use it to keep the auth workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     flex: { flex: 1 },

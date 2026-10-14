@@ -12,6 +12,12 @@ import {
 } from '@/components/auth';
 import { useAuthStore } from '@/stores/auth.store';
 
+/**
+ * Render the login page interface.
+ *
+ * Use it to keep the login page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered login page interface.
+ */
 export default function LoginPage() {
   const authStyles = useAuthTextStyles();
   const router = useRouter();
@@ -19,6 +25,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  /**
+   * Submit the current login page form.
+   *
+   * Use it to keep the login page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const submit = async () => {
     try {
       await login(email.trim(), password);

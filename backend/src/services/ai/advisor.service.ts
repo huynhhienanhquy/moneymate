@@ -15,6 +15,13 @@ export class AdvisorService {
   private contextBuilder = new ContextBuilderService();
   private llm = new LlmProvider();
 
+  /**
+   * Return recommendations required by the advisor workflow.
+   *
+   * Use it from controllers or jobs that run the advisor business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting advisor value.
+   */
   async getRecommendations(userId: string) {
     const ctx = await this.contextBuilder.build(userId);
     const recommendations = this.generateRecommendations(ctx);
@@ -41,6 +48,13 @@ export class AdvisorService {
     };
   }
 
+  /**
+   * Calculate health score for the advisor workflow.
+   *
+   * Use it from controllers or jobs that run the advisor business workflow.
+   * @param ctx - The ctx value required by the operation.
+   * @returns The resulting advisor value for the caller.
+   */
   private calculateHealthScore(ctx: Awaited<ReturnType<ContextBuilderService['build']>>): number {
     let score = 50;
     if (ctx.summary.savingsRate >= 20) score += 20;
@@ -61,6 +75,13 @@ export class AdvisorService {
     return Math.max(0, Math.min(100, score));
   }
 
+  /**
+   * Generate recommendations for advisor.
+   *
+   * Use it from controllers or jobs that run the advisor business workflow.
+   * @param ctx - The ctx value required by the operation.
+   * @returns The resulting advisor value for the caller.
+   */
   private generateRecommendations(ctx: Awaited<ReturnType<ContextBuilderService['build']>>): AdvisorRecommendation[] {
     const recs: AdvisorRecommendation[] = [];
 

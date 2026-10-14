@@ -13,15 +13,35 @@ export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
 }
 
+/**
+ * Invalid access token error for auth.
+ *
+ * Use it in the request pipeline when auth processing is required.
+ * @returns The resulting auth value for the caller.
+ */
 const invalidAccessTokenError = () =>
   new AppError('Invalid or expired authentication token', 401, [], 'UNAUTHORIZED');
 
+/**
+ * Return bearer token required by the auth workflow.
+ *
+ * Use it in the request pipeline when auth processing is required.
+ * @param authorization - The authorization value required by the operation.
+ * @returns The resulting auth value for the caller.
+ */
 export const getBearerToken = (authorization?: string | null): string | null => {
   if (!authorization) return null;
   const match = authorization.trim().match(/^Bearer\s+(\S+)$/i);
   return match?.[1] || null;
 };
 
+/**
+ * Verify access token before the auth workflow continues.
+ *
+ * Use it in the request pipeline when auth processing is required.
+ * @param token - The authentication or continuation token used by the operation.
+ * @returns The resulting auth value for the caller.
+ */
 export const verifyAccessToken = (token: string): Promise<AuthenticatedUser> =>
   new Promise((resolve, reject) => {
     jwt.verify(token, getJwtAccessSecret(), { algorithms: ['HS256'] }, (error, decoded) => {
@@ -44,6 +64,15 @@ export const verifyAccessToken = (token: string): Promise<AuthenticatedUser> =>
     });
   });
 
+/**
+ * Authenticate for auth.
+ *
+ * Use it in the request pipeline when auth processing is required.
+ * @param req - The incoming request and its authenticated or validated input.
+ * @param res - The response object used to return the operation result.
+ * @param next - The callback that continues the middleware pipeline or receives an error.
+ * @returns A promise that resolves after the operation completes.
+ */
 export const authenticate = async (
   req: AuthenticatedRequest,
   res: Response,

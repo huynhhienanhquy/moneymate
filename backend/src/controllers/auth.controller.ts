@@ -22,6 +22,15 @@ const CLEAR_COOKIE_OPTIONS = {
 export class AuthController {
   private authService = new AuthService();
 
+  /**
+   * Register auth for the auth workflow.
+   *
+   * Use it as the HTTP boundary for the auth route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public register = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await this.authService.register(req.body);
@@ -31,6 +40,15 @@ export class AuthController {
     }
   };
 
+  /**
+   * Authenticate submitted credentials and establish the HTTP session response.
+   *
+   * Use it as the HTTP boundary for the auth route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email, password, platform = 'web', deviceId, deviceName, appVersion, timezone } = req.body;
@@ -59,6 +77,15 @@ export class AuthController {
     }
   };
 
+  /**
+   * Refresh auth used by the auth workflow.
+   *
+   * Use it as the HTTP boundary for the auth route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public refresh = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cookieRefreshToken = req.cookies?.refreshToken;
@@ -84,6 +111,15 @@ export class AuthController {
     }
   };
 
+  /**
+   * Revoke the current session and clear its authentication cookies.
+   *
+   * Use it as the HTTP boundary for the auth route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public logout = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
@@ -99,6 +135,15 @@ export class AuthController {
     }
   };
 
+  /**
+   * List sessions available to the auth workflow.
+   *
+   * Use it as the HTTP boundary for the auth route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public listSessions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.user?.id) throw new AppError('Unauthorized', 401);
@@ -106,6 +151,15 @@ export class AuthController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Revoke session for auth.
+   *
+   * Use it as the HTTP boundary for the auth route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public revokeSession = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.user?.id) throw new AppError('Unauthorized', 401);
@@ -114,6 +168,15 @@ export class AuthController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Revoke all sessions for auth.
+   *
+   * Use it as the HTTP boundary for the auth route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public revokeAllSessions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.user?.id) throw new AppError('Unauthorized', 401);

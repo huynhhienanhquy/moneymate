@@ -1,8 +1,11 @@
-import { act } from 'react';
+import { act, useState } from 'react';
+import { fireEvent } from '@testing-library/react';
 import { render, screen } from '@/test/render';
 import { getCopilotErrorMessage, MoneyMateCopilotProvider } from './MoneyMateCopilotProvider';
 vi.mock('@/components/MoneyMateCopilot/ExpenseTool', () => ({ ExpenseTool: () => <div data-testid="expense-tool" /> }));
 vi.mock('@/components/MoneyMateCopilot/AppControlTools', () => ({ AppControlTools: () => <div data-testid="app-control-tools" /> }));
+vi.mock('@/components/MoneyMateCopilot/DataMutationTools', () => ({ DataMutationTools: () => <div data-testid="data-mutation-tools" /> }));
+vi.mock('@/components/MoneyMateCopilot/TransactionTools', () => ({ TransactionTools: () => <div data-testid="transaction-tools" /> }));
 
 const copilotMocks = vi.hoisted(() => ({
   providerProps: [] as Array<Record<string, unknown>>,
@@ -12,12 +15,14 @@ const copilotMocks = vi.hoisted(() => ({
 
 const authMocks = vi.hoisted(() => {
   type AuthSnapshot = {
+    user: { id: string } | null;
     accessToken: string | null;
     isAuthenticated: boolean;
     isInitializing: boolean;
   };
 
   let state: AuthSnapshot = {
+    user: null,
     accessToken: null,
     isAuthenticated: false,
     isInitializing: true,
@@ -83,6 +88,7 @@ describe('MoneyMateCopilotProvider', () => {
     copilotMocks.agentContext.mockClear();
     copilotMocks.suggestions.mockClear();
     authMocks.setState({
+      user: { id: 'owner-user' },
       accessToken: null,
       isAuthenticated: false,
       isInitializing: true,
@@ -147,9 +153,10 @@ describe('MoneyMateCopilotProvider', () => {
     const suggestionConfig = copilotMocks.suggestions.mock.calls[0][0];
     expect(suggestionConfig.consumerAgentId).toBe('default');
     expect(suggestionConfig.available).toBe('before-first-message');
-    expect(suggestionConfig.suggestions).toHaveLength(6);
+    expect(suggestionConfig.suggestions).toHaveLength(10);
     expect(screen.getByTestId('expense-tool')).toBeInTheDocument();
     expect(screen.getByTestId('app-control-tools')).toBeInTheDocument();
+    expect(screen.getByTestId('transaction-tools')).toBeInTheDocument();
     expect(suggestionConfig.suggestions.map((item: { message: string }) => item.message)).toContain(
       'Tháng này tôi chi nhiều nhất ở đâu?',
     );
@@ -175,5 +182,19 @@ describe('MoneyMateCopilotProvider', () => {
 
     act(() => authMocks.setState({ accessToken: null, isAuthenticated: false }));
     expect(screen.queryByTestId('copilot-provider')).not.toBeInTheDocument();
+  });
+
+  it('keeps child state after token refresh and resets it when the authenticated user changes', () => {
+    function ChatSession() {
+      const [message, setMessage] = useState('');
+      return <input aria-label="Hội thoại" value={message} onChange={event => setMessage(event.target.value)} />;
+    }
+    authMocks.setState({ user: { id: 'owner-user' }, accessToken: 'token-a', isAuthenticated: true, isInitializing: false });
+    render(<MoneyMateCopilotProvider enabled><ChatSession /></MoneyMateCopilotProvider>);
+    act(() => { fireEvent.change(screen.getByLabelText('Hội thoại'), { target: { value: 'Nội dung của tài khoản hiện tại' } }); });
+    act(() => authMocks.setState({ accessToken: 'token-refreshed' }));
+    expect(screen.getByLabelText('Hội thoại')).toHaveValue('Nội dung của tài khoản hiện tại');
+    act(() => authMocks.setState({ user: { id: 'other-user' }, accessToken: 'token-other-user' }));
+    expect(screen.getByLabelText('Hội thoại')).toHaveValue('');
   });
 });

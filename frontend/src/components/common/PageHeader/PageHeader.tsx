@@ -10,6 +10,13 @@ interface PageHeaderProps {
   size?: 'default' | 'hero';
 }
 
+/**
+ * Render the page header interface.
+ *
+ * Use it to keep the page header workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered page header interface.
+ */
 const PageHeader = ({ title, description, eyebrow, actions, className = '', size = 'default' }: PageHeaderProps) => (
   <header className={`app-page-header ${size === 'hero' ? 'app-page-header-hero' : ''} ${className}`}>
     <div className="relative z-10 min-w-0 flex-1">

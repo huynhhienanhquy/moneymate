@@ -1,3 +1,4 @@
+import { Text, TextInput } from '@/components/design-text';
 import {
   createContext,
   useCallback,
@@ -15,11 +16,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
+import { usePathname } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import {
   SafeAreaView,
@@ -52,14 +52,34 @@ const DEFAULT_SUGGESTIONS = [
 ];
 
 const MobileChatbotContext = createContext<MobileChatbotContextValue>({
+  /**
+   * Open chatbot in the mobile chatbot interface.
+   *
+   * Use it to keep the mobile chatbot workflow's presentation and interactions in one reusable UI boundary.
+   * @returns The resulting mobile chatbot value for the caller.
+   */
   openChatbot: () => undefined,
 });
 
+/**
+ * Provide mobile chatbot state and actions to React consumers.
+ *
+ * Use it to keep the mobile chatbot workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The current mobile chatbot state and the actions that operate on it.
+ */
 export function useMobileChatbot() {
   return useContext(MobileChatbotContext);
 }
 
+/**
+ * Provide mobile chatbot state and services to descendant components.
+ *
+ * Use it to keep the mobile chatbot workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered mobile chatbot provider interface.
+ */
 export function MobileChatbotProvider({ children }: PropsWithChildren) {
+  const pathname = usePathname();
   const userId = useAuthStore((state) => state.user?.id);
   const [openForUserId, setOpenForUserId] = useState<string | null>(null);
   const openChatbot = useCallback(() => {
@@ -70,7 +90,7 @@ export function MobileChatbotProvider({ children }: PropsWithChildren) {
   return (
     <MobileChatbotContext.Provider value={{ openChatbot }}>
       {children}
-      {userId && (
+      {userId && pathname !== '/scan-receipt' && (
         <MobileChatbot
           key={userId}
           open={open}
@@ -83,6 +103,13 @@ export function MobileChatbotProvider({ children }: PropsWithChildren) {
   );
 }
 
+/**
+ * Render the mobile chatbot interface.
+ *
+ * Use it to keep the mobile chatbot workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered mobile chatbot interface.
+ */
 function MobileChatbot({
   open,
   onOpenChange,
@@ -171,7 +198,7 @@ function MobileChatbot({
       >
         <AppIcon
           name="message-processing"
-          size={27}
+          size={23}
           color={theme.colors.onBrand}
         />
       </Pressable>
@@ -357,21 +384,28 @@ function MobileChatbot({
   );
 }
 
+/**
+ * Create theme-aware style definitions for the mobile chatbot interface.
+ *
+ * Use it to keep the mobile chatbot workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     flex: { flex: 1 },
     safe: { flex: 1, backgroundColor: theme.colors.background },
     fab: {
       position: 'absolute',
-      right: theme.spacing.md + theme.spacing.xs,
+      right: 16,
       zIndex: 100,
-      width: 46,
-      height: 46,
+      width: 44,
+      height: 44,
       borderRadius: 23,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.colors.primaryStrong,
-      borderWidth: 3,
+      backgroundColor: theme.colors.primary,
+      borderWidth: 0,
       borderColor: theme.colors.surface,
       shadowColor: theme.colors.primaryStrong,
       shadowOpacity: 0.34,
@@ -399,7 +433,7 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.primaryStrong,
     },
     headerCopy: { flex: 1 },
-    title: { color: theme.colors.text, fontSize: 18, fontWeight: '900' },
+    title: { color: theme.colors.text, fontSize: 18, fontWeight: '700' },
     subtitle: { color: theme.colors.muted, fontSize: 12, marginTop: 2 },
     closeButton: {
       width: 44,
@@ -429,7 +463,7 @@ const createStyles = (theme: AppTheme) =>
     welcomeTitle: {
       color: theme.colors.text,
       fontSize: 20,
-      fontWeight: '900',
+      fontWeight: '700',
       marginTop: 16,
       textAlign: 'center',
     },

@@ -13,6 +13,13 @@ import { appQueryClient } from '@/services/queryClient';
 
 const MoneyMateCopilotFeature = lazy(() => import('@/components/MoneyMateCopilot/MoneyMateCopilotFeature'));
 
+/**
+ * Render the page layout content interface.
+ *
+ * Use it to keep the page layout workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered page layout content interface.
+ */
 export const PageLayoutContent = ({ assistant = null }: { assistant?: ReactNode }) => {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -20,6 +27,12 @@ export const PageLayoutContent = ({ assistant = null }: { assistant?: ReactNode 
   const location = useLocation();
   const navigate = useNavigate();
 
+  /**
+   * Handle logout for the page layout workflow.
+   *
+   * Use it to keep the page layout workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const handleLogout = async () => {
     try {
       await runAuthSessionTransition(() => api.post('/auth/logout'));
@@ -49,6 +62,12 @@ export const PageLayoutContent = ({ assistant = null }: { assistant?: ReactNode 
   );
 };
 
+/**
+ * Render the layout interface.
+ *
+ * Use it to keep the page layout workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered layout interface.
+ */
 export const Layout = () => {
   if (!COPILOTKIT_FRONTEND_ENABLED) {
     return <PageLayoutContent assistant={<AiChatWidget />} />;

@@ -15,6 +15,12 @@ interface Session {
   expiresAt: string;
 }
 
+/**
+ * Render the profile page interface.
+ *
+ * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered profile page interface.
+ */
 export default function ProfilePage() {
   const ui = useUiStyles();
   const {
@@ -36,14 +42,39 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const sessions = useQuery({
     queryKey: ['sessions'],
+    /**
+     * Load profile page data for the query cache.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting profile page value for the caller.
+     */
     queryFn: () => apiRequest<Session[]>('/auth/sessions'),
   });
   const revoke = useMutation({
+    /**
+     * Execute the profile page mutation requested by the client.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting profile page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/auth/sessions/${id}`, { method: 'DELETE' }),
+    /**
+     * Finalize the profile page workflow after a successful operation.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting profile page value for the caller.
+     */
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sessions'] }),
   });
   const updateProfile = useMutation({
+    /**
+     * Execute the profile page mutation requested by the client.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting profile page value for the caller.
+     */
     mutationFn: () =>
       apiRequest<typeof user>('/users/profile', {
         method: 'PUT',
@@ -52,10 +83,24 @@ export default function ProfilePage() {
           avatarUrl: avatarUrl.trim() || null,
         }),
       }),
+    /**
+     * Finalize the profile page workflow after a successful operation.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param profile - The file-system location or file value used by the operation.
+     * @returns A promise that resolves after the operation completes.
+     */
     onSuccess: async (profile) => {
       if (profile) await updateCachedUser(profile);
       Alert.alert('Đã lưu', 'Hồ sơ đã được cập nhật.');
     },
+    /**
+     * Map a failed profile page operation into user-visible state.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param error - The failure value to classify, report, or propagate.
+     * @returns The resulting profile page value for the caller.
+     */
     onError: (error) =>
       Alert.alert(
         'Không thể cập nhật',
@@ -63,17 +108,36 @@ export default function ProfilePage() {
       ),
   });
   const changePassword = useMutation({
+    /**
+     * Execute the profile page mutation requested by the client.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting profile page value for the caller.
+     */
     mutationFn: () =>
       apiRequest('/users/change-password', {
         method: 'PUT',
         body: JSON.stringify({ currentPassword, newPassword }),
       }),
+    /**
+     * Finalize the profile page workflow after a successful operation.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       Alert.alert('Thành công', 'Mật khẩu đã được thay đổi.');
     },
+    /**
+     * Map a failed profile page operation into user-visible state.
+     *
+     * Use it to keep the profile page workflow's presentation and interactions in one reusable UI boundary.
+     * @param error - The failure value to classify, report, or propagate.
+     * @returns The resulting profile page value for the caller.
+     */
     onError: (error) =>
       Alert.alert(
         'Không thể đổi mật khẩu',

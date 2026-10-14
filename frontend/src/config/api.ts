@@ -1,3 +1,11 @@
+/**
+ * Resolve api base url from the available api context.
+ *
+ * Use it while deriving the application's api settings.
+ * @param configuredUrl - The configured url value required by the operation.
+ * @param isDevelopment - The is development value required by the operation.
+ * @returns The resulting api value for the caller.
+ */
 export const resolveApiBaseUrl = (configuredUrl: string | undefined, isDevelopment: boolean): string => {
   const baseUrl = configuredUrl || '/api';
   if (isDevelopment) {

@@ -2,6 +2,12 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 
+/**
+ * Render the private route route after enforcing its navigation requirements.
+ *
+ * Use it in the React Router tree to redirect unauthenticated visitors before rendering private screens.
+ * @returns The rendered private route interface.
+ */
 export const PrivateRoute: React.FC = () => {
   const { user, isAuthenticated, isInitializing } = useAuthStore();
 

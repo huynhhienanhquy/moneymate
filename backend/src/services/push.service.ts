@@ -13,6 +13,15 @@ const paths: Partial<Record<NotificationType, string>> = {
 export class PushService {
   private repository = new NotificationRepository();
 
+  /**
+   * Send to user through the push boundary.
+   *
+   * Use it from controllers or jobs that run the push business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param notification - The notification value required by the operation.
+   * @returns A promise containing the resulting push value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async sendToUser(userId: string, notification: { title: string; message: string; type: NotificationType }) {
     const devices = await this.repository.findActiveDeviceTokens(userId);
     if (!devices.length) return { sent: 0 };

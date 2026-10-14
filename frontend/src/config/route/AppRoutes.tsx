@@ -21,6 +21,12 @@ const AiAdvisorPage = lazy(() => import('@/pages/AiAdvisorPage/AiAdvisorPage'));
 const ProfilePage = lazy(() => import('@/pages/ProfilePage/ProfilePage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage/AdminPage'));
 
+/**
+ * Render the app routes interface.
+ *
+ * Use it as the application's React Router tree so every page shares the same route contract.
+ * @returns The rendered app routes interface.
+ */
 export const AppRoutes: React.FC = () => {
   return (
     <Suspense fallback={<LoadingState className="min-h-screen items-center" />}><Routes>

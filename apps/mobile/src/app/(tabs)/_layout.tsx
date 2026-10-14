@@ -2,6 +2,12 @@ import { Tabs } from 'expo-router';
 import { AppIcon } from '@/components/app-icon';
 import { useAppTheme } from '@/theme';
 
+/**
+ * Define the authenticated tab navigator and its shared screen options.
+ *
+ * Use it as an Expo Router entry point so navigation resolves the correct application screen.
+ * @returns The rendered tabs layout interface.
+ */
 export default function TabsLayout() {
   const { theme } = useAppTheme();
   return (
@@ -19,6 +25,13 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Tổng quan',
+          /**
+           * Tab bar icon for layout.
+           *
+           * Use it as an Expo Router entry point so navigation resolves the correct application screen.
+           * @param props - The properties that configure this React component.
+           * @returns The resulting layout value for the caller.
+           */
           tabBarIcon: ({ color, focused }) => (
             <AppIcon
               name={focused ? 'view-dashboard' : 'view-dashboard-outline'}
@@ -32,6 +45,13 @@ export default function TabsLayout() {
         name="transactions"
         options={{
           title: 'Giao dịch',
+          /**
+           * Tab bar icon for layout.
+           *
+           * Use it as an Expo Router entry point so navigation resolves the correct application screen.
+           * @param props - The properties that configure this React component.
+           * @returns The resulting layout value for the caller.
+           */
           tabBarIcon: ({ color, focused }) => (
             <AppIcon
               name={focused ? 'receipt-text' : 'receipt-text-outline'}
@@ -45,6 +65,13 @@ export default function TabsLayout() {
         name="budgets"
         options={{
           title: 'Ngân sách',
+          /**
+           * Tab bar icon for layout.
+           *
+           * Use it as an Expo Router entry point so navigation resolves the correct application screen.
+           * @param props - The properties that configure this React component.
+           * @returns The resulting layout value for the caller.
+           */
           tabBarIcon: ({ color, focused }) => (
             <AppIcon
               name={focused ? 'piggy-bank' : 'piggy-bank-outline'}
@@ -58,6 +85,13 @@ export default function TabsLayout() {
         name="advisor"
         options={{
           title: 'AI',
+          /**
+           * Tab bar icon for layout.
+           *
+           * Use it as an Expo Router entry point so navigation resolves the correct application screen.
+           * @param props - The properties that configure this React component.
+           * @returns The resulting layout value for the caller.
+           */
           tabBarIcon: ({ color }) => (
             <AppIcon name="creation" size={24} color={color} />
           ),
@@ -67,6 +101,13 @@ export default function TabsLayout() {
         name="more"
         options={{
           title: 'Thêm',
+          /**
+           * Tab bar icon for layout.
+           *
+           * Use it as an Expo Router entry point so navigation resolves the correct application screen.
+           * @param props - The properties that configure this React component.
+           * @returns The resulting layout value for the caller.
+           */
           tabBarIcon: ({ color, focused }) => (
             <AppIcon
               name={focused ? 'dots-grid' : 'dots-grid'}

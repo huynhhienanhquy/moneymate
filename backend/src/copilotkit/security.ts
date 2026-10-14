@@ -23,6 +23,17 @@ interface RunBody {
   messages?: unknown;
 }
 
+/**
+ * Create security response for the security workflow.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param request - The incoming request and its authenticated or validated input.
+ * @param status - The status value required by the operation.
+ * @param code - The stable machine-readable code used to classify the outcome.
+ * @param message - The human-readable outcome message returned to the caller.
+ * @param additionalHeaders - The additional headers value required by the operation.
+ * @returns The resulting security value for the caller.
+ */
 const createSecurityResponse = (
   request: Request,
   status: number,
@@ -47,6 +58,17 @@ const createSecurityResponse = (
   }), { status, headers });
 };
 
+/**
+ * Send express security error through the security boundary.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param response - The response object used to return the operation result.
+ * @param status - The status value required by the operation.
+ * @param code - The stable machine-readable code used to classify the outcome.
+ * @param message - The human-readable outcome message returned to the caller.
+ * @param additionalHeaders - The additional headers value required by the operation.
+ * @returns The resulting security value for the caller.
+ */
 const sendExpressSecurityError = (
   response: ExpressResponse,
   status: number,
@@ -70,6 +92,14 @@ const sendExpressSecurityError = (
 export class CopilotThreadOwnership {
   private readonly owners = new Map<string, string>();
 
+  /**
+   * Claim a Copilot thread for one owner and reject cross-user reuse.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+   * @param threadId - The stable identifier of the record targeted by the operation.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns The resulting security value for the caller.
+   */
   claim(threadId: string, userId: string): 'owned' | 'forbidden' | 'capacity' {
     const owner = this.owners.get(threadId);
     if (owner) return owner === userId ? 'owned' : 'forbidden';
@@ -78,6 +108,14 @@ export class CopilotThreadOwnership {
     return 'owned';
   }
 
+  /**
+   * Determine whether owned by applies.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+   * @param threadId - The stable identifier of the record targeted by the operation.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns `true` when the condition is satisfied; otherwise `false`.
+   */
   isOwnedBy(threadId: string, userId: string): boolean {
     return this.owners.get(threadId) === userId;
   }
@@ -86,11 +124,26 @@ export class CopilotThreadOwnership {
 export class CopilotRateLimiter {
   private readonly entries = new Map<string, RateLimitEntry>();
 
+  /**
+   * Initialize a security instance with its required dependencies.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+   * @param maximumRequests - The maximum requests value required by the operation.
+   * @param windowMs - The window ms value required by the operation.
+   */
   constructor(
     private readonly maximumRequests: number,
     private readonly windowMs: number,
   ) {}
 
+  /**
+   * Consume one rate-limit allowance for the normalized Copilot caller key.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+   * @param rawKey - The raw key value required by the operation.
+   * @param now - The reference time used to make the calculation deterministic.
+   * @returns The resulting security value for the caller.
+   */
   consume(rawKey: string, now = Date.now()): { allowed: boolean; remaining: number; resetAt: number } {
     let key = rawKey || 'unknown';
     let entry = this.entries.get(key);
@@ -117,6 +170,13 @@ export class CopilotRateLimiter {
   }
 }
 
+/**
+ * Create copilot rate limit middleware for the security workflow.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param config - Settings that customize how the operation runs.
+ * @returns The resulting security value for the caller.
+ */
 export const createCopilotRateLimitMiddleware = (config: CopilotKitConfig) => {
   const limiter = new CopilotRateLimiter(config.rateLimitMaxRequests, config.rateLimitWindowMs);
 
@@ -141,6 +201,16 @@ export const createCopilotRateLimitMiddleware = (config: CopilotKitConfig) => {
   };
 };
 
+/**
+ * Copilot body parser error handler for security.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param error - The failure value to classify, report, or propagate.
+ * @param _request - The request value required by the operation.
+ * @param response - The response object used to return the operation result.
+ * @param next - The callback that continues the middleware pipeline or receives an error.
+ * @returns The resulting security value for the caller.
+ */
 export const copilotBodyParserErrorHandler = (
   error: unknown,
   _request: ExpressRequest,
@@ -167,6 +237,14 @@ export const copilotBodyParserErrorHandler = (
   return next(error);
 };
 
+/**
+ * Assert that copilot transport security satisfies the security workflow's requirements.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param request - The incoming request and its authenticated or validated input.
+ * @returns Nothing; the operation is complete when the function returns.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 export const assertCopilotTransportSecurity = (request: Request): void => {
   const origin = request.headers.get('origin');
   const configuredOrigins = getConfiguredFrontendOrigins();
@@ -190,6 +268,14 @@ export const assertCopilotTransportSecurity = (request: Request): void => {
   }
 };
 
+/**
+ * Parse and validate envelope body for the security workflow.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param request - The incoming request and its authenticated or validated input.
+ * @returns A promise containing the resulting security value.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const parseEnvelopeBody = async (request: Request): Promise<RunBody> => {
   let envelope: CopilotEnvelope;
   try {
@@ -209,6 +295,16 @@ const parseEnvelopeBody = async (request: Request): Promise<RunBody> => {
   return body && typeof body === 'object' ? body as RunBody : {};
 };
 
+/**
+ * Parse and validate identifier for the security workflow.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param request - The incoming request and its authenticated or validated input.
+ * @param value - The value to transform or evaluate.
+ * @param name - The name value required by the operation.
+ * @returns The resulting security value for the caller.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const parseIdentifier = (request: Request, value: unknown, name: 'thread' | 'run'): string => {
   if (
     typeof value !== 'string'
@@ -227,6 +323,13 @@ const parseIdentifier = (request: Request, value: unknown, name: 'thread' | 'run
   return value;
 };
 
+/**
+ * Content length for security.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param content - The content value required by the operation.
+ * @returns The resulting security value for the caller.
+ */
 const contentLength = (content: unknown): number => {
   if (typeof content === 'string') return content.length;
   if (!Array.isArray(content)) return 0;
@@ -238,6 +341,16 @@ const contentLength = (content: unknown): number => {
   }, 0);
 };
 
+/**
+ * Assert that message lengths satisfies the security workflow's requirements.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param request - The incoming request and its authenticated or validated input.
+ * @param messages - The messages value required by the operation.
+ * @param maximumChars - The maximum chars value required by the operation.
+ * @returns Nothing; the operation is complete when the function returns.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const assertMessageLengths = (request: Request, messages: unknown, maximumChars: number): void => {
   if (!Array.isArray(messages)) return;
   for (const message of messages) {
@@ -254,6 +367,18 @@ const assertMessageLengths = (request: Request, messages: unknown, maximumChars:
   }
 };
 
+/**
+ * Assert that owned satisfies the security workflow's requirements.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+ * @param request - The incoming request and its authenticated or validated input.
+ * @param ownership - The ownership value required by the operation.
+ * @param threadId - The stable identifier of the record targeted by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @param mayClaim - The may claim value required by the operation.
+ * @returns Nothing; the operation is complete when the function returns.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const assertOwned = (
   request: Request,
   ownership: CopilotThreadOwnership,
@@ -286,8 +411,25 @@ const assertOwned = (
 export class CopilotSecurityGuard {
   private readonly ownership = new CopilotThreadOwnership();
 
+  /**
+   * Initialize a security instance with its required dependencies.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+   * @param config - Settings that customize how the operation runs.
+   */
   constructor(private readonly config: CopilotKitConfig) {}
 
+  /**
+   * Authorize route for security.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+   * @param request - The incoming request and its authenticated or validated input.
+   * @param route - The route value required by the operation.
+   * @param user - The user value required by the operation.
+   * @param runner - The runner value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async authorizeRoute(
     request: Request,
     route: RouteInfo,
@@ -320,6 +462,12 @@ export class CopilotSecurityGuard {
 
     if (route.method === 'agent/run') {
       const runId = parseIdentifier(request, body.runId, 'run');
+      /**
+       * Stop run for security.
+       *
+       * Use it at the CopilotKit boundary so AI-driven operations follow the application's security rules.
+       * @returns Nothing; the operation is complete when the function returns.
+       */
       const stopRun = () => {
         void runner.stop({ threadId, runId }).catch(() => undefined);
       };

@@ -7,6 +7,15 @@ import { AppError } from '../common/app-error';
 export class NotificationController {
   private notificationService = new NotificationService();
 
+  /**
+   * Return notifications required by the notification workflow.
+   *
+   * Use it as the HTTP boundary for the notification route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getNotifications = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -17,6 +26,15 @@ export class NotificationController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Mark as read for notification.
+   *
+   * Use it as the HTTP boundary for the notification route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public markAsRead = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -26,6 +44,15 @@ export class NotificationController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Mark all as read for notification.
+   *
+   * Use it as the HTTP boundary for the notification route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public markAllAsRead = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -35,6 +62,15 @@ export class NotificationController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Register device for the notification workflow.
+   *
+   * Use it as the HTTP boundary for the notification route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public registerDevice = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -44,6 +80,15 @@ export class NotificationController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Unregister device for notification.
+   *
+   * Use it as the HTTP boundary for the notification route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public unregisterDevice = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -53,6 +98,15 @@ export class NotificationController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Delete notification through the notification workflow.
+   *
+   * Use it as the HTTP boundary for the notification route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deleteNotification = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

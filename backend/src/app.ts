@@ -31,6 +31,14 @@ const configuredOrigins = getConfiguredFrontendOrigins();
 // Middlewares
 app.use(requestId);
 app.use(cors({
+  /**
+   * Authorize a browser origin against the configured CORS allowlist.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @param origin - The request origin to normalize or authorize.
+   * @param callback - The callback invoked when the corresponding operation occurs.
+   * @returns The resulting backend value for the caller.
+   */
   origin: (origin, callback) => callback(null, isAllowedCorsOrigin(origin, configuredOrigins)),
   credentials: true
 }));

@@ -1,3 +1,4 @@
+import { Text, TextInput } from '@/components/design-text';
 import {
   useEffect,
   useMemo,
@@ -13,10 +14,11 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
   type TextInputProps,
+  type StyleProp,
+  type ViewStyle,
+  type TextStyle,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,11 +27,24 @@ import { AppIcon, type AppIconName } from '@/components/app-icon';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { MobileBottomBar, MobileTopBar } from '@/components/navigation-shell';
 
+/**
+ * Create theme-aware ui styles for the ui interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The style map derived from the active theme.
+ */
 export function useUiStyles() {
   const { theme } = useAppTheme();
   return useMemo(() => createUiStyles(theme), [theme]);
 }
 
+/**
+ * Render the screen interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered screen interface.
+ */
 export function Screen({
   children,
   title,
@@ -38,7 +53,8 @@ export function Screen({
   onRefresh,
   bottomNav = true,
   showTopBar = true,
-  decorated = true,
+  decorated = false,
+  gutter,
 }: PropsWithChildren<{
   title: string;
   action?: ReactNode;
@@ -47,6 +63,7 @@ export function Screen({
   bottomNav?: boolean;
   showTopBar?: boolean;
   decorated?: boolean;
+  gutter?: number;
 }>) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -59,8 +76,10 @@ export function Screen({
         </>
       )}
       <ScrollView
+        testID="mobile-screen-scroll"
         contentContainerStyle={[
           styles.content,
+          gutter !== undefined && { paddingHorizontal: gutter },
           bottomNav && styles.contentWithNav,
         ]}
         keyboardShouldPersistTaps="handled"
@@ -76,7 +95,12 @@ export function Screen({
         }
       >
         {showTopBar && (
-          <View style={styles.headerBleed}>
+          <View
+            style={[
+              styles.headerBleed,
+              gutter !== undefined && { marginHorizontal: -gutter },
+            ]}
+          >
             <MobileTopBar title={title} />
           </View>
         )}
@@ -88,6 +112,13 @@ export function Screen({
   );
 }
 
+/**
+ * Render the page hero interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered page hero interface.
+ */
 export function PageHero({
   eyebrow,
   title,
@@ -95,12 +126,18 @@ export function PageHero({
   icon = 'chart-box-outline',
   action,
   children,
+  heroStyle,
+  subtitleStyle,
+  eyebrowLarge = false,
 }: PropsWithChildren<{
   eyebrow?: string;
   title?: string;
   subtitle?: string;
   icon?: AppIconName;
   action?: ReactNode;
+  heroStyle?: StyleProp<ViewStyle>;
+  subtitleStyle?: StyleProp<TextStyle>;
+  eyebrowLarge?: boolean;
 }>) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -109,14 +146,23 @@ export function PageHero({
       colors={theme.gradients.brand}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={styles.hero}
+      style={[styles.hero, heroStyle]}
     >
       {(eyebrow || action) && (
         <View style={styles.heroTop}>
           {eyebrow ? (
             <View style={styles.heroEyebrow}>
-              <AppIcon name={icon} size={18} color={theme.colors.onBrand} />
-              <Text style={styles.heroEyebrowText}>{eyebrow}</Text>
+              <View style={styles.heroIcon}>
+                <AppIcon name={icon} size={24} color={theme.colors.onBrand} />
+              </View>
+              <Text
+                style={[
+                  styles.heroEyebrowText,
+                  eyebrowLarge && { fontSize: 20 },
+                ]}
+              >
+                {eyebrow}
+              </Text>
             </View>
           ) : (
             <View />
@@ -124,13 +170,28 @@ export function PageHero({
           {action}
         </View>
       )}
-      {!!title && <Text style={styles.heroTitle}>{title}</Text>}
-      {subtitle && <Text style={styles.heroSubtitle}>{subtitle}</Text>}
+      {!!title && (
+        <Text
+          style={[styles.heroTitle, !eyebrow && !action && { marginTop: 0 }]}
+        >
+          {title}
+        </Text>
+      )}
+      {subtitle && (
+        <Text style={[styles.heroSubtitle, subtitleStyle]}>{subtitle}</Text>
+      )}
       {children}
     </LinearGradient>
   );
 }
 
+/**
+ * Render the metric card interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered metric card interface.
+ */
 export function MetricCard({
   label,
   value,
@@ -186,6 +247,13 @@ export function MetricCard({
   );
 }
 
+/**
+ * Render the card interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered card interface.
+ */
 export function Card({ children }: PropsWithChildren) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -214,6 +282,13 @@ export function Card({ children }: PropsWithChildren) {
   );
 }
 
+/**
+ * Render the section title interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered section title interface.
+ */
 export function SectionTitle({
   title,
   caption,
@@ -241,6 +316,13 @@ export function SectionTitle({
   );
 }
 
+/**
+ * Render the badge interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered badge interface.
+ */
 export function Badge({
   label,
   tone = 'info',
@@ -259,6 +341,13 @@ export function Badge({
   );
 }
 
+/**
+ * Render the progress bar interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered progress bar interface.
+ */
 export function ProgressBar({
   value,
   tone = 'primary',
@@ -291,6 +380,13 @@ export function ProgressBar({
   );
 }
 
+/**
+ * Render the empty state interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered empty state interface.
+ */
 export function EmptyState({
   icon = 'inbox-outline',
   title,
@@ -321,6 +417,13 @@ export function EmptyState({
   );
 }
 
+/**
+ * Render the sheet interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered sheet interface.
+ */
 export function Sheet({
   visible,
   title,
@@ -372,6 +475,13 @@ export function Sheet({
   );
 }
 
+/**
+ * Render the choice chips interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered choice chips interface.
+ */
 export function ChoiceChips({
   value,
   options,
@@ -407,6 +517,13 @@ export function ChoiceChips({
   );
 }
 
+/**
+ * Render the field interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered field interface.
+ */
 export function Field(props: TextInputProps & { label: string }) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -423,6 +540,13 @@ export function Field(props: TextInputProps & { label: string }) {
   );
 }
 
+/**
+ * Render the button interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered button interface.
+ */
 export function Button({
   label,
   icon,
@@ -484,7 +608,7 @@ export function Button({
     >
       {variant === 'primary' ? (
         <LinearGradient
-          colors={theme.gradients.brand}
+          colors={[theme.colors.primary, theme.colors.primary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.buttonGradient}
@@ -498,6 +622,13 @@ export function Button({
   );
 }
 
+/**
+ * Render the state message interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered state message interface.
+ */
 export function StateMessage({
   message,
   loading,
@@ -515,6 +646,12 @@ export function StateMessage({
   );
 }
 
+/**
+ * Render the skeleton card interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered skeleton card interface.
+ */
 export function SkeletonCard() {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -527,6 +664,13 @@ export function SkeletonCard() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the ui interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createUiStyles = (theme: AppTheme) =>
   StyleSheet.create({
     row: {
@@ -559,7 +703,7 @@ const createUiStyles = (theme: AppTheme) =>
     amount: {
       color: theme.colors.text,
       fontSize: theme.typography.display - 2,
-      fontWeight: '900',
+      fontWeight: '700',
       letterSpacing: -1,
     },
     positive: { color: theme.colors.success },
@@ -567,6 +711,13 @@ const createUiStyles = (theme: AppTheme) =>
     gap: { gap: theme.spacing.sm + theme.spacing.xs },
   });
 
+/**
+ * Create theme-aware style definitions for the ui interface.
+ *
+ * Use it to keep the ui workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     flex: { flex: 1 },
@@ -598,13 +749,13 @@ const createStyles = (theme: AppTheme) =>
     content: {
       paddingHorizontal: theme.sizes.screenGutter,
       paddingTop: 0,
-      paddingBottom: theme.spacing.xxl,
-      gap: theme.spacing.sm + theme.spacing.xs,
+      paddingBottom: 40,
+      gap: 20,
     },
-    contentWithNav: { paddingBottom: 112 },
+    contentWithNav: { paddingBottom: 150 },
     headerBleed: {
       marginHorizontal: -theme.sizes.screenGutter,
-      marginBottom: theme.spacing.xs,
+      marginBottom: -10,
     },
     pageAction: {
       flexDirection: 'row',
@@ -614,27 +765,19 @@ const createStyles = (theme: AppTheme) =>
     },
     card: {
       backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.dark ? theme.colors.border : '#ECECF4',
-      borderRadius: 18,
-      padding: theme.spacing.md + 1,
-      gap: theme.spacing.sm + theme.spacing.xs,
-      shadowColor: theme.colors.shadow,
-      shadowOpacity: theme.dark ? 0.22 : 0.055,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 5 },
-      elevation: 2,
+      borderWidth: theme.dark ? 1 : 0,
+      borderColor: theme.colors.border,
+      borderRadius: 16,
+      padding: 20,
+      gap: 14,
+      boxShadow: '0px 2px 2px rgba(19,27,46,0.035)',
     },
     hero: {
-      minHeight: 158,
-      borderRadius: 18,
+      minHeight: 150,
+      borderRadius: 16,
       padding: 20,
       overflow: 'hidden',
-      shadowColor: theme.colors.primary,
-      shadowOpacity: 0.24,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 7 },
-      elevation: 5,
+      boxShadow: '0px 4px 7px rgba(19,27,46,0.12)',
     },
     heroTop: {
       minHeight: 38,
@@ -644,34 +787,39 @@ const createStyles = (theme: AppTheme) =>
       gap: 10,
     },
     heroEyebrow: {
-      minHeight: 34,
-      paddingHorizontal: 11,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 7,
-      borderRadius: 11,
-      backgroundColor: 'rgba(255,255,255,.16)',
+      gap: 10,
+      flexShrink: 1,
+    },
+    heroIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(255,255,255,.2)',
     },
     heroEyebrowText: {
       color: theme.colors.onBrand,
-      fontSize: 12,
-      fontWeight: '900',
-      letterSpacing: 0.3,
+      fontSize: 15,
+      fontWeight: '600',
+      flexShrink: 1,
     },
     heroTitle: {
       marginTop: 12,
       color: theme.colors.onBrand,
-      fontSize: 28,
-      lineHeight: 33,
-      fontWeight: '900',
-      letterSpacing: -0.7,
+      fontSize: 30,
+      lineHeight: 39,
+      fontWeight: '600',
+      letterSpacing: -1,
     },
     heroSubtitle: {
-      marginTop: 3,
-      color: 'rgba(255,255,255,.83)',
-      fontSize: 14,
-      lineHeight: 19,
-      fontWeight: '600',
+      marginTop: 0,
+      color: 'rgba(255,255,255,.85)',
+      fontSize: 15,
+      lineHeight: 21,
+      fontWeight: '400',
     },
     metric: {
       flex: 1,
@@ -706,7 +854,7 @@ const createStyles = (theme: AppTheme) =>
     metricValue: {
       marginTop: 3,
       fontSize: 20,
-      fontWeight: '900',
+      fontWeight: '700',
       letterSpacing: -0.3,
     },
     metricCaption: {
@@ -735,14 +883,14 @@ const createStyles = (theme: AppTheme) =>
       shadowRadius: 6,
     },
     button: {
-      minHeight: theme.sizes.button,
-      borderRadius: theme.radius.md,
+      minHeight: 44,
+      borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
     },
     buttonGradient: {
-      minHeight: theme.sizes.button,
+      minHeight: 44,
       width: '100%',
       paddingHorizontal: theme.spacing.md + 2,
       alignItems: 'center',
@@ -751,14 +899,12 @@ const createStyles = (theme: AppTheme) =>
     primary: {
       backgroundColor: theme.colors.primaryStrong,
       shadowColor: theme.colors.primary,
-      shadowOpacity: 0.25,
+      shadowOpacity: 0.08,
       shadowRadius: 10,
       shadowOffset: { width: 0, height: 6 },
     },
     secondary: {
-      backgroundColor: theme.colors.surfaceRaised,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.neutralSoft,
     },
     danger: { backgroundColor: theme.colors.danger },
     buttonContent: {
@@ -784,32 +930,31 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: theme.spacing.sm + theme.spacing.xs,
-      marginTop: theme.spacing.xs + 1,
+      gap: 8,
+      minHeight: 35,
+      marginTop: 5,
     },
-    sectionTitleGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    sectionTitleGroup: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
     sectionCaption: {
-      maxWidth: '48%',
-      paddingHorizontal: 9,
-      paddingVertical: 3,
-      borderRadius: 99,
-      overflow: 'hidden',
       color: theme.colors.muted,
-      backgroundColor: theme.colors.primarySoft,
-      fontSize: 11,
-      fontWeight: '700',
+      fontSize: 13,
+      fontWeight: '500',
     },
     badge: {
-      borderRadius: theme.radius.pill,
-      paddingHorizontal: theme.spacing.sm + 1,
-      paddingVertical: theme.spacing.xs,
-      borderWidth: 1,
+      borderRadius: 99,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
     },
     badgeText: {
-      fontSize: theme.typography.caption - 1,
-      fontWeight: '900',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      fontSize: 12,
+      fontWeight: '500',
+      letterSpacing: 0.2,
     },
     infoBadge: {
       backgroundColor: theme.colors.primarySoft,
@@ -890,7 +1035,7 @@ const createStyles = (theme: AppTheme) =>
     sheetTitle: {
       color: theme.colors.text,
       fontSize: theme.typography.heading,
-      fontWeight: '900',
+      fontWeight: '700',
       letterSpacing: -0.5,
     },
     closeButton: {

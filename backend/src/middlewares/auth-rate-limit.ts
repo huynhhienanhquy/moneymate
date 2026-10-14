@@ -5,6 +5,14 @@ const MAX_TRACKED_CLIENTS = 10_000;
 
 interface RateEntry { count: number; resetAt: number }
 
+/**
+ * Positive integer for auth rate limit.
+ *
+ * Use it in the request pipeline when auth rate limit processing is required.
+ * @param value - The value to transform or evaluate.
+ * @param fallback - The value used when no explicit input is configured.
+ * @returns The resulting auth rate limit value for the caller.
+ */
 function positiveInteger(value: string | undefined, fallback: number) {
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
@@ -13,11 +21,26 @@ function positiveInteger(value: string | undefined, fallback: number) {
 export class AuthRateLimiter {
   private entries = new Map<string, RateEntry>();
 
+  /**
+   * Initialize a auth rate limit instance with its required dependencies.
+   *
+   * Use it in the request pipeline when auth rate limit processing is required.
+   * @param maximumRequests - The maximum requests value required by the operation.
+   * @param windowMs - The window ms value required by the operation.
+   */
   constructor(
     private readonly maximumRequests: number,
     private readonly windowMs: number,
   ) {}
 
+  /**
+   * Consume one rate-limit allowance for the normalized authentication key.
+   *
+   * Use it in the request pipeline when auth rate limit processing is required.
+   * @param rawKey - The raw key value required by the operation.
+   * @param now - The reference time used to make the calculation deterministic.
+   * @returns The resulting auth rate limit value for the caller.
+   */
   consume(rawKey: string, now = Date.now()) {
     let key = rawKey || 'unknown';
     let entry = this.entries.get(key);
@@ -41,6 +64,13 @@ export class AuthRateLimiter {
   }
 }
 
+/**
+ * Create auth rate limit middleware for the auth rate limit workflow.
+ *
+ * Use it in the request pipeline when auth rate limit processing is required.
+ * @param kind - The kind value required by the operation.
+ * @returns The resulting auth rate limit value for the caller.
+ */
 export function createAuthRateLimitMiddleware(kind: 'login' | 'register') {
   const isLogin = kind === 'login';
   const limit = positiveInteger(

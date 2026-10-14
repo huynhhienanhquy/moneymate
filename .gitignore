@@ -4,6 +4,8 @@ dist/
 coverage/
 storybook-static/
 .tmp-web-export/
+.tmp/
+.tmp-design-export/
 .tmp-pages-results.json
 
 # Local configuration (commit examples and test defaults only)

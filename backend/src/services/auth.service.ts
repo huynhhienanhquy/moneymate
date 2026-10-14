@@ -10,6 +10,15 @@ export class AuthService {
   private userRepository = new UserRepository();
   private tokenRepository = new RefreshTokenRepository();
 
+  /**
+   * Generate access token for auth.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param email - The email value required by the operation.
+   * @param role - The role value required by the operation.
+   * @returns The resulting auth value for the caller.
+   */
   private generateAccessToken(userId: string, email: string, role: string): string {
     return jwt.sign({ userId, email, role }, getJwtAccessSecret(), {
       algorithm: 'HS256',
@@ -17,14 +26,35 @@ export class AuthService {
     });
   }
 
+  /**
+   * Generate refresh token for auth.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @returns The resulting auth value for the caller.
+   */
   private generateRefreshToken(): string {
     return randomBytes(48).toString('base64url');
   }
 
+  /**
+   * Hash refresh token for auth.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param token - The authentication or continuation token used by the operation.
+   * @returns The resulting auth value for the caller.
+   */
   private hashRefreshToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }
 
+  /**
+   * Register auth for the auth workflow.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param data - The input data required to register auth for the auth workflow.
+   * @returns A promise containing the resulting auth value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async register(data: { email: string; password: string; fullName: string }) {
     const normalizedEmail = data.email.trim().toLowerCase();
     const existingUser = await this.userRepository.findByEmail(normalizedEmail);
@@ -46,6 +76,16 @@ export class AuthService {
     };
   }
 
+  /**
+   * Authenticate a user and issue the access and refresh credentials for a new session.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param email - The email value required by the operation.
+   * @param password - The password value required by the operation.
+   * @param session - The session value required by the operation.
+   * @returns A promise containing the resulting auth value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async login(
     email: string,
     password: string,
@@ -99,6 +139,14 @@ export class AuthService {
     };
   }
 
+  /**
+   * Refresh auth used by the auth workflow.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param token - The authentication or continuation token used by the operation.
+   * @returns A promise containing the resulting auth value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async refresh(token: string) {
     if (!token) {
       throw new AppError('Refresh token is invalid or expired', 401);
@@ -156,19 +204,49 @@ export class AuthService {
     };
   }
 
+  /**
+   * Revoke the supplied refresh token so the session can no longer be renewed.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param token - The authentication or continuation token used by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   async logout(token: string) {
     if (token) await this.tokenRepository.revokeByHash(this.hashRefreshToken(token));
   }
 
+  /**
+   * List sessions available to the auth workflow.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns The resulting auth value for the caller.
+   */
   listSessions(userId: string) {
     return this.tokenRepository.findActiveByUserId(userId);
   }
 
+  /**
+   * Revoke session for auth.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param sessionId - The stable identifier of the record targeted by the operation.
+   * @returns A promise that resolves after the operation completes.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async revokeSession(userId: string, sessionId: string) {
     const result = await this.tokenRepository.revokeById(userId, sessionId);
     if (result.count === 0) throw new AppError('Session not found', 404);
   }
 
+  /**
+   * Revoke all sessions for auth.
+   *
+   * Use it from controllers or jobs that run the auth business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise that resolves after the operation completes.
+   */
   async revokeAllSessions(userId: string) {
     await this.tokenRepository.revokeByUserId(userId);
   }

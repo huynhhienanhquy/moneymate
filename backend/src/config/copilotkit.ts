@@ -18,6 +18,14 @@ export interface CopilotKitConfig {
   openaiApiKey: string;
 }
 
+/**
+ * Parse and validate enabled for the copilotkit workflow.
+ *
+ * Use it while deriving the application's copilotkit settings.
+ * @param rawValue - The untrusted configuration value to parse and validate.
+ * @returns The resulting copilotkit value for the caller.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const parseEnabled = (rawValue: string | undefined): boolean => {
   const value = rawValue?.trim().toLowerCase();
   if (!value || value === 'false') return false;
@@ -25,6 +33,18 @@ const parseEnabled = (rawValue: string | undefined): boolean => {
   throw new Error('COPILOTKIT_ENABLED must be either true or false');
 };
 
+/**
+ * Parse and validate bounded integer for the copilotkit workflow.
+ *
+ * Use it while deriving the application's copilotkit settings.
+ * @param name - The name value required by the operation.
+ * @param rawValue - The untrusted configuration value to parse and validate.
+ * @param fallback - The value used when no explicit input is configured.
+ * @param minimum - The lowest accepted numeric value.
+ * @param maximum - The highest accepted numeric value.
+ * @returns The resulting copilotkit value for the caller.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const parseBoundedInteger = (
   name: string,
   rawValue: string | undefined,
@@ -40,6 +60,13 @@ const parseBoundedInteger = (
   return value;
 };
 
+/**
+ * Return copilot kit config required by the copilotkit workflow.
+ *
+ * Use it while deriving the application's copilotkit settings.
+ * @returns The resulting copilotkit value for the caller.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 export const getCopilotKitConfig = (): CopilotKitConfig => {
   const enabled = parseEnabled(process.env.COPILOTKIT_ENABLED);
   const openaiApiKey = process.env.OPENAI_API_KEY?.trim() || '';

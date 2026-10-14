@@ -26,6 +26,12 @@ import type { AdminUser } from '@/types/api';
 type RoleFilter = 'ALL' | AdminUser['role'];
 const EMPTY_USERS: AdminUser[] = [];
 
+/**
+ * Render the admin page interface.
+ *
+ * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered admin page interface.
+ */
 export default function AdminPage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
@@ -42,13 +48,31 @@ export default function AdminPage() {
   const [formError, setFormError] = useState('');
   const users = useQuery({
     queryKey: ['admin-users'],
+    /**
+     * Load admin page data for the query cache.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting admin page value for the caller.
+     */
     queryFn: () => apiRequest<AdminUser[]>('/admin/users'),
   });
+  /**
+   * Close admin page in the admin page interface.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const close = () => {
     setEditing(null);
     setFormError('');
   };
   const save = useMutation({
+    /**
+     * Execute the admin page mutation requested by the client.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting admin page value for the caller.
+     */
     mutationFn: () =>
       editing === 'create'
         ? apiRequest('/auth/register', {
@@ -63,27 +87,67 @@ export default function AdminPage() {
             method: 'PUT',
             body: JSON.stringify({ fullName: fullName.trim(), role }),
           }),
+    /**
+     * Finalize the admin page workflow after a successful operation.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['admin-users'] });
       close();
     },
+    /**
+     * Map a failed admin page operation into user-visible state.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @param error - The failure value to classify, report, or propagate.
+     * @returns The resulting admin page value for the caller.
+     */
     onError: (error) =>
       setFormError(
         error instanceof Error ? error.message : 'Không thể lưu tài khoản.',
       ),
   });
   const remove = useMutation({
+    /**
+     * Execute the admin page mutation requested by the client.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting admin page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/admin/users/${id}`, { method: 'DELETE' }),
+    /**
+     * Finalize the admin page workflow after a successful operation.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['admin-users'] });
       close();
     },
+    /**
+     * Map a failed admin page operation into user-visible state.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @param error - The failure value to classify, report, or propagate.
+     * @returns The resulting admin page value for the caller.
+     */
     onError: (error) =>
       setFormError(
         error instanceof Error ? error.message : 'Không thể xóa tài khoản.',
       ),
   });
+  /**
+   * Open admin page in the admin page interface.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @param user - The user value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const open = (user: AdminUser | 'create') => {
     setEditing(user);
     setFullName(user === 'create' ? '' : user.fullName);
@@ -128,8 +192,21 @@ export default function AdminPage() {
   const canSave =
     !!fullName.trim() &&
     (editing !== 'create' || (!!email.trim() && password.length >= 8));
+  /**
+   * Export list from the admin page workflow.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const exportList = async () => {
     try {
+      /**
+       * Escape a value so it can be written safely to the admin page export.
+       *
+       * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+       * @param value - The value to transform or evaluate.
+       * @returns The resulting admin page value for the caller.
+       */
       const escape = (value: unknown) =>
         `"${String(value ?? '').replace(/"/g, '""')}"`;
       const rows = filtered.map((item) => [
@@ -407,6 +484,12 @@ export default function AdminPage() {
                   {
                     text: 'Xóa',
                     style: 'destructive',
+                    /**
+                     * Handle press for the admin page workflow.
+                     *
+                     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+                     * @returns The resulting admin page value for the caller.
+                     */
                     onPress: () => remove.mutate(editing.id),
                   },
                 ],

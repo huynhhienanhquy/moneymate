@@ -5,6 +5,7 @@ jest.mock('@copilotkit/runtime/v2', () => ({
 }));
 
 import { buildFinancialTools } from '../../copilotkit/financial-tools';
+import { AppError } from '../../common/app-error';
 
 type ExecutableTool = {
   name: string;
@@ -64,6 +65,8 @@ const createDependencies = () => ({
     ]),
   },
   transactionService: {
+    getTransactions: jest.fn().mockResolvedValue({ transactions: [], pagination: { total: 0 } }),
+    getTransaction: jest.fn(),
     getMonthlyReport: jest.fn()
       .mockResolvedValueOnce({ summary: { totalExpense: 12_000_000 } })
       .mockResolvedValueOnce({ summary: { totalExpense: 10_000_000 } }),
@@ -83,7 +86,7 @@ describe('CopilotKit financial tools', () => {
     jest.clearAllMocks();
   });
 
-  it('registers exactly the five read-only MVP tools', () => {
+  it('registers aggregate tools and the read-only transaction lookup', () => {
     const tools = buildFinancialTools('owner-user', { logger }, createDependencies());
 
     expect(tools.map((tool) => tool.name)).toEqual([
@@ -92,6 +95,7 @@ describe('CopilotKit financial tools', () => {
       'getBudgetStatus',
       'getSavingGoals',
       'compareMonthlySpending',
+      'findTransactions',
     ]);
   });
 
@@ -215,5 +219,64 @@ describe('CopilotKit financial tools', () => {
       errorCode: 'TOOL_TIMEOUT',
     }));
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain('120000000');
+  });
+
+  it('finds bounded transactions only in the authenticated user scope and includes the final day', async () => {
+    const dependencies = createDependencies();
+    const transaction = {
+      id: '11111111-1111-4111-8111-111111111111', version: 3,
+      type: 'EXPENSE', amount: '120000', transactionDate: new Date('2026-10-12T12:00:00Z'),
+      wallet: { name: 'Tiền mặt' }, category: { name: 'Ăn uống' }, note: 'Ăn trưa',
+      userId: 'owner-user', walletId: 'private-wallet-id',
+    };
+    dependencies.transactionService.getTransactions.mockResolvedValue({ transactions: [transaction], pagination: { total: 2 } });
+    const tool = getTool(buildFinancialTools('owner-user', { logger }, dependencies), 'findTransactions');
+    expect(tool.parameters.safeParse({ userId: 'other-user' }).success).toBe(false);
+    expect(tool.parameters.safeParse({ limit: 21 }).success).toBe(false);
+    const result = await tool.execute!({ search: 'Ăn uống', startDate: '2026-10-12', endDate: '2026-10-12', type: 'EXPENSE', limit: 1 });
+    expect(dependencies.transactionService.getTransactions).toHaveBeenCalledWith('owner-user', {
+      search: 'Ăn uống', type: 'EXPENSE', startDate: new Date('2026-10-12T00:00:00.000Z'),
+      endDate: new Date('2026-10-12T23:59:59.999Z'), take: 1, skip: 0, sortBy: 'transactionDate', order: 'desc',
+    });
+    expect(result.data).toEqual({ transactions: [{
+      id: transaction.id, version: 3, type: 'EXPENSE', amount: 120000, currency: 'VND',
+      date: transaction.transactionDate.toISOString(), walletName: 'Tiền mặt', categoryName: 'Ăn uống', note: 'Ăn trưa', editable: true,
+    }], total: 2, hasMore: true });
+    expect(JSON.stringify(result)).not.toContain('private-wallet-id');
+    expect(JSON.stringify(logger.info.mock.calls)).not.toContain('Ăn trưa');
+  });
+
+  it('checks ownership through the transaction service for an exact ID and safely handles inaccessible IDs', async () => {
+    const dependencies = createDependencies();
+    dependencies.transactionService.getTransaction.mockRejectedValue(new AppError('Transaction not found', 404));
+    const tool = getTool(buildFinancialTools('owner-user', { logger }, dependencies), 'findTransactions');
+    const result = await tool.execute!({ transactionId: '11111111-1111-4111-8111-111111111111' });
+    expect(dependencies.transactionService.getTransaction).toHaveBeenCalledWith('owner-user', '11111111-1111-4111-8111-111111111111');
+    expect(dependencies.transactionService.getTransactions).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+    expect(result.error).toEqual(expect.objectContaining({ code: 'TRANSACTION_NOT_FOUND', retryable: false }));
+    expect(JSON.stringify(result)).not.toContain('Transaction not found');
+  });
+
+  it('does not query transactions for impossible dates or reversed date ranges', async () => {
+    const dependencies = createDependencies();
+    const tool = getTool(buildFinancialTools('owner-user', { logger }, dependencies), 'findTransactions');
+    expect((await tool.execute!({ startDate: '2026-02-30' })).error.code).toBe('INVALID_TOOL_INPUT');
+    expect((await tool.execute!({ startDate: '2026-10-13', endDate: '2026-10-12' })).error.code).toBe('INVALID_TOOL_INPUT');
+    expect(dependencies.transactionService.getTransactions).not.toHaveBeenCalled();
+  });
+
+  it('accepts explicit nulls from strict model tools and searches a list rather than a guessed ID', async () => {
+    const dependencies = createDependencies();
+    const tool = getTool(buildFinancialTools('owner-user', { logger }, dependencies), 'findTransactions');
+    const args = { transactionId: null, search: 'ăn uống', type: 'EXPENSE', startDate: null, endDate: null, limit: null, offset: null };
+    expect(tool.parameters.safeParse(args).success).toBe(true);
+    const result = await tool.execute!(args);
+    expect(dependencies.transactionService.getTransaction).not.toHaveBeenCalled();
+    expect(dependencies.transactionService.getTransactions).toHaveBeenCalledWith('owner-user', {
+      search: 'ăn uống', type: 'EXPENSE', startDate: undefined, endDate: undefined,
+      take: 10, skip: 0, sortBy: 'transactionDate', order: 'desc',
+    });
+    expect(result).toEqual({ success: true, data: { transactions: [], total: 0, hasMore: false } });
   });
 });

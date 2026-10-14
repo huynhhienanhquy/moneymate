@@ -9,6 +9,13 @@ export class SavingGoalService {
   private walletRepository = new WalletRepository();
   private notificationService = new NotificationService();
 
+  /**
+   * Return status required by the saving goal workflow.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param goal - The goal value required by the operation.
+   * @returns The resulting saving goal value for the caller.
+   */
   private getStatus(goal: { currentAmount: any; targetAmount: any; targetDate: Date }) {
     const current = Number(goal.currentAmount);
     const target = Number(goal.targetAmount);
@@ -17,6 +24,13 @@ export class SavingGoalService {
     return 'ACTIVE';
   }
 
+  /**
+   * Enrich goal for saving goal.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param goal - The goal value required by the operation.
+   * @returns The resulting saving goal value for the caller.
+   */
   private enrichGoal(goal: any) {
     const current = Number(goal.currentAmount);
     const target = Number(goal.targetAmount);
@@ -29,6 +43,15 @@ export class SavingGoalService {
     };
   }
 
+  /**
+   * Create goal for the saving goal workflow.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to create goal for the saving goal workflow.
+   * @returns A promise containing the resulting saving goal value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async createGoal(userId: string, data: {
     title: string;
     targetAmount: number;
@@ -39,17 +62,43 @@ export class SavingGoalService {
     return this.enrichGoal(goal);
   }
 
+  /**
+   * Return goals required by the saving goal workflow.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting saving goal value.
+   */
   async getGoals(userId: string) {
     const goals = await this.savingGoalRepository.findAllByUserId(userId);
     return goals.map((g) => this.enrichGoal(g));
   }
 
+  /**
+   * Return goal required by the saving goal workflow.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting saving goal value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async getGoal(userId: string, id: string) {
     const goal = await this.savingGoalRepository.findById(id);
     if (!goal || goal.userId !== userId) throw new AppError('Saving goal not found', 404);
     return this.enrichGoal(goal);
   }
 
+  /**
+   * Update goal while preserving the saving goal workflow's rules.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to update goal while preserving the saving goal workflow's rules.
+   * @returns A promise containing the resulting saving goal value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async updateGoal(userId: string, id: string, data: {
     title?: string;
     targetAmount?: number;
@@ -61,6 +110,15 @@ export class SavingGoalService {
     return this.enrichGoal(updated);
   }
 
+  /**
+   * Delete goal through the saving goal workflow.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting saving goal value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async deleteGoal(userId: string, id: string) {
     const goal = await this.savingGoalRepository.findById(id);
     if (!goal || goal.userId !== userId) throw new AppError('Saving goal not found', 404);
@@ -84,6 +142,16 @@ export class SavingGoalService {
     return true;
   }
 
+  /**
+   * Deposit for saving goal.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param goalId - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to deposit for saving goal.
+   * @returns A promise containing the resulting saving goal value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async deposit(userId: string, goalId: string, data: { walletId: string; amount: number }) {
     const goal = await this.savingGoalRepository.findById(goalId);
     if (!goal || goal.userId !== userId) throw new AppError('Saving goal not found', 404);
@@ -125,6 +193,16 @@ export class SavingGoalService {
     return enriched;
   }
 
+  /**
+   * Withdraw for saving goal.
+   *
+   * Use it from controllers or jobs that run the saving goal business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param goalId - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to withdraw for saving goal.
+   * @returns A promise containing the resulting saving goal value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async withdraw(userId: string, goalId: string, data: { walletId: string; amount: number }) {
     const goal = await this.savingGoalRepository.findById(goalId);
     if (!goal || goal.userId !== userId) throw new AppError('Saving goal not found', 404);

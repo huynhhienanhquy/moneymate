@@ -29,6 +29,12 @@ const agent = buildMoneyMateAgent({ id: 'copilot-smoke-no-data', email: 'smoke@e
 const calls = [];
 let failed = false;
 const timer = setTimeout(() => { agent.abortRun(); process.exitCode = 1; }, 60_000);
+/**
+ * Finalize the live Copilot expense check and release its timeout guard.
+ *
+ * Use it while running the check copilot expense maintenance workflow.
+ * @returns A promise that resolves after the operation completes.
+ */
 const finish = async () => {
   clearTimeout(timer);
   await prisma.$disconnect();
@@ -39,6 +45,13 @@ agent.run({
   context: [{ description: 'Current local application date', value: JSON.stringify({ localDate, timeZone: 'Asia/Bangkok' }) }],
   tools: [{ name: expenseToolDefinition.name, description: expenseToolDefinition.description, parameters: z.toJSONSchema(expenseToolDefinition.parameters) }],
 }).subscribe({
+  /**
+   * Move the selected check copilot expense period forward.
+   *
+   * Use it while running the check copilot expense maintenance workflow.
+   * @param event - The UI or runtime event that initiated the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   next: (event) => {
     if (event.type === 'TOOL_CALL_START') calls.push({ id: event.toolCallId, name: event.toolCallName, args: '' });
     if (event.type === 'TOOL_CALL_ARGS') {
@@ -47,11 +60,24 @@ agent.run({
     }
     if (event.type === 'RUN_ERROR') { failed = true; console.error('Agent run failed:', event.code || 'RUN_ERROR'); }
   },
+  /**
+   * Error for check copilot expense.
+   *
+   * Use it while running the check copilot expense maintenance workflow.
+   * @param error - The failure value to classify, report, or propagate.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   error: (error) => {
     console.error('Live expense check failed:', error.name, error.code || 'UNKNOWN');
     process.exitCode = 1;
     void finish();
   },
+  /**
+   * Complete for check copilot expense.
+   *
+   * Use it while running the check copilot expense maintenance workflow.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   complete: () => {
     const call = calls.find(item => item.name === 'recordExpense');
     let args;

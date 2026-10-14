@@ -6,10 +6,23 @@ import { sessionStorage } from '@/storage/session';
 let _Notifications: typeof import('expo-notifications') | null = null;
 let _initialized = false;
 
+/**
+ * Determine whether expo go applies.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @returns `true` when the condition is satisfied; otherwise `false`.
+ */
 function isExpoGo(): boolean {
   return Constants.executionEnvironment === 'storeClient';
 }
 
+/**
+ * Return notifications required by the notifications workflow.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @returns A promise containing the resulting notifications value.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 async function getNotifications(): Promise<
   typeof import('expo-notifications')
 > {
@@ -23,6 +36,12 @@ async function getNotifications(): Promise<
   if (!_initialized) {
     _initialized = true;
     Notifications.setNotificationHandler({
+      /**
+       * Handle notification for the notifications workflow.
+       *
+       * Use it from callers that need this operation without duplicating its rules.
+       * @returns A promise containing the resulting notifications value.
+       */
       handleNotification: async () => ({
         shouldShowBanner: true,
         shouldShowList: true,
@@ -34,6 +53,13 @@ async function getNotifications(): Promise<
   return Notifications;
 }
 
+/**
+ * Register for push notifications for the notifications workflow.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @returns A promise containing the resulting notifications value.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 export async function registerForPushNotifications() {
   if (Platform.OS === 'web') {
     throw new Error('Thông báo đẩy chưa được hỗ trợ trên phiên bản web');

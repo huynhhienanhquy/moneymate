@@ -54,6 +54,12 @@ interface AiStatus {
   model?: string;
 }
 
+/**
+ * Render the ai advisor page interface.
+ *
+ * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered ai advisor page interface.
+ */
 export default function AiAdvisorPage() {
   const ui = useUiStyles();
   const router = useRouter();
@@ -62,18 +68,42 @@ export default function AiAdvisorPage() {
   const { openChatbot } = useMobileChatbot();
   const advisor = useQuery({
     queryKey: ['ai-advisor'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => apiRequest<Advisor>('/ai/advisor/insights'),
   });
   const analysis = useQuery({
     queryKey: ['ai-analysis'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => apiRequest<Analysis>('/ai/analyze/expenses'),
   });
   const forecast = useQuery({
     queryKey: ['ai-forecast'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => apiRequest<Forecast>('/ai/budget/forecast'),
   });
   const status = useQuery({
     queryKey: ['ai-status'],
+    /**
+     * Load ai advisor page data for the query cache.
+     *
+     * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting ai advisor page value for the caller.
+     */
     queryFn: () => apiRequest<AiStatus>('/ai/status'),
   });
   const score = advisor.data?.healthScore || 0;
@@ -289,6 +319,13 @@ export default function AiAdvisorPage() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the ai advisor page interface.
+ *
+ * Use it to keep the ai advisor page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     flex: { flex: 1 },

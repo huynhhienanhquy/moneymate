@@ -8,6 +8,15 @@ import { safeParseInt } from '../common/utils';
 export class BudgetController {
   private budgetService = new BudgetService();
 
+  /**
+   * Create budget for the budget workflow.
+   *
+   * Use it as the HTTP boundary for the budget route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public createBudget = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -17,6 +26,15 @@ export class BudgetController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Return budgets required by the budget workflow.
+   *
+   * Use it as the HTTP boundary for the budget route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getBudgets = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -28,6 +46,15 @@ export class BudgetController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Return budget required by the budget workflow.
+   *
+   * Use it as the HTTP boundary for the budget route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getBudget = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -37,6 +64,15 @@ export class BudgetController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Update budget while preserving the budget workflow's rules.
+   *
+   * Use it as the HTTP boundary for the budget route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public updateBudget = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -46,6 +82,15 @@ export class BudgetController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Delete budget through the budget workflow.
+   *
+   * Use it as the HTTP boundary for the budget route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deleteBudget = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

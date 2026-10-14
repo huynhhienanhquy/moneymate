@@ -6,6 +6,15 @@ export class ChatService {
   private contextBuilder = new ContextBuilderService();
   private llm = new LlmProvider();
 
+  /**
+   * Chat for chat.
+   *
+   * Use it from controllers or jobs that run the chat business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param message - The human-readable outcome message returned to the caller.
+   * @param history - The history value required by the operation.
+   * @returns A promise containing the resulting chat value.
+   */
   async chat(userId: string, message: string, history: ChatMessage[] = []) {
     const ctx = await this.contextBuilder.build(userId);
     const contextText = this.contextBuilder.toPromptText(ctx);
@@ -24,6 +33,14 @@ export class ChatService {
     return { reply, poweredBy: 'rules' as const, suggestions: this.getSuggestions(ctx) };
   }
 
+  /**
+   * Rule based reply for chat.
+   *
+   * Use it from controllers or jobs that run the chat business workflow.
+   * @param message - The human-readable outcome message returned to the caller.
+   * @param ctx - The ctx value required by the operation.
+   * @returns The resulting chat value for the caller.
+   */
   private ruleBasedReply(message: string, ctx: Awaited<ReturnType<ContextBuilderService['build']>>): string {
     const q = message.toLowerCase();
 
@@ -68,6 +85,13 @@ export class ChatService {
     return `Tháng ${ctx.month}/${ctx.year}: Thu ${formatVND(ctx.summary.monthlyIncome)}, chi ${formatVND(ctx.summary.monthlyExpense)}, tiết kiệm ${formatVND(ctx.summary.monthlySavings)}. Hỏi tôi về chi tiêu, ngân sách, mục tiêu hoặc tiết kiệm nhé!`;
   }
 
+  /**
+   * Return suggestions required by the chat workflow.
+   *
+   * Use it from controllers or jobs that run the chat business workflow.
+   * @param ctx - The ctx value required by the operation.
+   * @returns The resulting chat value for the caller.
+   */
   private getSuggestions(ctx: Awaited<ReturnType<ContextBuilderService['build']>>): string[] {
     return [
       'Tháng này tôi chi nhiều nhất ở đâu?',

@@ -19,6 +19,15 @@ export class RecurringService {
   private notificationService = new NotificationService();
   private budgetService = new BudgetService();
 
+  /**
+   * Create recurring for the recurring workflow.
+   *
+   * Use it from controllers or jobs that run the recurring business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to create recurring for the recurring workflow.
+   * @returns A promise containing the resulting recurring value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async createRecurring(userId: string, data: {
     walletId: string;
     categoryId: string;
@@ -48,16 +57,42 @@ export class RecurringService {
     });
   }
 
+  /**
+   * Return recurring list required by the recurring workflow.
+   *
+   * Use it from controllers or jobs that run the recurring business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting recurring value.
+   */
   async getRecurringList(userId: string) {
     return this.recurringRepository.findAllByUserId(userId);
   }
 
+  /**
+   * Return recurring required by the recurring workflow.
+   *
+   * Use it from controllers or jobs that run the recurring business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting recurring value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async getRecurring(userId: string, id: string) {
     const item = await this.recurringRepository.findById(id);
     if (!item || item.userId !== userId) throw new AppError('Recurring transaction not found', 404);
     return item;
   }
 
+  /**
+   * Update recurring while preserving the recurring workflow's rules.
+   *
+   * Use it from controllers or jobs that run the recurring business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to update recurring while preserving the recurring workflow's rules.
+   * @returns A promise containing the resulting recurring value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async updateRecurring(userId: string, id: string, data: Partial<{
     walletId: string;
     categoryId: string;
@@ -99,12 +134,29 @@ export class RecurringService {
     });
   }
 
+  /**
+   * Delete recurring through the recurring workflow.
+   *
+   * Use it from controllers or jobs that run the recurring business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting recurring value.
+   */
   async deleteRecurring(userId: string, id: string) {
     await this.getRecurring(userId, id);
     await this.recurringRepository.delete(id);
     return true;
   }
 
+  /**
+   * Toggle active in the recurring interface.
+   *
+   * Use it from controllers or jobs that run the recurring business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting recurring value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async toggleActive(userId: string, id: string) {
     const item = await this.getRecurring(userId, id);
     const resumedAt = !item.isActive ? new Date() : null;

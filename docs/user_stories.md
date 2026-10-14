@@ -1,168 +1,179 @@
-# MoneyMate User Stories
+# User stories và điều kiện chấp nhận
 
-> Current product baseline, verified against the repository on 2026-09-24.
+> Đối chiếu mã nguồn ngày 13/10/2026. Giữ ID `US-01` đến `US-15`. Các điều kiện dưới đây là kịch bản cần kiểm chứng, không phải báo cáo tất cả test đã chạy. [Mục lục](README.md).
 
-## US-01 — Register and sign in securely
+## US-01 — Đăng ký và đăng nhập
 
-**As a visitor, I want to create an account and sign in, so that my financial records are private and available across devices.**
+**Là khách, tôi muốn tạo tài khoản và đăng nhập để quản lý dữ liệu tài chính riêng.**
 
-Acceptance criteria:
+- Nhập họ tên/email hợp lệ và mật khẩu tối thiểu 8 ký tự; email đã dùng được từ chối.
+- Login đúng trả user/access token và refresh qua cookie web hoặc body native.
+- Login sai không tiết lộ tài khoản có tồn tại; vượt giới hạn trả `429`.
+- Đăng ký không cho người dùng tự chọn role admin.
 
-- Registration validates full name, normalized unique email, and a password of at least eight characters.
-- Login returns a short-lived access token and creates a rotating refresh session.
-- Invalid credentials use a generic error and login/registration are rate limited.
-- Web and mobile receive refresh credentials through their appropriate secure transport.
+Truy vết: `FR-AUTH-01..03`, `NFR-SEC-02..04`; [auth](auth_sessions.md).
 
-## US-02 — Manage devices and account
+## US-02 — Quản lý phiên và hồ sơ
 
-**As a user, I want to review sessions and manage my profile, so that I stay in control of my account.**
+**Là người dùng, tôi muốn xem phiên, sửa hồ sơ và kiểm soát tài khoản.**
 
-Acceptance criteria:
+- Xem/revoke phiên của mình; revoke một phiên không áp dụng cho phiên người khác.
+- Đổi mật khẩu cần mật khẩu hiện tại và thu hồi refresh sessions.
+- Xóa tài khoản cần password confirmation; DB và file cleanup có phạm vi như [nghiệp vụ](business_rules.md).
+- Refresh luân chuyển; dùng lại token cũ thu hồi family. JWT access đã cấp có thể tồn tại đến hạn, không hứa revoke tức thời.
 
-- I can view active sessions and revoke one or all of them.
-- I can update my name/avatar metadata and change my password after confirming the current password.
-- I can delete my account only after password confirmation.
-- Refresh-token replay revokes the affected token family.
+Truy vết: `FR-AUTH-04..06`; [auth](auth_sessions.md).
 
-## US-03 — Manage wallets and categories
+## US-03 — Quản lý ví và danh mục
 
-**As a user, I want separate wallets and personal categories, so that my records match how I manage money.**
+**Là người dùng, tôi muốn chia ví và danh mục theo cách quản lý tiền của mình.**
 
-Acceptance criteria:
+- Tạo/sửa/xem/archive ví; archive ẩn khỏi danh sách active, giữ lịch sử.
+- Dùng danh mục hệ thống và quản lý danh mục cá nhân thu/chi; không sửa danh mục hệ thống.
+- Tham chiếu ví/danh mục của người khác hoặc loại không phù hợp bị từ chối.
+- Currency không tạo ra FX conversion; UI/tổng hợp hiện chủ yếu VND.
 
-- I can create, edit, list, and archive supported wallet types.
-- Archived wallets disappear from active lists while historical records remain.
-- I can use read-only system categories and manage my own income/expense categories.
-- The API rejects wallets/categories owned by another user and type mismatches.
+Truy vết: `FR-WALLET-01..02`, `FR-CATEGORY-01..03`.
 
-## US-04 — Record and find transactions
+## US-04 — Ghi và tìm giao dịch
 
-**As a user, I want to record and organize income and expenses, so that reports reflect my activity.**
+**Là người dùng, tôi muốn ghi thu/chi và tra cứu giao dịch theo thời gian, ví, danh mục.**
 
-Acceptance criteria:
+- Giao dịch có amount dương, ví của mình, danh mục đúng loại và ngày không tương lai.
+- Khoản thu tăng ví; khoản chi thường kiểm tra đủ tiền nhưng không trừ ví theo implementation hiện tại.
+- Tìm/lọc/sắp xếp/phân trang trả đúng phạm vi user; transfer không hiện như khoản thu/chi thông thường.
+- Update/delete với version cũ trả conflict; delete lưu tombstone.
+- Update/delete khoản thu hoàn tác ảnh hưởng số dư, có thể làm số dư âm nếu tiền đã chuyển đi; đây là giới hạn cần hiểu khi QA.
 
-- I can create an income or expense with positive amount, owned wallet, compatible category, date, and optional note.
-- A normal transaction date cannot be in the future.
-- I can search, filter, sort, and paginate transactions.
-- I can update or soft-delete a normal transaction, and stale versions produce a conflict instead of overwriting newer data.
+Truy vết: `FR-TX-01..04`; [business rules](business_rules.md).
 
-## US-05 — Transfer between wallets
+## US-05 — Chuyển tiền giữa ví
 
-**As a user, I want to transfer money between my wallets, so that balances stay consistent.**
+**Là người dùng, tôi muốn chuyển tiền giữa hai ví để phân bổ số dư.**
 
-Acceptance criteria:
+- Hai ví active, khác nhau, thuộc mình; amount dương và ví nguồn đủ số dư.
+- Debit/credit, bản ghi transfer và các giao dịch liên kết commit atomic.
+- Retry cùng request/key trong thời gian hiệu lực idempotency không tạo transfer trùng.
+- Không sửa/xóa transfer qua CRUD giao dịch thường.
 
-- Source and destination must be different active wallets owned by me.
-- The amount must be positive and the source must have sufficient balance.
-- Debit, credit, transfer audit record, and linked transaction records commit atomically.
-- Retrying the same idempotent request does not create a duplicate transfer.
+Truy vết: `FR-WALLET-03`, `FR-TX-05,07`; [API](api.md).
 
-## US-06 — Plan with budgets
+## US-06 — Theo dõi ngân sách
 
-**As a user, I want monthly global or category budgets, so that I can detect overspending.**
+**Là người dùng, tôi muốn đặt ngân sách tháng và nhận cảnh báo chi tiêu.**
 
-Acceptance criteria:
+- Tạo ngân sách tổng hoặc danh mục chi, không trùng phạm vi/tháng/năm.
+- Xem hạn mức, đã chi, còn lại, phần trăm và status.
+- Đạt 80% có warning, 100% có exceeded; ngưỡng/kỳ được deduplicate.
+- Vượt budget không tự chặn khoản chi hợp lệ.
 
-- I can create one budget per scope/month/year and update or delete it.
-- The UI shows limit, spent, remaining, utilization percentage, and status.
-- I receive one warning at 80% and one exceeded notification at 100% or above.
-- Exceeding a budget does not block a valid expense.
+Truy vết: `FR-BUDGET-01..03`.
 
-## US-07 — Fund savings goals
+## US-07 — Nạp/rút mục tiêu
 
-**As a user, I want to move money between wallets and goals, so that I can track progress toward a target.**
+**Là người dùng, tôi muốn dành tiền trong ví cho mục tiêu và xem tiến độ.**
 
-Acceptance criteria:
+- Tạo mục tiêu số tiền/ngày đích hợp lệ; progress/status được tính từ dữ liệu.
+- Deposit kiểm tra ví đủ tiền, giảm ví/tăng goal và ghi history atomic.
+- Withdraw không vượt số tiền goal, tăng ví/giảm goal atomic.
+- Goal có tiền hoặc có history không được xóa, kể cả đã rút hết về 0.
 
-- I can create a goal with a positive target and target date.
-- Deposits require sufficient owned-wallet balance and update wallet, goal, and history atomically.
-- Withdrawals cannot exceed the saved amount and credit an owned wallet.
-- Completed/expired/active status and progress are derived consistently.
-- A goal with funds or funding history cannot be deleted.
+Truy vết: `FR-GOAL-01..04`.
 
-## US-08 — Automate recurring activity
+## US-08 — Lập lịch thu/chi
 
-**As a user, I want recurring income and expense schedules, so that routine records are created automatically.**
+**Là người dùng, tôi muốn tạo lịch giao dịch lặp lại để bớt thao tác thường xuyên.**
 
-Acceptance criteria:
+- Hỗ trợ ngày/tuần/tháng/năm, ngày bắt đầu và pause/resume; chưa có trường ngày kết thúc.
+- Processor claim kỳ đến hạn để hạn chế sinh trùng khi chạy chồng.
+- Catch up có giới hạn và giữ `recurringId` để báo cáo không cộng trùng khoản đã sinh.
+- Scheduler chạy lúc startup/mỗi 24 giờ; không giả định giao dịch xuất hiện chính xác tại một giờ trong ngày.
+- Recurring expense không có cùng kiểm tra số dư với expense thường; đối chiếu [nghiệp vụ](business_rules.md).
 
-- I can manage daily, weekly, monthly, and yearly schedules.
-- I can pause a schedule and resume it without generating the paused period.
-- Due occurrences are generated once even if processors overlap.
-- Missed occurrences are caught up in order within a bounded run.
+Truy vết: `FR-REC-01..04`.
 
-## US-09 — Understand reports
+## US-09 — Hiểu báo cáo và export
 
-**As a user, I want dashboards and reports, so that I can understand financial trends.**
+**Là người dùng, tôi muốn xem chỉ số tháng/năm và tải báo cáo.**
 
-Acceptance criteria:
+- Dashboard có tổng ví active và 5 giao dịch gần nhất theo service.
+- Monthly/trend/year dùng đúng số dư, khoản thực tế/dự kiến và công thức của từng endpoint.
+- Khoản đã soft delete được loại khỏi tổng hợp tương ứng; backdated mutation vô hiệu snapshot liên quan.
+- Export Excel/PDF tháng cần auth và chỉ chứa dữ liệu của mình.
+- Không diễn giải `totalIncome` trên monthly report như tổng giao dịch thu; xem định nghĩa trong [API](api.md).
 
-- The dashboard shows wallet totals, current-period metrics, and recent transactions.
-- Monthly reports show summary values and expense categories.
-- Trend and yearly views use bounded date ranges and exclude deleted data.
-- I can export a selected month as PDF or Excel.
+Truy vết: `FR-REPORT-01..05`.
 
-## US-10 — Attach and scan receipts
+## US-10 — Đính kèm và quét hóa đơn
 
-**As a user, I want to attach or scan receipts, so that I can keep evidence and reduce manual entry.**
+**Là người dùng, tôi muốn lưu chứng từ và điền nhanh giao dịch từ hóa đơn.**
 
-Acceptance criteria:
+- JPEG/PNG/WEBP/PDF tối đa 5 MiB qua MIME allowlist; lỗi type/size trả thông báo phù hợp.
+- Download/delete chỉ áp dụng attachment/giao dịch của mình.
+- OCR trả dự thảo amount/date/merchant/category/confidence; tôi xem và sửa trước khi lưu.
+- Khi create/edit offline được queue, file hóa đơn không được lưu/replay; không hiển thị như attachment đã lưu thành công.
 
-- JPEG, PNG, WEBP, and PDF files up to 5 MiB are accepted.
-- I can list, download, and delete attachments only for my own transactions.
-- OCR proposes extracted fields for review rather than saving automatically.
-- Storage/provider failures produce a recoverable user-facing error.
+Truy vết: `FR-FILE-01..02`, `FR-AI-01`.
 
-## US-11 — Receive notifications
+## US-11 — Đọc thông báo và nhận push
 
-**As a user, I want relevant alerts, so that I notice budget, goal, and recurring events.**
+**Là người dùng, tôi muốn biết sự kiện ngân sách, mục tiêu và lịch định kỳ.**
 
-Acceptance criteria:
+- List/mark-read/mark-all/delete không tác động thông báo user khác.
+- Native đăng ký/hủy token thiết bị và xử lý permission từ OS.
+- Push failure không rollback thao tác tài chính đã commit.
+- Delivery và deep link phải kiểm tra trên build/thiết bị theo [release runbook](mobile_release.md).
 
-- I can list, mark read, mark all read, and delete my notifications.
-- iOS/Android devices can register and unregister push tokens.
-- Push delivery is optional and does not roll back committed financial data.
+Truy vết: `FR-NOTIFY-01..02`, `FR-MOBILE-02`.
 
-## US-12 — Work offline on mobile
+## US-12 — Ghi giao dịch khi mất mạng
 
-**As a mobile user, I want safe offline behavior, so that temporary network loss does not duplicate or lose supported changes.**
+**Là người dùng mobile, tôi muốn một số thao tác giao dịch tiếp tục được lưu để gửi lại sau.**
 
-Acceptance criteria:
+- Create/edit JSON từ trang thêm/sửa được queue khi mất mạng/lỗi phù hợp; transfer/delete và file không phải cùng phạm vi outbox.
+- POST replay giữ key; PUT edit chưa có idempotency middleware ở backend và phụ thuộc version.
+- Reconnect xử lý batch/backoff có giới hạn; không có timer retry độc lập bảo đảm gửi đúng thời điểm.
+- Delta ghi vào SQLite kèm cursor/tombstone, nhưng màn hình chưa dùng đầy đủ cache này; QA không coi đó là offline UI hoàn chỉnh.
+- Conflict/queued state phải được phân biệt với đã lưu server; đăng xuất/chuyển user cần giữ cách ly dữ liệu.
 
-- Supported offline mutations enter a persistent SQLite outbox.
-- Replay uses the original idempotency key and bounded exponential backoff.
-- Transaction deltas include edits and deletion tombstones after the saved cursor.
-- Conflicts are visible and are not silently overwritten.
+Truy vết: `FR-TX-05..06`, `FR-MOBILE-01`; [kiến trúc](architecture.md).
 
-## US-13 — Ask the financial Copilot
+## US-13 — Hỏi trợ lý tài chính
 
-**As a user, I want to ask natural-language questions, so that aggregate financial information is easier to understand.**
+**Là người dùng, tôi muốn hỏi về số liệu của mình bằng ngôn ngữ tự nhiên.**
 
-Acceptance criteria:
+- Copilot server lấy số liệu qua 6 tool read-only có principal user, gồm tìm giao dịch có giới hạn; không dùng userId do model truyền.
+- Câu trả lời nêu kỳ và hạn chế; lỗi provider không lộ secret.
+- Khi Copilot bị tắt, chat fallback vẫn có luồng riêng; không hứa kết quả hay tool giống nhau.
+- Mobile REST chat được kiểm tra riêng, không coi web Copilot tests bao phủ mobile chat.
 
-- Personal numbers come from authenticated, user-scoped read-only tools.
-- Answers identify relevant time periods and format VND clearly.
-- The Copilot states limitations instead of inventing unavailable data.
-- Provider and connection errors are shown without exposing internal details or secrets.
+Truy vết: `FR-AI-01`, `FR-COPILOT-01,04`.
 
-## US-14 — Control the app through Copilot
+## US-14 — Thao tác bằng Copilot web
 
-**As a user, I want the Copilot to perform simple app actions, so that I can navigate and adjust the interface conversationally.**
+**Là người dùng, tôi muốn điều hướng, đổi theme và chuẩn bị dữ liệu từ cuộc hội thoại.**
 
-Acceptance criteria:
+- Đổi light/dark và mở route theo allowlist; không mở URL tùy ý qua tool.
+- Xem bản nháp và xác nhận trước khi tạo expense/income/transfer/category/wallet/budget/goal/recurring.
+- Hủy không gọi mutation API; chỉ hiển thị thành công khi response xác nhận.
+- Tìm giao dịch, xem thông tin hiện tại/thay đổi đề xuất và xác nhận trước khi sửa hoặc xóa giao dịch thu/chi; nếu có nhiều kết quả phù hợp thì hỏi người dùng chọn.
+- Giữ hội thoại, nội dung đang nhập và thẻ xác nhận khi đóng/mở khung chat trong cùng phiên đăng nhập.
 
-- I can request light or dark mode and the exact theme is persisted.
-- I can request a supported MoneyMate page; arbitrary external URLs are rejected by design.
-- I can describe an expense and review the proposed amount/date/category/wallet before saving.
-- Canceling the confirmation does not create a transaction.
-- The Copilot cannot edit or delete transactions.
+**Khoảng trống hiện tại:** tool `transferFunds` chờ `data === true` nhưng API trả object `WalletTransfer`, nên có thể báo lỗi sau khi server đã chuyển tiền và chưa invalidate cache. Điều kiện hiển thị thành công chưa đạt cho tool này; kiểm tra server trước khi tạo lại thao tác.
 
-## US-15 — Administer users
+Truy vết: `FR-COPILOT-02..03`; [Copilot provider](../frontend/src/contexts/MoneyMateCopilotProvider.tsx).
 
-**As an administrator, I want a protected user-management area, so that authorized operations staff can support the service.**
+## US-15 — Quản lý người dùng
 
-Acceptance criteria:
+**Là admin, tôi muốn xem và quản lý tài khoản trong khu vực được bảo vệ.**
 
-- Only an authenticated `ADMIN` can enter the admin route or call admin APIs.
-- An administrator can list, inspect, update, and delete user accounts.
-- Standard users receive an authorization failure without admin data leakage.
+- Chỉ access token hợp lệ và role `ADMIN` vào được API admin.
+- Có list/detail/update/delete theo validator và quy tắc admin service.
+- Người dùng thường nhận lỗi phân quyền, không có dữ liệu admin.
+- Test trực tiếp API để kiểm chứng, không chỉ dựa vào việc UI ẩn route.
+
+Truy vết: `FR-ADMIN-01..02`; [admin service](../backend/src/services/admin.service.ts).
+
+## Áp dụng khi nghiệm thu
+
+Mỗi thay đổi chọn story/requirement bị ảnh hưởng và kiểm tra đường thành công, validation, ownership, lỗi và replay/conflict khi phù hợp. Phạm vi kiểm thử hiện có và các bước thủ công nằm trong [testing.md](testing.md).

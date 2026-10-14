@@ -16,10 +16,23 @@ import { useCategories, useWallets } from '@/hooks/useReferenceData';
 import { toLocalDateInputValue } from '@/utils/dateInput';
 import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
 
+/**
+ * Render the transaction modal interface.
+ *
+ * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered transaction modal interface.
+ */
 const TransactionModal: React.FC<{
   tx?: any; prefill?: any; wallets: any[]; categories: any[];
   onClose: () => void; onSave: (d: any, file?: File) => Promise<unknown>; loading: boolean;
 }> = ({ tx, prefill, wallets, categories, onClose, onSave, loading }) => {
+  /**
+   * Return initial form required by the transactions page workflow.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns The resulting transactions page value for the caller.
+   */
   const getInitialForm = () => {
     if (tx) return {
       walletId: tx.walletId, categoryId: tx.categoryId, amount: String(tx.amount),
@@ -62,6 +75,12 @@ const TransactionModal: React.FC<{
     && !!selectedWallet
     && Number(form.amount) > availableBalance;
 
+  /**
+   * Handle save for the transactions page workflow.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const handleSave = async () => {
     if (!form.walletId || !form.categoryId || !form.amount) {
       setSaveError(!form.walletId ? 'Vui lòng chọn ví' : !form.categoryId ? 'Vui lòng nhập đúng tên danh mục' : 'Vui lòng nhập số tiền');
@@ -212,6 +231,12 @@ const TransactionModal: React.FC<{
   );
 };
 
+/**
+ * Render the transactions page interface.
+ *
+ * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered transactions page interface.
+ */
 const TransactionsPage: React.FC = () => {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
@@ -237,12 +262,24 @@ const TransactionsPage: React.FC = () => {
   if (search) params.search = search;
   if (typeFilter) params.type = typeFilter;
 
+  /**
+   * Move the selected transactions page period backward.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const previousMonth = () => {
     setPage(0);
     if (month === 1) { setMonth(12); setYear((value) => value - 1); }
     else setMonth((value) => value - 1);
   };
 
+  /**
+   * Move the selected transactions page period forward.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const nextMonth = () => {
     setPage(0);
     if (month === 12) { setMonth(1); setYear((value) => value + 1); }
@@ -251,6 +288,12 @@ const TransactionsPage: React.FC = () => {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['transactions', params],
+    /**
+     * Load transactions page data for the query cache.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting transactions page value for the caller.
+     */
     queryFn: () => api.get('/transactions', { params }).then(r => r.data.data),
     staleTime: 30_000,
   });
@@ -259,6 +302,13 @@ const TransactionsPage: React.FC = () => {
   const { data: categories = [] } = useCategories();
 
   const createMutation = useMutation({
+    /**
+     * Execute the transactions page mutation requested by the client.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns A promise containing the resulting transactions page value.
+     */
     mutationFn: async ({ data, file }: { data: any; file?: File }) => {
       const res = await api.post('/transactions', data);
       if (file && res.data.data?.id) {
@@ -270,17 +320,49 @@ const TransactionsPage: React.FC = () => {
       }
       return res;
     },
+    /**
+     * Finalize the transactions page workflow after a successful operation.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['transactions'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); qc.invalidateQueries({ queryKey: ['wallets'] }); setShowModal(false); },
   });
 
   const updateMutation = useMutation({
+    /**
+     * Execute the transactions page mutation requested by the client.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting transactions page value for the caller.
+     */
     mutationFn: ({ id, data }: any) => api.put(`/transactions/${id}`, data),
+    /**
+     * Finalize the transactions page workflow after a successful operation.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['transactions'] }); qc.invalidateQueries({ queryKey: ['dashboard'] }); qc.invalidateQueries({ queryKey: ['wallets'] }); setEditTx(null); },
   });
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const deleteMutation = useMutation({
+    /**
+     * Execute the transactions page mutation requested by the client.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting transactions page value for the caller.
+     */
     mutationFn: (id: string) => api.delete(`/transactions/${id}`),
+    /**
+     * Finalize the transactions page workflow after a successful operation.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       for (const queryKey of [
         ['transactions'], ['wallets'], ['dashboard'], ['monthly-report'],
@@ -290,9 +372,22 @@ const TransactionsPage: React.FC = () => {
       }
       setDeletingId(null);
     },
+    /**
+     * Map a failed transactions page operation into user-visible state.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting transactions page value for the caller.
+     */
     onError: () => setDeletingId(null),
   });
 
+  /**
+   * Handle scan apply for the transactions page workflow.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @param scan - The scan value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const handleScanApply = (scan: ScanResult) => {
     setPrefill({
       amount: scan.amount,
@@ -310,6 +405,13 @@ const TransactionsPage: React.FC = () => {
   const total: number = data?.pagination?.total || 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  /**
+   * Return transaction icon required by the transactions page workflow.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @param tx - The database client or transaction used for persistence.
+   * @returns The resulting transactions page value for the caller.
+   */
   const getTransactionIcon = (tx: any) => {
     if (tx.type === 'INCOME') return Banknote;
     const category = String(tx.category?.name || '').toLowerCase();

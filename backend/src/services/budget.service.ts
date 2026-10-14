@@ -9,6 +9,15 @@ export class BudgetService {
   private categoryRepository = new CategoryRepository();
   private notificationService = new NotificationService();
 
+  /**
+   * Validate expense category before the budget workflow continues.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param categoryId - The stable identifier of the record targeted by the operation.
+   * @returns A promise that resolves after the operation completes.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   private async validateExpenseCategory(userId: string, categoryId: string | null) {
     if (!categoryId) return;
     const category = await this.categoryRepository.findById(categoryId);
@@ -20,10 +29,25 @@ export class BudgetService {
     }
   }
 
+  /**
+   * Determine whether unique constraint error applies.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param error - The failure value to classify, report, or propagate.
+   * @returns `true` when the condition is satisfied; otherwise `false`.
+   */
   private isUniqueConstraintError(error: unknown) {
     return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
   }
 
+  /**
+   * Enrich budget for budget.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param budget - The budget value required by the operation.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting budget value.
+   */
   private async enrichBudget(budget: any, userId: string) {
     const spent = await this.budgetRepository.getSpentAmount(
       userId,
@@ -43,6 +67,15 @@ export class BudgetService {
     };
   }
 
+  /**
+   * Create budget for the budget workflow.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to create budget for the budget workflow.
+   * @returns A promise containing the resulting budget value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async createBudget(userId: string, data: {
     categoryId?: string | null;
     amount: number;
@@ -77,17 +110,45 @@ export class BudgetService {
     return this.enrichBudget(budget, userId);
   }
 
+  /**
+   * Return budgets required by the budget workflow.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting budget value.
+   */
   async getBudgets(userId: string, month: number, year: number) {
     const budgets = await this.budgetRepository.findByUserMonthYear(userId, month, year);
     return Promise.all(budgets.map((b) => this.enrichBudget(b, userId)));
   }
 
+  /**
+   * Return budget required by the budget workflow.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting budget value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async getBudget(userId: string, id: string) {
     const budget = await this.budgetRepository.findById(id);
     if (!budget || budget.userId !== userId) throw new AppError('Budget not found', 404);
     return this.enrichBudget(budget, userId);
   }
 
+  /**
+   * Update budget while preserving the budget workflow's rules.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to update budget while preserving the budget workflow's rules.
+   * @returns A promise containing the resulting budget value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async updateBudget(userId: string, id: string, data: { amount?: number; categoryId?: string | null }) {
     const budget = await this.budgetRepository.findById(id);
     if (!budget || budget.userId !== userId) throw new AppError('Budget not found', 404);
@@ -114,6 +175,15 @@ export class BudgetService {
     return this.enrichBudget(updated, userId);
   }
 
+  /**
+   * Delete budget through the budget workflow.
+   *
+   * Use it from controllers or jobs that run the budget business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting budget value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async deleteBudget(userId: string, id: string) {
     const budget = await this.budgetRepository.findById(id);
     if (!budget || budget.userId !== userId) throw new AppError('Budget not found', 404);

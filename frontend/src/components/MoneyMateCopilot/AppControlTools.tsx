@@ -32,6 +32,12 @@ const pageSchema = z.enum([
   'profile',
 ]);
 
+/**
+ * Render the app control tools interface.
+ *
+ * Use it to keep the app control tools workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered app control tools interface.
+ */
 export function AppControlTools() {
   const navigate = useNavigate();
   const setTheme = useThemeStore((state) => state.setTheme);
@@ -44,6 +50,13 @@ export function AppControlTools() {
       parameters: z.object({
         theme: z.enum(['dark', 'light']).describe('Chế độ giao diện cần áp dụng.'),
       }),
+      /**
+       * Apply the theme change requested through the Copilot app-control tool.
+       *
+       * Use it to keep the app control tools workflow's presentation and interactions in one reusable UI boundary.
+       * @param options - The validated theme requested by the Copilot tool.
+       * @returns A promise containing the resulting app control tools value.
+       */
       handler: async ({ theme }) => {
         setTheme(theme);
         return `Đã chuyển MoneyMate sang chế độ ${theme === 'dark' ? 'tối' : 'sáng'}.`;
@@ -64,6 +77,13 @@ export function AppControlTools() {
           'Mã trang: dashboard=Tổng quan, wallets=Ví tài khoản, transactions=Giao dịch, categories=Danh mục, budgets=Ngân sách, savingGoals=Mục tiêu tiết kiệm, recurring=Giao dịch định kỳ, reports=Báo cáo, monthlyBalance=Tiết kiệm tháng, aiAdvisor=AI Tài chính, profile=Hồ sơ.',
         ),
       }),
+      /**
+       * Apply the navigation action requested through the Copilot app-control tool.
+       *
+       * Use it to keep the app control tools workflow's presentation and interactions in one reusable UI boundary.
+       * @param options - The validated destination requested by the Copilot tool.
+       * @returns A promise containing the resulting app control tools value.
+       */
       handler: async ({ page }) => {
         const destination = PAGE_DESTINATIONS[page];
         navigate(destination.path);

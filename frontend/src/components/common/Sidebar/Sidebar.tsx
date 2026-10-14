@@ -14,6 +14,13 @@ type SidebarProps = {
   onLogout: () => void;
 };
 
+/**
+ * Render the navigation links interface.
+ *
+ * Use it to keep the sidebar workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered navigation links interface.
+ */
 const NavigationLinks = ({ user, currentPath, onNavigate, mobile = false }: Pick<SidebarProps, 'user' | 'currentPath'> & { onNavigate?: () => void; mobile?: boolean }) => (
   <nav aria-label="Điều hướng chính" className="flex-1 space-y-1 overflow-y-auto px-2">
     {getNavigationItems(user?.role === 'ADMIN').map((item) => {
@@ -38,6 +45,13 @@ const NavigationLinks = ({ user, currentPath, onNavigate, mobile = false }: Pick
   </nav>
 );
 
+/**
+ * Render the sidebar interface.
+ *
+ * Use it to keep the sidebar workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered sidebar interface.
+ */
 const Sidebar = ({ user, currentPath, theme, mobileOpen, onMobileOpenChange, onThemeToggle, onLogout }: SidebarProps) => (
   <>
     <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 hidden h-dvh w-sidebar flex-col py-4 md:flex">

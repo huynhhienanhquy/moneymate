@@ -33,6 +33,13 @@ interface ConfirmationProps {
   respond: ToolRespond;
 }
 
+/**
+ * Normalize data mutation tools into the data mutation tools workflow's canonical form.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param value - The value to transform or evaluate.
+ * @returns The resulting data mutation tools value for the caller.
+ */
 const normalize = (value: string) =>
   value
     .toLowerCase()
@@ -41,6 +48,16 @@ const normalize = (value: string) =>
     .replace(/đ/g, 'd')
     .trim();
 
+/**
+ * Find by name in the data mutation tools data source.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param items - The records to process in this operation.
+ * @param name - The name value required by the operation.
+ * @param kind - The kind value required by the operation.
+ * @returns The resulting data mutation tools value for the caller.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const findByName = (items: ReferenceItem[], name: string, kind: string) => {
   const matches = items.filter(
     (item) => normalize(item.name) === normalize(name),
@@ -52,6 +69,15 @@ const findByName = (items: ReferenceItem[], name: string, kind: string) => {
   );
 };
 
+/**
+ * Normalize an optional date into the timestamp format accepted by mutation APIs.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param value - The value to transform or evaluate.
+ * @param allowFuture - The allow future value required by the operation.
+ * @returns The resulting data mutation tools value for the caller.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 const toTimestamp = (value: string, allowFuture: boolean) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value))
     throw new Error('Ngày phải có định dạng YYYY-MM-DD.');
@@ -70,6 +96,13 @@ const toTimestamp = (value: string, allowFuture: boolean) => {
   return timestamp.toISOString();
 };
 
+/**
+ * Extract a user-safe message from an API mutation failure.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param error - The failure value to classify, report, or propagate.
+ * @returns The resulting data mutation tools value for the caller.
+ */
 const apiErrorMessage = (error: unknown) => {
   const response = (error as { response?: { data?: { message?: string } } })
     .response;
@@ -79,6 +112,13 @@ const apiErrorMessage = (error: unknown) => {
   );
 };
 
+/**
+ * Render the mutation confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered mutation confirmation interface.
+ */
 function MutationConfirmation({
   title,
   description,
@@ -92,6 +132,13 @@ function MutationConfirmation({
   const [receipt, setReceipt] = useState<Record<string, unknown> | null>(null);
   const busyRef = useRef(false);
 
+  /**
+   * Complete the pending human-in-the-loop mutation with its result payload.
+   *
+   * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+   * @param result - The result value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   const finish = async (result: Record<string, unknown>) => {
     try {
       await respond(result);
@@ -104,6 +151,12 @@ function MutationConfirmation({
     }
   };
 
+  /**
+   * Execute the confirmed mutation once and report its outcome to CopilotKit.
+   *
+   * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const confirm = async () => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -124,6 +177,12 @@ function MutationConfirmation({
     }
   };
 
+  /**
+   * Cancel the pending mutation without changing application data.
+   *
+   * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const cancel = async () => {
     if (busyRef.current || receipt) return;
     busyRef.current = true;
@@ -209,6 +268,14 @@ function MutationConfirmation({
   );
 }
 
+/**
+ * Render the terminal status returned by a completed Copilot mutation.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param result - The result value required by the operation.
+ * @param successLabel - The success label value required by the operation.
+ * @returns The resulting data mutation tools value for the caller.
+ */
 const completedState = (result: string | undefined, successLabel: string) => {
   try {
     const parsed = JSON.parse(result || '{}') as {
@@ -223,6 +290,13 @@ const completedState = (result: string | undefined, successLabel: string) => {
   return 'Thao tác chưa được lưu.';
 };
 
+/**
+ * Render the category confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered category confirmation interface.
+ */
 function CategoryConfirmation({
   draft,
   respond,
@@ -265,6 +339,13 @@ function CategoryConfirmation({
   );
 }
 
+/**
+ * Render the wallet confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered wallet confirmation interface.
+ */
 function WalletConfirmation({
   draft,
   respond,
@@ -300,6 +381,13 @@ function WalletConfirmation({
   );
 }
 
+/**
+ * Render the budget confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered budget confirmation interface.
+ */
 function BudgetConfirmation({
   draft,
   respond,
@@ -345,6 +433,13 @@ function BudgetConfirmation({
   );
 }
 
+/**
+ * Render the saving goal confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered saving goal confirmation interface.
+ */
 function SavingGoalConfirmation({
   draft,
   respond,
@@ -379,6 +474,13 @@ function SavingGoalConfirmation({
   );
 }
 
+/**
+ * Render the recurring confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered recurring confirmation interface.
+ */
 function RecurringConfirmation({
   draft,
   respond,
@@ -434,6 +536,13 @@ function RecurringConfirmation({
   );
 }
 
+/**
+ * Render the income confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered income confirmation interface.
+ */
 function IncomeConfirmation({
   draft,
   respond,
@@ -493,6 +602,13 @@ function IncomeConfirmation({
   );
 }
 
+/**
+ * Render the transfer confirmation interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered transfer confirmation interface.
+ */
 function TransferConfirmation({
   draft,
   respond,
@@ -545,10 +661,23 @@ function TransferConfirmation({
   );
 }
 
+/**
+ * Render the data mutation tools interface.
+ *
+ * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered data mutation tools interface.
+ */
 export function DataMutationTools() {
   useHumanInTheLoop({
     ...createCategoryToolDefinition,
     agentId: 'default',
+    /**
+     * Render the confirmation UI for a requested category creation.
+     *
+     * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting data mutation tools value for the caller.
+     */
     render: ({ args, status, respond, result }) =>
       status === 'executing' && respond ? (
         <CategoryConfirmation draft={args} respond={respond} />
@@ -563,6 +692,13 @@ export function DataMutationTools() {
   useHumanInTheLoop({
     ...createWalletToolDefinition,
     agentId: 'default',
+    /**
+     * Render the confirmation UI for a requested wallet creation.
+     *
+     * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting data mutation tools value for the caller.
+     */
     render: ({ args, status, respond, result }) =>
       status === 'executing' && respond ? (
         <WalletConfirmation draft={args} respond={respond} />
@@ -577,6 +713,13 @@ export function DataMutationTools() {
   useHumanInTheLoop({
     ...createBudgetToolDefinition,
     agentId: 'default',
+    /**
+     * Render the confirmation UI for a requested budget creation.
+     *
+     * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting data mutation tools value for the caller.
+     */
     render: ({ args, status, respond, result }) =>
       status === 'executing' && respond ? (
         <BudgetConfirmation draft={args} respond={respond} />
@@ -591,6 +734,13 @@ export function DataMutationTools() {
   useHumanInTheLoop({
     ...createSavingGoalToolDefinition,
     agentId: 'default',
+    /**
+     * Render the confirmation UI for a requested saving-goal creation.
+     *
+     * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting data mutation tools value for the caller.
+     */
     render: ({ args, status, respond, result }) =>
       status === 'executing' && respond ? (
         <SavingGoalConfirmation draft={args} respond={respond} />
@@ -605,6 +755,13 @@ export function DataMutationTools() {
   useHumanInTheLoop({
     ...createRecurringToolDefinition,
     agentId: 'default',
+    /**
+     * Render the confirmation UI for a requested recurring transaction.
+     *
+     * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting data mutation tools value for the caller.
+     */
     render: ({ args, status, respond, result }) =>
       status === 'executing' && respond ? (
         <RecurringConfirmation draft={args} respond={respond} />
@@ -619,6 +776,13 @@ export function DataMutationTools() {
   useHumanInTheLoop({
     ...recordIncomeToolDefinition,
     agentId: 'default',
+    /**
+     * Render the confirmation UI for a requested income transaction.
+     *
+     * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting data mutation tools value for the caller.
+     */
     render: ({ args, status, respond, result, toolCallId }) =>
       status === 'executing' && respond ? (
         <IncomeConfirmation
@@ -637,6 +801,13 @@ export function DataMutationTools() {
   useHumanInTheLoop({
     ...transferFundsToolDefinition,
     agentId: 'default',
+    /**
+     * Render the confirmation UI for a requested wallet transfer.
+     *
+     * Use it to keep the data mutation tools workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting data mutation tools value for the caller.
+     */
     render: ({ args, status, respond, result, toolCallId }) =>
       status === 'executing' && respond ? (
         <TransferConfirmation

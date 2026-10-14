@@ -1,6 +1,15 @@
 import type { ComponentProps } from 'react';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { StyleProp, TextStyle } from 'react-native';
 import {
   ArrowDownLeft,
+  Plane,
+  Dumbbell,
+  Laptop,
+  Bike,
+  Shirt,
+  Landmark,
+  Zap,
   ArrowLeftRight,
   ArrowRight,
   ArrowUpDown,
@@ -31,7 +40,6 @@ import {
   Eye,
   EyeOff,
   Filter,
-  Flashlight,
   Gamepad2,
   Gift,
   GraduationCap,
@@ -100,7 +108,13 @@ const icons = {
   'arrow-bottom-left': ArrowDownLeft,
   'arrow-right': ArrowRight,
   'arrow-top-right': ArrowUpRight,
-  'bank-outline': Wallet,
+  'bank-outline': Landmark,
+  airplane: Plane,
+  plane: Plane,
+  dumbbell: Dumbbell,
+  laptop: Laptop,
+  bike: Bike,
+  shirt: Shirt,
   'bell-outline': Bell,
   'bell-sleep-outline': BellOff,
   brain: Brain,
@@ -135,7 +149,7 @@ const icons = {
   'eye-off-outline': EyeOff,
   'eye-outline': Eye,
   'filter-variant': Filter,
-  'flash-outline': Flashlight,
+  'flash-outline': Zap,
   'gamepad-2': Gamepad2,
   'gamepad-variant-outline': Gamepad2,
   gift: Gift,
@@ -205,12 +219,57 @@ const icons = {
 
 export type AppIconName = keyof typeof icons;
 type LucideProps = ComponentProps<LucideIcon>;
+const referenceIcons: Partial<
+  Record<AppIconName, ComponentProps<typeof MaterialCommunityIcons>['name']>
+> = {
+  'account-outline': 'account-outline',
+  'tune-variant': 'tune-vertical',
+  'wallet-outline': 'wallet-outline',
+  wallet: 'wallet-outline',
+  'view-dashboard': 'view-dashboard-outline',
+  'view-dashboard-outline': 'view-dashboard-outline',
+  'view-grid': 'view-grid-outline',
+  'view-grid-outline': 'view-grid-outline',
+  'car-outline': 'car-outline',
+  car: 'car-outline',
+  'bank-outline': 'bank-outline',
+  'cash-multiple': 'cash-multiple',
+  'silverware-fork-knife': 'silverware-fork-knife',
+  'school-outline': 'school-outline',
+  'shopping-outline': 'shopping-outline',
+  'gamepad-variant-outline': 'gamepad-variant-outline',
+  'heart-pulse': 'heart-outline',
+  'piggy-bank': 'piggy-bank-outline',
+  'piggy-bank-outline': 'piggy-bank-outline',
+  'home-outline': 'home-outline',
+  'chart-donut': 'chart-pie',
+  'message-processing': 'message-text-outline',
+  'contactless-payment-circle-outline': 'contactless-payment-circle-outline',
+};
 
+/**
+ * Render the app icon interface.
+ *
+ * Use it to keep the app icon workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered app icon interface.
+ */
 export function AppIcon({
   name,
   strokeWidth = 2.1,
   ...props
 }: Omit<LucideProps, 'name'> & { name: AppIconName | string }) {
+  const reference = referenceIcons[name as AppIconName];
+  if (reference)
+    return (
+      <MaterialCommunityIcons
+        name={reference}
+        accessible={false}
+        size={typeof props.size === 'number' ? props.size : 24}
+        color={props.color}
+        style={props.style as StyleProp<TextStyle>}
+      />
+    );
   const Icon = icons[name as AppIconName] ?? Tag;
   return <Icon aria-hidden strokeWidth={strokeWidth} {...props} />;
 }

@@ -3,6 +3,16 @@ import { AppError } from '../common/app-error';
 import { sendError } from '../common/response';
 import multer from 'multer';
 
+/**
+ * Error handler for error.
+ *
+ * Use it in the request pipeline when error processing is required.
+ * @param err - The err value required by the operation.
+ * @param req - The incoming request and its authenticated or validated input.
+ * @param res - The response object used to return the operation result.
+ * @param next - The callback that continues the middleware pipeline or receives an error.
+ * @returns The resulting error value for the caller.
+ */
 export const errorHandler = (
   err: any,
   req: Request,

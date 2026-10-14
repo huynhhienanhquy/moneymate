@@ -16,6 +16,13 @@ import CategoryIcon from '@/components/common/CategoryIcon/CategoryIcon';
 const COLORS = [...new Set(['blue', 'income', 'warning', 'expense', 'purple', 'cyan', 'orange', 'violet', 'pink', 'teal'].map((name) => webTheme.chartColors[name as keyof typeof webTheme.chartColors]))];
 const ICONS = ['tag','utensils','home','car','heart-pulse','graduation-cap','shopping-bag','gamepad-2','receipt','briefcase','gift','more-horizontal'];
 
+/**
+ * Render the category modal interface.
+ *
+ * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered category modal interface.
+ */
 const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({ cat, typeFilter, onClose, onSave, loading }) => {
   const [form, setForm] = useState({ name: cat?.name || '', type: cat?.type || typeFilter, color: cat?.color || COLORS[0], icon: cat?.icon || ICONS[0] });
 
@@ -119,6 +126,12 @@ const CategoryModal: React.FC<{ cat?: any; typeFilter: 'INCOME'|'EXPENSE'; onClo
   );
 };
 
+/**
+ * Render the categories page interface.
+ *
+ * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered categories page interface.
+ */
 const CategoriesPage: React.FC = () => {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
@@ -127,21 +140,66 @@ const CategoriesPage: React.FC = () => {
 
   const { data: allCategories = [], isLoading } = useQuery({
     queryKey: ['categories'],
+    /**
+     * Load categories page data for the query cache.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting categories page value for the caller.
+     */
     queryFn: () => api.get('/categories').then(r => r.data.data),
   });
 
   const createMutation = useMutation({
+    /**
+     * Execute the categories page mutation requested by the client.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @param d - The d value required by the operation.
+     * @returns The resulting categories page value for the caller.
+     */
     mutationFn: (d: any) => api.post('/categories', d),
+    /**
+     * Finalize the categories page workflow after a successful operation.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); setShowModal(false); },
   });
 
   const updateMutation = useMutation({
+    /**
+     * Execute the categories page mutation requested by the client.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting categories page value for the caller.
+     */
     mutationFn: ({ id, data }: any) => api.put(`/categories/${id}`, data),
+    /**
+     * Finalize the categories page workflow after a successful operation.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); setEditCat(null); },
   });
 
   const deleteMutation = useMutation({
+    /**
+     * Execute the categories page mutation requested by the client.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting categories page value for the caller.
+     */
     mutationFn: (id: string) => api.delete(`/categories/${id}`),
+    /**
+     * Finalize the categories page workflow after a successful operation.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting categories page value for the caller.
+     */
     onSuccess: () => qc.invalidateQueries({ queryKey: ['categories'] }),
   });
 

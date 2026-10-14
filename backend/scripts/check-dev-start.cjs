@@ -13,6 +13,13 @@ const child = spawn(process.execPath, ['-r', tsNodeRegister, 'src/server.ts'], {
 let output = '';
 let finished = false;
 
+/**
+ * Append output for check dev start.
+ *
+ * Use it while running the check dev start maintenance workflow.
+ * @param chunk - The chunk value required by the operation.
+ * @returns Nothing; the operation is complete when the function returns.
+ */
 const appendOutput = (chunk) => {
   const text = String(chunk);
   output += text;
@@ -22,6 +29,13 @@ const appendOutput = (chunk) => {
 child.stdout.on('data', appendOutput);
 child.stderr.on('data', appendOutput);
 
+/**
+ * Stop for check dev start.
+ *
+ * Use it while running the check dev start maintenance workflow.
+ * @param exitCode - The exit code value required by the operation.
+ * @returns Nothing; the operation is complete when the function returns.
+ */
 const stop = (exitCode) => {
   if (finished) return;
   finished = true;
@@ -49,6 +63,12 @@ child.once('error', (error) => {
   stop(1);
 });
 
+/**
+ * Check health for check dev start.
+ *
+ * Use it while running the check dev start maintenance workflow.
+ * @returns A promise that resolves after the operation completes.
+ */
 const checkHealth = async () => {
   while (!finished) {
     try {

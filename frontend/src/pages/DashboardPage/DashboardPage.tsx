@@ -17,6 +17,13 @@ import { formatVND } from '@/utils/formatCurrency';
 
 const PIE_COLORS = chartTheme.palette;
 
+/**
+ * Render the stat card interface.
+ *
+ * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered stat card interface.
+ */
 const StatCard: React.FC<{
   title: string;
   value: string;
@@ -56,11 +63,23 @@ const StatCard: React.FC<{
 
 const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
 
+/**
+ * Render the dashboard page interface.
+ *
+ * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered dashboard page interface.
+ */
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
 
   const dashboardQuery = useQuery({
     queryKey: ['dashboard'],
+    /**
+     * Load dashboard page data for the query cache.
+     *
+     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting dashboard page value for the caller.
+     */
     queryFn: () => api.get('/transactions/dashboard').then(r => r.data.data),
     staleTime: 60_000,
   });
@@ -68,6 +87,12 @@ const DashboardPage: React.FC = () => {
   const now = new Date();
   const reportQuery = useQuery({
     queryKey: ['monthly-report', now.getMonth() + 1, now.getFullYear()],
+    /**
+     * Load dashboard page data for the query cache.
+     *
+     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting dashboard page value for the caller.
+     */
     queryFn: () =>
       api.get('/transactions/report', { params: { month: now.getMonth() + 1, year: now.getFullYear() } })
         .then(r => r.data.data),
@@ -76,12 +101,24 @@ const DashboardPage: React.FC = () => {
 
   const trendQuery = useQuery({
     queryKey: ['monthly-trend', 6],
+    /**
+     * Load dashboard page data for the query cache.
+     *
+     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting dashboard page value for the caller.
+     */
     queryFn: () => api.get('/transactions/trend', { params: { months: 6 } }).then(r => r.data.data),
     staleTime: 60_000,
   });
 
   const { data: aiInsight } = useQuery({
     queryKey: ['ai-analysis-dash'],
+    /**
+     * Load dashboard page data for the query cache.
+     *
+     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting dashboard page value for the caller.
+     */
     queryFn: () => api.get('/ai/analyze/expenses').then(r => r.data.data),
     staleTime: 120_000,
   });

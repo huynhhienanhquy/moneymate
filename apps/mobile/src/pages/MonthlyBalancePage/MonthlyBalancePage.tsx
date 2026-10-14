@@ -1,17 +1,12 @@
+import { Text } from '@/components/design-text';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { AppIcon } from '@/components/app-icon';
-import {
-  Card,
-  MetricCard,
-  Screen,
-  SectionTitle,
-  StateMessage,
-  useUiStyles,
-} from '@/components/ui';
-import { IconTile, money } from '@/components/finance';
-import { BarChart } from '@/components/charts';
+import { Card, Screen, StateMessage, useUiStyles } from '@/components/ui';
+import { money } from '@/components/finance';
+import { SavingsChart } from '@/components/charts';
+import { SectionHeading } from '@/components/design';
 import { apiRequest } from '@/lib/api';
 import { useAppTheme, type AppTheme } from '@/theme';
 
@@ -29,6 +24,12 @@ interface YearReport {
   }[];
 }
 
+/**
+ * Render the monthly balance page interface.
+ *
+ * Use it to keep the monthly balance page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered monthly balance page interface.
+ */
 export default function MonthlyBalancePage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
@@ -37,6 +38,12 @@ export default function MonthlyBalancePage() {
   const [year, setYear] = useState(String(current));
   const query = useQuery({
     queryKey: ['year-report', year],
+    /**
+     * Load monthly balance page data for the query cache.
+     *
+     * Use it to keep the monthly balance page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting monthly balance page value for the caller.
+     */
     queryFn: () =>
       apiRequest<YearReport>(`/transactions/report/yearly?year=${year}`),
   });
@@ -81,10 +88,17 @@ export default function MonthlyBalancePage() {
     ? Math.max(0, Math.round((totalSavings / totalIncome) * 100))
     : 0;
 
+  /**
+   * Shift year within the monthly balance page reporting range.
+   *
+   * Use it to keep the monthly balance page workflow's presentation and interactions in one reusable UI boundary.
+   * @param step - The step value required by the operation.
+   * @returns The resulting monthly balance page value for the caller.
+   */
   const shiftYear = (step: number) => setYear(String(Number(year) + step));
 
   return (
-    <Screen title="Tiết kiệm tháng">
+    <Screen title="Tiết kiệm tháng" bottomNav={false}>
       <View style={styles.headerCard}>
         <Text style={styles.eyebrow}>Dòng tiền</Text>
         <Text style={styles.title}>Tiết kiệm mỗi tháng</Text>
@@ -119,48 +133,83 @@ export default function MonthlyBalancePage() {
       )}
       {data && !!monthlyData.length && (
         <>
-          <MetricCard
-            label="Tổng thu nhập"
+          <BalanceMetric
+            label="TỔNG THU NHẬP"
             value={money(totalIncome)}
             icon="trending-up"
-            tone="success"
-            caption="+38.2%"
+            color={theme.colors.success}
+            background={theme.colors.successSoft}
           />
-          <MetricCard
-            label="Tổng chi tiêu"
+          <BalanceMetric
+            label="TỔNG CHI TIÊU"
             value={money(totalExpense)}
             icon="trending-down"
-            tone="danger"
-            caption="-12.4%"
+            color={theme.colors.danger}
+            background={theme.colors.dangerSoft}
           />
-          <MetricCard
-            label="Tiết kiệm trung bình"
+          <BalanceMetric
+            label="TIẾT KIỆM TRUNG BÌNH"
             value={money(totalSavings / Math.max(monthlyData.length, 1))}
             icon="wallet-outline"
-            caption={`Mục tiêu ${savingRate}%`}
+            color={theme.colors.primaryStrong}
+            background={theme.colors.primarySoft}
+            caption={'Mục tiêu ' + savingRate + '%'}
+            detail={
+              monthlyData.length
+                ? 'Tháng tốt nhất: T' +
+                  monthlyData.reduce((best, item) =>
+                    item.savings > best.savings ? item : best,
+                  ).month +
+                  ' (' +
+                  money(Math.max(...monthlyData.map((item) => item.savings))) +
+                  ')'
+                : undefined
+            }
           />
           <Card>
             <View>
               <Text style={styles.chartTitle}>Tiết kiệm theo tháng</Text>
               <Text style={ui.muted}>Biến động số dư tiết kiệm ròng</Text>
             </View>
-            <BarChart
+            <SavingsChart
               data={monthlyData.map((item) => ({
                 label: item.label,
-                income: Math.max(0, item.savings),
-                expense: Math.max(0, -item.savings),
+                value: item.savings,
               }))}
             />
           </Card>
-          <SectionTitle
+          <SectionHeading
             title="Chi tiết từng tháng"
             caption={`${monthlyData.length} tháng gần nhất`}
           />
-          {monthlyData.map((item) => (
+          {[...monthlyData].reverse().map((item) => (
             <Card key={item.month}>
               <View style={ui.between}>
                 <View style={ui.row}>
-                  <IconTile name="calendar-month-outline" />
+                  <View
+                    style={[
+                      styles.monthTile,
+                      {
+                        backgroundColor:
+                          item.savings < 0
+                            ? theme.colors.dangerSoft
+                            : theme.colors.primarySoft,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 17,
+                        fontWeight: '500',
+                        color:
+                          item.savings < 0
+                            ? theme.colors.danger
+                            : theme.colors.primaryStrong,
+                      }}
+                    >
+                      {String(item.month).padStart(2, '0')}
+                    </Text>
+                  </View>
                   <View>
                     <Text style={ui.text}>Tháng {item.month}</Text>
                     <Text style={ui.muted}>Đã kết toán</Text>
@@ -171,9 +220,12 @@ export default function MonthlyBalancePage() {
                   <Text
                     style={[
                       ui.heading,
-                      item.savings >= 0 ? ui.positive : ui.negative,
+                      item.savings >= 0
+                        ? { color: theme.colors.primaryStrong }
+                        : ui.negative,
                     ]}
                   >
+                    {item.savings >= 0 ? '+' : ''}
                     {money(item.savings)}
                   </Text>
                 </View>
@@ -191,7 +243,12 @@ export default function MonthlyBalancePage() {
                   Lũy kế tiết kiệm{`\n`}
                   <Text
                     style={
-                      item.cumulativeSavings >= 0 ? ui.positive : ui.negative
+                      item.cumulativeSavings >= 0
+                        ? {
+                            color: theme.colors.primaryStrong,
+                            fontWeight: '600',
+                          }
+                        : ui.negative
                     }
                   >
                     {money(item.cumulativeSavings)}
@@ -206,8 +263,97 @@ export default function MonthlyBalancePage() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the monthly balance page interface.
+ *
+ * Use it to keep the monthly balance page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
+function BalanceMetric({
+  label,
+  value,
+  icon,
+  color,
+  background,
+  caption,
+  detail,
+}: {
+  label: string;
+  value: string;
+  icon: import('@/components/app-icon').AppIconName;
+  color: string;
+  background: string;
+  caption?: string;
+  detail?: string;
+}) {
+  const { theme } = useAppTheme();
+  return (
+    <View
+      style={{
+        padding: 20,
+        borderRadius: 16,
+        backgroundColor: theme.colors.surface,
+        flexDirection: 'row',
+        gap: 20,
+        alignItems: 'flex-start',
+        boxShadow: '0px 2px 2px rgba(19,27,46,.035)',
+      }}
+    >
+      <View
+        style={{
+          width: 55,
+          height: 55,
+          borderRadius: 17,
+          backgroundColor: background,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <AppIcon name={icon} size={27} color={color} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: theme.colors.muted, fontSize: 15 }}>{label}</Text>
+        <Text style={{ color, fontSize: 30, fontWeight: '600', marginTop: 5 }}>
+          {value}
+        </Text>
+        {detail && (
+          <Text
+            style={{ color: theme.colors.muted, fontSize: 13, marginTop: 10 }}
+          >
+            ♜ {detail}
+          </Text>
+        )}
+      </View>
+      {caption && (
+        <Text
+          style={{
+            color,
+            fontSize: 12,
+            fontWeight: '500',
+            borderRadius: 15,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            backgroundColor: theme.colors.neutralSoft,
+            alignSelf: 'center',
+          }}
+        >
+          {caption}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    monthTile: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     headerCard: {
       minHeight: 192,
       padding: 29,
@@ -219,14 +365,14 @@ const createStyles = (theme: AppTheme) =>
     eyebrow: {
       color: theme.colors.primaryStrong,
       fontSize: 15,
-      fontWeight: '800',
+      fontWeight: '500',
     },
     title: {
       marginTop: 4,
       color: theme.colors.text,
       fontSize: 29,
       lineHeight: 34,
-      fontWeight: '900',
+      fontWeight: '600',
       letterSpacing: -0.7,
     },
     yearRow: {
@@ -254,8 +400,8 @@ const createStyles = (theme: AppTheme) =>
       gap: 8,
       backgroundColor: theme.colors.surfaceRaised,
     },
-    yearText: { color: theme.colors.text, fontSize: 16, fontWeight: '900' },
-    chartTitle: { color: theme.colors.text, fontSize: 19, fontWeight: '900' },
+    yearText: { color: theme.colors.text, fontSize: 16, fontWeight: '600' },
+    chartTitle: { color: theme.colors.text, fontSize: 19, fontWeight: '600' },
     monthSummary: {
       minHeight: 63,
       padding: 10,

@@ -8,6 +8,13 @@ interface AuthShellProps {
   register?: boolean;
 }
 
+/**
+ * Render the auth shell interface.
+ *
+ * Use it to keep the auth shell workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered auth shell interface.
+ */
 const AuthShell = ({ titleId, children, register = false }: AuthShellProps) => (
   <main className={`auth-page ${register ? 'auth-page-register' : ''}`}>
     <div className="auth-scene" aria-hidden="true"><span>₫</span><span>↗</span><span>✦</span><span>●</span><span>▥</span><span>₫</span><span>+</span></div>

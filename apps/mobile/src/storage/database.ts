@@ -8,6 +8,13 @@ export interface OutboxItem {
   attempts: number;
 }
 
+/**
+ * Bring the local database schema up to the version expected by the mobile app.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @returns A promise that resolves after the operation completes.
+ */
 export async function migrateDatabase(db: SQLiteDatabase) {
   // Wait briefly for another connection/statement instead of immediately
   // throwing SQLITE_BUSY during app bootstrap or a fast refresh.
@@ -70,6 +77,14 @@ export interface TransactionDelta {
   [key: string]: unknown;
 }
 
+/**
+ * Return sync cursor required by the database workflow.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @returns A promise containing the resulting database value.
+ */
 export async function getSyncCursor(db: SQLiteDatabase, userId: string) {
   const row = await db.getFirstAsync<{ value: string }>(
     "SELECT value FROM cache WHERE user_id = ? AND key = 'transactions.sync.cursor'",
@@ -78,6 +93,16 @@ export async function getSyncCursor(db: SQLiteDatabase, userId: string) {
   return row?.value;
 }
 
+/**
+ * Apply transaction delta to the database workflow.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @param items - The records to process in this operation.
+ * @param nextCursor - The synchronization cursor that bounds the processed change set.
+ * @returns A promise that resolves after the operation completes.
+ */
 export async function applyTransactionDelta(
   db: SQLiteDatabase,
   userId: string,
@@ -114,6 +139,14 @@ export async function applyTransactionDelta(
   });
 }
 
+/**
+ * Return failed mutation count required by the database workflow.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @returns A promise containing the resulting database value.
+ */
 export async function getFailedMutationCount(
   db: SQLiteDatabase,
   userId: string,
@@ -125,6 +158,15 @@ export async function getFailedMutationCount(
   return row?.count || 0;
 }
 
+/**
+ * Queue an offline mutation for a later synchronization attempt.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @param item - The item value required by the operation.
+ * @returns A promise that resolves after the operation completes.
+ */
 export async function enqueueMutation(
   db: SQLiteDatabase,
   userId: string,
@@ -141,6 +183,14 @@ export async function enqueueMutation(
   );
 }
 
+/**
+ * Return pending mutations required by the database workflow.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @returns A promise containing the resulting database value.
+ */
 export async function getPendingMutations(db: SQLiteDatabase, userId: string) {
   return db.getAllAsync<OutboxItem>(
     "SELECT id, method, path, body, attempts FROM outbox WHERE user_id = ? AND status IN ('pending', 'failed') AND (next_attempt_at IS NULL OR next_attempt_at <= ?) ORDER BY created_at LIMIT 50",
@@ -149,6 +199,15 @@ export async function getPendingMutations(db: SQLiteDatabase, userId: string) {
   );
 }
 
+/**
+ * Mark a queued offline mutation as successfully synchronized.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @param id - The stable identifier of the record targeted by the operation.
+ * @returns A promise that resolves after the operation completes.
+ */
 export async function markMutationSynced(
   db: SQLiteDatabase,
   userId: string,
@@ -161,6 +220,17 @@ export async function markMutationSynced(
   );
 }
 
+/**
+ * Record a failed synchronization attempt for a queued mutation.
+ *
+ * Use it when database data must be read from or written to local persistence.
+ * @param db - The initialized local database connection used by the operation.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @param id - The stable identifier of the record targeted by the operation.
+ * @param message - The human-readable outcome message returned to the caller.
+ * @param attempts - The attempts value required by the operation.
+ * @returns A promise that resolves after the operation completes.
+ */
 export async function markMutationFailed(
   db: SQLiteDatabase,
   userId: string,

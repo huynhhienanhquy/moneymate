@@ -15,6 +15,13 @@ type WalletModalProps = {
 
 const EMPTY_FORM = { name: '', type: 'CASH', currency: 'VND', initialBalance: 0 };
 
+/**
+ * Render the wallet modal interface.
+ *
+ * Use it to keep the wallet modal workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered wallet modal interface.
+ */
 const WalletModal = ({ wallet, onClose, onSave, loading }: WalletModalProps) => {
   const [form, setForm] = useState(wallet ? { name: wallet.name, type: wallet.type, currency: wallet.currency, initialBalance: Number(wallet.initialBalance) } : EMPTY_FORM);
 

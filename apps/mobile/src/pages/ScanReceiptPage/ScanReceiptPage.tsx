@@ -1,14 +1,17 @@
+import { Text } from '@/components/design-text';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { AppIcon } from '@/components/app-icon';
 import { useRouter, type Href } from 'expo-router';
-import { Button, Card, Screen, useUiStyles } from '@/components/ui';
+import { Button, Screen, useUiStyles } from '@/components/ui';
 import { apiRequest } from '@/lib/api';
 import { toLocalDateInputValue } from '@/lib/date';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { APP_IMAGES } from '@/lib/app-images';
+import { categoryAppearance } from '@/components/design';
+import { money } from '@/components/finance';
 
 interface ReceiptResult {
   amount?: number | null;
@@ -18,8 +21,15 @@ interface ReceiptResult {
   suggestedCategoryId?: string | null;
   suggestedCategoryName?: string | null;
   rawText?: string;
+  confidence?: 'high' | 'medium' | 'low';
 }
 
+/**
+ * Render the scan receipt page interface.
+ *
+ * Use it to keep the scan receipt page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered scan receipt page interface.
+ */
 export default function ScanReceiptPage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
@@ -29,17 +39,25 @@ export default function ScanReceiptPage() {
   const [result, setResult] = useState<ReceiptResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [expanded, setExpanded] = useState(true);
   const analyzeAsset = useCallback(
     async (nextAsset: ImagePicker.ImagePickerAsset) => {
       setLoading(true);
       setError('');
       try {
         const form = new FormData();
-        form.append('file', {
-          uri: nextAsset.uri,
-          name: nextAsset.fileName || 'receipt.jpg',
-          type: nextAsset.mimeType || 'image/jpeg',
-        } as unknown as Blob);
+        if (Platform.OS === 'web' && nextAsset.file) {
+          form.append(
+            'file',
+            nextAsset.file,
+            nextAsset.fileName || 'receipt.jpg',
+          );
+        } else
+          form.append('file', {
+            uri: nextAsset.uri,
+            name: nextAsset.fileName || 'receipt.jpg',
+            type: nextAsset.mimeType || 'image/jpeg',
+          } as unknown as Blob);
         setResult(
           await apiRequest<ReceiptResult>('/ai/receipt/scan', {
             method: 'POST',
@@ -79,6 +97,12 @@ export default function ScanReceiptPage() {
       })
       .catch(() => undefined);
   }, [applyCapturedAsset]);
+  /**
+   * Capture for scan receipt page.
+   *
+   * Use it to keep the scan receipt page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const capture = async () => {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -101,6 +125,12 @@ export default function ScanReceiptPage() {
       );
     }
   };
+  /**
+   * Pick for scan receipt page.
+   *
+   * Use it to keep the scan receipt page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const pick = async () => {
     const image = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -108,6 +138,12 @@ export default function ScanReceiptPage() {
     });
     if (!image.canceled && image.assets[0]) applyCapturedAsset(image.assets[0]);
   };
+  /**
+   * Open transaction form in the scan receipt page interface.
+   *
+   * Use it to keep the scan receipt page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const openTransactionForm = () => {
     router.push({
       pathname: '/add-transaction',
@@ -123,6 +159,24 @@ export default function ScanReceiptPage() {
       },
     });
   };
+  const recognizedFields = result
+    ? [
+        result.amount,
+        result.transactionDate,
+        result.merchant,
+        result.note,
+        result.suggestedCategoryId,
+      ].filter(Boolean).length
+    : 0;
+  const confidenceLabel =
+    result?.confidence === 'high'
+      ? 'Độ tin cậy cao'
+      : result?.confidence === 'medium'
+        ? 'Cần kiểm tra lại'
+        : 'Cần xác nhận';
+  const categoryStyle = categoryAppearance(
+    result?.suggestedCategoryName || 'Ăn uống',
+  );
 
   return (
     <Screen title="Quét hóa đơn" bottomNav={false} showTopBar={false}>
@@ -180,31 +234,29 @@ export default function ScanReceiptPage() {
         </Pressable>
       </View>
       <View style={styles.modeRow}>
-        <Pressable
-          accessibilityLabel="Quét hóa đơn tự động"
-          onPress={() => void capture()}
-          style={styles.modeActive}
-        >
-          <AppIcon name="creation" size={18} color={theme.colors.onBrand} />
-          <Text style={styles.modeActiveText}>Tự động</Text>
-        </Pressable>
-        <Pressable
-          accessibilityLabel="Nhập giao dịch thủ công"
-          onPress={openTransactionForm}
-          style={styles.mode}
-        >
-          <Text style={styles.modeText}>Thủ công</Text>
-        </Pressable>
+        <View style={styles.modeGroup}>
+          <Pressable
+            accessibilityLabel="Quét hóa đơn tự động"
+            onPress={() => void capture()}
+            style={styles.modeActive}
+          >
+            <AppIcon name="creation" size={18} color={theme.colors.onBrand} />
+            <Text style={styles.modeActiveText}>Tự động</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Nhập giao dịch thủ công"
+            onPress={openTransactionForm}
+            style={styles.mode}
+          >
+            <Text style={styles.modeText}>Thủ công</Text>
+          </Pressable>
+        </View>
         <Pressable
           accessibilityLabel="Mở camera để dùng đèn flash"
           onPress={() => void capture()}
           style={styles.flash}
         >
-          <AppIcon
-            name="flash-outline"
-            size={22}
-            color={theme.colors.warning}
-          />
+          <AppIcon name="flash-outline" size={22} color="#FFAE00" />
           <Text style={styles.modeText}>Bật</Text>
         </Pressable>
       </View>
@@ -235,10 +287,49 @@ export default function ScanReceiptPage() {
         {asset && (
           <View style={styles.detected}>
             <View style={styles.greenDot} />
-            <Text style={styles.detectedText}>Đã phát hiện hóa đơn</Text>
+            <Text style={styles.detectedText}>
+              {result
+                ? 'Đã nhận diện hóa đơn'
+                : loading
+                  ? 'Đang phân tích hóa đơn…'
+                  : 'Đã phát hiện hóa đơn'}
+            </Text>
           </View>
         )}
         <View style={styles.scanLine} />
+        {result && (
+          <>
+            {result.merchant && (
+              <View style={styles.merchantOverlay}>
+                <AppIcon name="storefront-outline" size={15} color="#FFFFFF" />
+                <Text numberOfLines={1} style={styles.overlayText}>
+                  {result.merchant}
+                </Text>
+              </View>
+            )}
+            {result.amount != null && (
+              <View style={styles.totalOverlay}>
+                <View style={styles.totalTag}>
+                  <AppIcon name="cash-multiple" size={15} color="#FFFFFF" />
+                  <Text style={styles.overlayText}>Tổng tiền</Text>
+                </View>
+                <Text style={styles.overlayAmount}>{money(result.amount)}</Text>
+              </View>
+            )}
+            {result.transactionDate && (
+              <View style={styles.dateOverlay}>
+                <AppIcon
+                  name="calendar-blank-outline"
+                  size={17}
+                  color="#67E8F9"
+                />
+                <Text style={styles.overlayText}>
+                  {new Date(result.transactionDate).toLocaleDateString('vi-VN')}
+                </Text>
+              </View>
+            )}
+          </>
+        )}
       </View>
       <View style={styles.hint}>
         <AppIcon
@@ -246,7 +337,7 @@ export default function ScanReceiptPage() {
           size={22}
           color={theme.colors.primaryStrong}
         />
-        <Text style={ui.muted}>
+        <Text style={[ui.muted, { flex: 1 }]}>
           Căn chỉnh 4 góc hóa đơn vào khung để AI tự động bóc tách
         </Text>
       </View>
@@ -268,7 +359,7 @@ export default function ScanReceiptPage() {
         </Text>
       )}
       {result && (
-        <Card>
+        <View style={styles.resultCard}>
           <View style={styles.resultHeader}>
             <View style={styles.aiIcon}>
               <AppIcon
@@ -278,7 +369,17 @@ export default function ScanReceiptPage() {
               />
             </View>
             <View style={styles.flex}>
-              <Text style={styles.resultTitle}>MoneyMate AI OCR</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 7,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <Text style={styles.resultTitle}>MoneyMate AI OCR</Text>
+                <Text style={styles.version}>V3.2</Text>
+              </View>
               <View style={styles.resultSuccessRow}>
                 <AppIcon
                   name="check-circle-outline"
@@ -286,59 +387,110 @@ export default function ScanReceiptPage() {
                   color={theme.colors.successStrong}
                 />
                 <Text style={styles.resultSuccess}>
-                  Đã nhận diện thành công
+                  Đã nhận diện thành công {recognizedFields} trường
                 </Text>
               </View>
             </View>
-            <Text style={styles.version}>V3.2</Text>
-          </View>
-          <View style={styles.amountBox}>
-            <Text style={ui.muted}>Tổng số tiền chi tiêu</Text>
-            <Text style={styles.amount}>
-              {result.amount?.toLocaleString('vi-VN') || '—'} ₫
-            </Text>
-            <Text style={styles.confidence}>99% khớp</Text>
-          </View>
-          <View style={styles.resultGrid}>
-            <View style={styles.resultItem}>
-              <Text style={ui.muted}>Danh mục</Text>
-              <Text style={ui.text}>
-                {result.suggestedCategoryName || 'Chưa nhận diện'}
-              </Text>
-            </View>
-            <View style={styles.resultItem}>
-              <Text style={ui.muted}>Nguồn tiền</Text>
-              <Text style={ui.text}>Chọn khi lưu</Text>
-            </View>
-          </View>
-          <View style={styles.merchant}>
-            <AppIcon
-              name="storefront-outline"
-              size={21}
-              color={theme.colors.text}
-            />
-            <View style={styles.flex}>
-              <Text numberOfLines={1} style={ui.text}>
-                {result.merchant || 'Chưa nhận diện cửa hàng'}
-              </Text>
-              <Text style={ui.muted}>
-                {result.transactionDate || 'Chưa nhận diện ngày'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.resultActions}>
-            <View style={styles.flex}>
-              <Button
-                variant="secondary"
-                label="Sửa"
-                onPress={openTransactionForm}
+            <Pressable
+              accessibilityLabel={expanded ? 'Thu gọn kết quả' : 'Mở kết quả'}
+              onPress={() => setExpanded((value) => !value)}
+              style={styles.collapseButton}
+            >
+              <AppIcon
+                name={expanded ? 'chevron-left' : 'chevron-right'}
+                size={20}
+                color={theme.colors.text}
               />
-            </View>
-            <View style={{ flex: 2 }}>
-              <Button label="Lưu giao dịch" onPress={openTransactionForm} />
-            </View>
+            </Pressable>
           </View>
-        </Card>
+          {expanded && (
+            <>
+              <View style={styles.amountBox}>
+                <Text style={ui.muted}>Tổng số tiền chi tiêu</Text>
+                <Text style={styles.amount}>
+                  {result.amount != null ? money(result.amount) : '—'}
+                </Text>
+                <Text style={styles.confidence}>{confidenceLabel}</Text>
+              </View>
+              <View style={styles.resultGrid}>
+                <View style={styles.resultItem}>
+                  <Text style={ui.muted}>Danh mục</Text>
+                  <View style={styles.resultChoice}>
+                    <View
+                      style={[
+                        styles.choiceIcon,
+                        { backgroundColor: '#FFF1C7' },
+                      ]}
+                    >
+                      <AppIcon
+                        name={categoryStyle.icon}
+                        size={22}
+                        color="#BC5100"
+                      />
+                    </View>
+                    <Text numberOfLines={1} style={[ui.text, { flex: 1 }]}>
+                      {result.suggestedCategoryName || 'Chưa nhận diện'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={ui.muted}>Nguồn tiền</Text>
+                  <View style={styles.resultChoice}>
+                    <View
+                      style={[
+                        styles.choiceIcon,
+                        { backgroundColor: '#FFE4F2' },
+                      ]}
+                    >
+                      <AppIcon
+                        name="wallet-outline"
+                        size={22}
+                        color="#F60086"
+                      />
+                    </View>
+                    <Text style={ui.text}>Chọn khi lưu</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.merchant}>
+                <AppIcon
+                  name="storefront-outline"
+                  size={21}
+                  color={theme.colors.text}
+                />
+                <View style={styles.flex}>
+                  <Text numberOfLines={1} style={ui.text}>
+                    {result.merchant || 'Chưa nhận diện cửa hàng'}
+                  </Text>
+                  <Text style={ui.muted}>
+                    {result.transactionDate
+                      ? new Date(result.transactionDate).toLocaleDateString(
+                          'vi-VN',
+                        )
+                      : 'Chưa nhận diện ngày'}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.resultActions}>
+                <View style={styles.flex}>
+                  <Button
+                    variant="secondary"
+                    label="Sửa"
+                    icon="pencil-outline"
+                    onPress={openTransactionForm}
+                  />
+                </View>
+                <View style={{ flex: 2 }}>
+                  <Button
+                    label="Lưu giao dịch"
+                    icon="check-circle-outline"
+                    onPress={openTransactionForm}
+                  />
+                </View>
+              </View>
+            </>
+          )}
+        </View>
       )}
       <View style={styles.captureBar}>
         <Pressable style={styles.captureSide} onPress={() => void pick()}>
@@ -370,12 +522,100 @@ export default function ScanReceiptPage() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the scan receipt page interface.
+ *
+ * Use it to keep the scan receipt page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     flex: { flex: 1 },
+    resultCard: {
+      padding: 20,
+      gap: 14,
+      borderRadius: 30,
+      backgroundColor: theme.colors.surface,
+      boxShadow: '0px 4px 5px rgba(19,27,46,.15)',
+    },
+    collapseButton: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: theme.colors.neutralSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      transform: [{ rotate: '90deg' }],
+    },
+    resultChoice: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    choiceIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    merchantOverlay: {
+      position: 'absolute',
+      top: '28%',
+      left: '16%',
+      right: '16%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor: 'rgba(0,77,206,.6)',
+    },
+    totalOverlay: {
+      position: 'absolute',
+      top: '52%',
+      left: '17%',
+      right: '17%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+      padding: 10,
+      borderRadius: 12,
+      backgroundColor: 'rgba(135,230,187,.6)',
+    },
+    totalTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      padding: 7,
+      borderRadius: 7,
+      backgroundColor: '#007652',
+    },
+    overlayText: {
+      color: '#FFFFFF',
+      fontSize: 12,
+      fontWeight: '500',
+      flexShrink: 1,
+    },
+    overlayAmount: {
+      color: '#FFFFFF',
+      fontSize: 22,
+      fontWeight: '600',
+      flexShrink: 1,
+    },
+    dateOverlay: {
+      position: 'absolute',
+      top: '69%',
+      left: '24%',
+      right: '24%',
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor: 'rgba(19,27,46,.8)',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
     scannerHeader: {
       minHeight: 70,
-      marginHorizontal: -16,
+      marginHorizontal: -20,
       paddingHorizontal: 13,
       flexDirection: 'row',
       alignItems: 'center',
@@ -395,13 +635,13 @@ const createStyles = (theme: AppTheme) =>
     brandName: {
       color: theme.colors.text,
       fontSize: 11,
-      fontWeight: '900',
+      fontWeight: '600',
       lineHeight: 12,
     },
     brandCaption: {
       color: theme.colors.muted,
       fontSize: 6,
-      fontWeight: '900',
+      fontWeight: '600',
       letterSpacing: 0.5,
     },
     headerTitle: {
@@ -409,7 +649,7 @@ const createStyles = (theme: AppTheme) =>
       marginLeft: 6,
       color: theme.colors.text,
       fontSize: 18,
-      fontWeight: '900',
+      fontWeight: '600',
     },
     profileButton: {
       width: 44,
@@ -420,8 +660,15 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.primaryStrong,
     },
     modeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    modeGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.neutralSoft,
+      borderRadius: 24,
+      padding: 5,
+    },
     modeActive: {
-      minHeight: 42,
+      minHeight: 34,
       paddingHorizontal: 15,
       borderRadius: 22,
       flexDirection: 'row',
@@ -429,15 +676,19 @@ const createStyles = (theme: AppTheme) =>
       gap: 6,
       backgroundColor: theme.colors.primaryStrong,
     },
-    modeActiveText: { color: theme.colors.onBrand, fontWeight: '900' },
+    modeActiveText: {
+      color: theme.colors.onBrand,
+      fontSize: 16,
+      fontWeight: '500',
+    },
     mode: {
-      minHeight: 42,
+      minHeight: 34,
       paddingHorizontal: 14,
       justifyContent: 'center',
       borderRadius: 22,
       backgroundColor: theme.colors.surfaceRaised,
     },
-    modeText: { color: theme.colors.text, fontWeight: '700' },
+    modeText: { color: theme.colors.text, fontSize: 16, fontWeight: '500' },
     flash: {
       marginLeft: 'auto',
       minHeight: 42,
@@ -450,7 +701,7 @@ const createStyles = (theme: AppTheme) =>
     },
     cameraFrame: {
       width: '100%',
-      aspectRatio: 0.79,
+      aspectRatio: 0.94,
       borderRadius: 28,
       overflow: 'hidden',
       backgroundColor: '#20252D',
@@ -466,7 +717,7 @@ const createStyles = (theme: AppTheme) =>
       marginTop: 13,
       color: theme.colors.onBrand,
       fontSize: 19,
-      fontWeight: '900',
+      fontWeight: '600',
     },
     cameraEmptyText: {
       marginTop: 5,
@@ -525,7 +776,7 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: 6,
       backgroundColor: theme.colors.success,
     },
-    detectedText: { color: theme.colors.onBrand, fontWeight: '900' },
+    detectedText: { color: theme.colors.onBrand, fontWeight: '600' },
     scanLine: {
       position: 'absolute',
       top: '52%',
@@ -556,7 +807,7 @@ const createStyles = (theme: AppTheme) =>
       gap: 9,
       backgroundColor: theme.colors.primarySoft,
     },
-    analyzingText: { color: theme.colors.primaryStrong, fontWeight: '800' },
+    analyzingText: { color: theme.colors.primaryStrong, fontWeight: '500' },
     resultHeader: { flexDirection: 'row', alignItems: 'center', gap: 11 },
     aiIcon: {
       width: 47,
@@ -566,7 +817,7 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       backgroundColor: theme.colors.primarySoft,
     },
-    resultTitle: { color: theme.colors.text, fontSize: 19, fontWeight: '900' },
+    resultTitle: { color: theme.colors.text, fontSize: 20, fontWeight: '500' },
     resultSuccessRow: {
       marginTop: 2,
       flexDirection: 'row',
@@ -581,7 +832,7 @@ const createStyles = (theme: AppTheme) =>
       overflow: 'hidden',
       color: theme.colors.successStrong,
       backgroundColor: theme.colors.successSoft,
-      fontWeight: '900',
+      fontWeight: '600',
     },
     amountBox: {
       position: 'relative',
@@ -589,23 +840,28 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: 16,
       backgroundColor: theme.colors.surfaceRaised,
     },
-    amount: { color: theme.colors.text, fontSize: 31, fontWeight: '900' },
+    amount: {
+      color: theme.colors.text,
+      fontSize: 34,
+      fontWeight: '600',
+      marginTop: 7,
+    },
     confidence: {
       position: 'absolute',
       right: 13,
-      top: 30,
+      top: 12,
       paddingHorizontal: 10,
       paddingVertical: 5,
       borderRadius: 99,
       overflow: 'hidden',
       color: theme.colors.successStrong,
       backgroundColor: theme.colors.successSoft,
-      fontWeight: '800',
+      fontWeight: '500',
     },
     resultGrid: { flexDirection: 'row', gap: 10 },
     resultItem: {
       flex: 1,
-      minHeight: 83,
+      minHeight: 96,
       padding: 13,
       gap: 9,
       borderRadius: 15,
@@ -627,18 +883,18 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'flex-start',
       justifyContent: 'space-around',
     },
-    captureSide: { flex: 1, alignItems: 'center', gap: 8 },
+    captureSide: { flex: 1, alignItems: 'center', gap: 12, paddingTop: 20 },
     captureSideText: { color: theme.colors.text, fontSize: 12 },
     captureMain: { flex: 1.25, marginTop: -4, alignItems: 'center', gap: 6 },
     captureCircle: {
-      width: 78,
-      height: 78,
-      borderRadius: 39,
+      width: 100,
+      height: 100,
+      borderRadius: 50,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.colors.primaryStrong,
       borderWidth: 7,
       borderColor: theme.colors.primarySoft,
     },
-    captureMainText: { color: theme.colors.primaryStrong, fontWeight: '900' },
+    captureMainText: { color: theme.colors.primaryStrong, fontWeight: '600' },
   });

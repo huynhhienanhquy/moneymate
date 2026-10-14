@@ -12,6 +12,16 @@ export class TransactionService {
   private categoryRepository = new CategoryRepository();
   private budgetService = new BudgetService();
 
+  /**
+   * Check budget alerts after commit for transaction.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param categoryId - The stable identifier of the record targeted by the operation.
+   * @param transactionDate - The date or reporting period used by the operation.
+   * @param transactionId - The stable identifier of the record targeted by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   private async checkBudgetAlertsAfterCommit(
     userId: string,
     categoryId: string,
@@ -29,6 +39,15 @@ export class TransactionService {
     }
   }
 
+  /**
+   * Invalidate closed snapshots for transaction.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param tx - The database client or transaction used for persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param dates - The date or reporting period used by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   private async invalidateClosedSnapshots(
     tx: Prisma.TransactionClient,
     userId: string,
@@ -47,6 +66,15 @@ export class TransactionService {
     }
   }
 
+  /**
+   * Create transaction for the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to create transaction for the transaction workflow.
+   * @returns A promise containing the resulting transaction value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async createTransaction(userId: string, data: {
     walletId: string;
     categoryId: string;
@@ -133,6 +161,14 @@ export class TransactionService {
     return transaction;
   }
 
+  /**
+   * Return transactions required by the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param query - The query value required by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getTransactions(userId: string, query: Omit<TransactionFilter, 'userId'>) {
     const filter: TransactionFilter = { ...query, userId, excludeTransfers: true };
     const transactions = await this.transactionRepository.findAll(filter);
@@ -148,6 +184,14 @@ export class TransactionService {
     };
   }
 
+  /**
+   * Decode sync cursor for transaction.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param cursor - The synchronization cursor that bounds the processed change set.
+   * @returns The resulting transaction value for the caller.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   private decodeSyncCursor(cursor?: string): TransactionSyncCursor | undefined {
     if (!cursor) return undefined;
     try {
@@ -163,6 +207,13 @@ export class TransactionService {
     }
   }
 
+  /**
+   * Encode sync cursor for transaction.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param cursor - The synchronization cursor that bounds the processed change set.
+   * @returns The resulting transaction value for the caller.
+   */
   private encodeSyncCursor(cursor: TransactionSyncCursor) {
     return Buffer.from(JSON.stringify({
       updatedAt: cursor.updatedAt.toISOString(),
@@ -170,6 +221,15 @@ export class TransactionService {
     })).toString('base64url');
   }
 
+  /**
+   * Synchronize transactions with the transaction source of truth.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param cursor - The synchronization cursor that bounds the processed change set.
+   * @param take - The take value required by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async syncTransactions(userId: string, cursor?: string, take = 100) {
     const decodedCursor = this.decodeSyncCursor(cursor);
     const pageSize = Math.min(take, 200);
@@ -184,6 +244,15 @@ export class TransactionService {
     };
   }
 
+  /**
+   * Return transaction required by the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting transaction value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async getTransaction(userId: string, id: string) {
     const tx = await this.transactionRepository.findById(id);
     if (!tx || tx.userId !== userId) {
@@ -192,6 +261,16 @@ export class TransactionService {
     return tx;
   }
 
+  /**
+   * Update transaction while preserving the transaction workflow's rules.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to update transaction while preserving the transaction workflow's rules.
+   * @returns A promise containing the resulting transaction value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async updateTransaction(userId: string, id: string, data: {
     walletId?: string;
     categoryId?: string;
@@ -315,6 +394,16 @@ export class TransactionService {
     return updatedTransaction;
   }
 
+  /**
+   * Delete transaction through the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param version - The version value required by the operation.
+   * @returns A promise containing the resulting transaction value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async deleteTransaction(userId: string, id: string, version?: number) {
     const txVal = await this.getTransaction(userId, id);
     if (txVal.type === TransactionType.TRANSFER) {
@@ -348,6 +437,15 @@ export class TransactionService {
     });
   }
 
+  /**
+   * Transfer between wallets for transaction.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to transfer between wallets for transaction.
+   * @returns A promise containing the resulting transaction value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async transferBetweenWallets(userId: string, data: {
     sourceWalletId: string;
     destinationWalletId: string;
@@ -380,6 +478,13 @@ export class TransactionService {
     });
   }
 
+  /**
+   * Return dashboard summary required by the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getDashboardSummary(userId: string) {
     // Current date values
     const today = new Date();
@@ -414,6 +519,15 @@ export class TransactionService {
     };
   }
 
+  /**
+   * Return monthly report required by the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getMonthlyReport(userId: string, month: number, year: number) {
     const stats = await this.transactionRepository.getMonthlySummary(userId, month, year);
     const categoryBreakdown = await this.transactionRepository.getCategoryBreakdown(userId, month, year);
@@ -433,11 +547,27 @@ export class TransactionService {
     };
   }
 
+  /**
+   * Return monthly trend required by the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param months - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getMonthlyTrend(userId: string, months = 6) {
     const count = Math.min(Math.max(months, 1), 12);
     return this.transactionRepository.getMonthlyTrend(userId, count);
   }
 
+  /**
+   * Return yearly report required by the transaction workflow.
+   *
+   * Use it from controllers or jobs that run the transaction business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getYearlyReport(userId: string, year: number) {
     const summary = await this.transactionRepository.getYearlySummary(userId, year);
     const user = await prisma.user.findUnique({

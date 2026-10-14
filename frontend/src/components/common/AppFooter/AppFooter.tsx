@@ -8,6 +8,13 @@ interface AppFooterProps {
   className?: string;
 }
 
+/**
+ * Render the app footer interface.
+ *
+ * Use it to keep the app footer workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered app footer interface.
+ */
 const AppFooter = ({ brand = 'MoneyMate', links = [], copyright, className = '' }: AppFooterProps) => (
   <footer className={className}>
     {brand && <strong>{brand}</strong>}

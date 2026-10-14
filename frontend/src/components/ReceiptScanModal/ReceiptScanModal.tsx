@@ -8,6 +8,13 @@ import type { ScanResult } from '@/types/receipt';
 import AppButton from '@/components/common/AppButton/AppButton';
 export type { ScanResult } from '@/types/receipt';
 
+/**
+ * Render the receipt scan modal interface.
+ *
+ * Use it to keep the receipt scan modal workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered receipt scan modal interface.
+ */
 const ReceiptScanModal: React.FC<{
   onClose: () => void;
   onApply: (data: ScanResult) => void;

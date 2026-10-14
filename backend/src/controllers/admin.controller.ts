@@ -7,6 +7,15 @@ import { AppError } from '../common/app-error';
 export class AdminController {
   private adminService = new AdminService();
 
+  /**
+   * Return all users required by the admin workflow.
+   *
+   * Use it as the HTTP boundary for the admin route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getAllUsers = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const users = await this.adminService.getAllUsers();
@@ -16,6 +25,15 @@ export class AdminController {
     }
   };
 
+  /**
+   * Return user required by the admin workflow.
+   *
+   * Use it as the HTTP boundary for the admin route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const user = await this.adminService.getUser(req.params.id);
@@ -25,6 +43,15 @@ export class AdminController {
     }
   };
 
+  /**
+   * Update user while preserving the admin workflow's rules.
+   *
+   * Use it as the HTTP boundary for the admin route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public updateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       if (req.params.id === req.user?.id) {
@@ -37,6 +64,15 @@ export class AdminController {
     }
   };
 
+  /**
+   * Delete user through the admin workflow.
+   *
+   * Use it as the HTTP boundary for the admin route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       if (req.params.id === req.user?.id) {

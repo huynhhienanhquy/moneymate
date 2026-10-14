@@ -32,6 +32,13 @@ setInterval(() => {
 }, CRON_INTERVAL);
 
 // Handle graceful shutdown
+/**
+ * Shutdown for server.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param signal - The signal value required by the operation.
+ * @returns A promise that resolves after the operation completes.
+ */
 const shutdown = async (signal: string) => {
   console.log(`Received ${signal}. Shutting down server gracefully...`);
   

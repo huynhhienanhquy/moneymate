@@ -12,6 +12,13 @@ type TopbarProps = {
   onThemeToggle: () => void;
 };
 
+/**
+ * Render the topbar interface.
+ *
+ * Use it to keep the topbar workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered topbar interface.
+ */
 const Topbar = ({ user, theme, currentPage, onMenuOpen, onThemeToggle }: TopbarProps) => (
   <header className="dashboard-topbar sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200/70 bg-white/95 px-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 md:px-8">
     <button onClick={onMenuOpen} aria-label="Mở menu" className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 focus:outline-none"><Menu className="size-6" /></button>

@@ -15,6 +15,15 @@ export class AnalysisService {
   private contextBuilder = new ContextBuilderService();
   private llm = new LlmProvider();
 
+  /**
+   * Analyze expenses for analysis.
+   *
+   * Use it from controllers or jobs that run the analysis business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting analysis value.
+   */
   async analyzeExpenses(userId: string, month?: number, year?: number) {
     const ctx = await this.contextBuilder.build(userId, month, year);
     const insights = this.generateRuleBasedInsights(ctx);
@@ -39,6 +48,13 @@ export class AnalysisService {
     };
   }
 
+  /**
+   * Generate rule based insights for analysis.
+   *
+   * Use it from controllers or jobs that run the analysis business workflow.
+   * @param ctx - The ctx value required by the operation.
+   * @returns The resulting analysis value for the caller.
+   */
   private generateRuleBasedInsights(ctx: FinancialContext): ExpenseInsight[] {
     const insights: ExpenseInsight[] = [];
 
@@ -125,6 +141,13 @@ export class AnalysisService {
     return insights;
   }
 
+  /**
+   * Build fallback summary used by the analysis workflow.
+   *
+   * Use it from controllers or jobs that run the analysis business workflow.
+   * @param ctx - The ctx value required by the operation.
+   * @returns The resulting analysis value for the caller.
+   */
   private buildFallbackSummary(ctx: FinancialContext): string {
     const parts = [];
     if (ctx.topExpenseCategory) {

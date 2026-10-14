@@ -1,155 +1,89 @@
-# MoneyMate Software Requirements Specification
+# Đặc tả yêu cầu hệ thống — MoneyMate
 
-> Version 3.0 — implementation-aligned baseline, 2026-09-24.
+> Baseline tài liệu ngày 13/10/2026, đối chiếu workspace hiện tại. Không phải số version phát hành ứng dụng. [Mục lục](README.md).
 
-## 1. Purpose
+## 1. Mục đích và phạm vi
 
-This specification defines the current scope, architecture, external interfaces, constraints, and verification expectations for MoneyMate. Detailed requirement identifiers live in [requirements.md](./requirements.md), while domain invariants live in [business_rules.md](./business_rules.md).
+SRS xác định sản phẩm, giao diện, ràng buộc dữ liệu, chất lượng và cách nghiệm thu MoneyMate. Yêu cầu có ID nằm trong [requirements.md](requirements.md); quy tắc chi tiết nằm trong [business_rules.md](business_rules.md).
 
-## 2. Product scope
+MoneyMate cung cấp web và mobile iOS/Android cho tài chính cá nhân: tài khoản, ví, danh mục, thu/chi, chuyển ví, ngân sách, mục tiêu, lịch định kỳ, báo cáo, attachment, thông báo, OCR và AI. Admin có khu vực quản lý tài khoản riêng. Không có tích hợp ngân hàng, FX, social login hoặc reset mật khẩu qua email trong phạm vi hiện tại.
 
-MoneyMate is a Vietnamese-oriented personal finance system delivered through a React web application and an Expo iOS/Android application backed by one Express/MySQL API.
+## 2. Người sử dụng
 
-The product supports:
+`USER` quản lý dữ liệu của mình. `ADMIN` quản lý tài khoản qua API được bảo vệ. Khách chỉ sử dụng đăng ký/đăng nhập. Người vận hành quản lý infrastructure, cấu hình và release bên ngoài role sản phẩm.
 
-- accounts, rotating multi-device sessions, profiles, and administration;
-- wallets, categories, income/expense records, and atomic wallet transfers;
-- budgets, savings goals, recurring transactions, notifications, and attachments;
-- dashboards, monthly/yearly analytics, trend data, and Excel/PDF exports;
-- mobile offline replay and transaction delta synchronization;
-- receipt OCR, AI analysis/advice, and an authenticated financial Copilot;
-- light/dark themes and Copilot-driven application navigation.
+Web guard có thể chuyển admin sang trang admin, nhưng backend mới là ranh giới kiểm soát quyền. User ID trong body hoặc ngữ cảnh AI không thay thế principal từ access token.
 
-## 3. Users
+## 3. Thành phần hệ thống
 
-### 3.1 Standard user
+Web React/Vite và Expo mobile gọi Express API. API dùng Prisma/MySQL, có object-storage adapter, AI provider, OCR, Expo push và scheduler định kỳ. Shared packages cung cấp auth contract/schema, token và helper chọn lọc; chưa phải toàn bộ domain/API dùng chung.
 
-Manages only their own financial data, sessions, devices, profile, exports, AI requests, and application preferences.
+Web dùng Axios/TanStack Query/Zustand; mobile dùng fetch adapter, Query persistence, SQLite và SecureStore native. Sơ đồ và module ở [architecture](architecture.md), [project structure](project-structure.md), [ERD](erd.md).
 
-### 3.2 Administrator
+## 4. Giao diện bên ngoài
 
-Uses a protected administration area to list, inspect, update, or delete users. Administrator access does not remove the need for authentication and route authorization.
+| Giao diện | Contract |
+| --- | --- |
+| REST | Prefix `/api`, JSON request/response; upload multipart, export/download binary |
+| Xác thực API | `Authorization: Bearer <accessToken>` |
+| Phiên web | Refresh cookie HttpOnly; request refresh gửi credentials |
+| Phiên native | Refresh token trong body và SecureStore, metadata platform/device |
+| API delta | Cursor opaque, version, `deletedAt` và tombstone giao dịch |
+| Mutation replay | `Idempotency-Key` trên route hỗ trợ; không bao phủ mọi POST |
+| Copilot web | `/api/copilotkit`, authenticated single endpoint; giao thức agent/stream riêng |
+| Health | `GET /health` xác nhận tiến trình HTTP; không suy diễn tất cả dependency healthy |
+| Swagger | `/api-docs` có UI; không thay thế route inventory/validator trong [api.md](api.md) |
 
-### 3.3 Operations team
+Web có public login/register, khu vực tài chính có auth và admin route có role. Mobile dùng Expo Router với page tài chính, hóa đơn và thông báo. Cấu hình môi trường gồm URL API, origin, secret, storage/AI tùy chọn; xem [environment setup](environment-setup.md).
 
-Maintains infrastructure, secrets, database migrations/backups, attachment storage, optional AI/push integrations, monitoring, and release processes. Operations access is outside the end-user product UI.
+## 5. Chức năng và dữ liệu
 
-## 4. System architecture
+### 5.1 Tài khoản
 
-```text
-React web ──────┐
-                ├── Express API ── Prisma ── MySQL
-Expo mobile ────┘        │
-                         ├── Object storage
-                         ├── OpenAI/CopilotKit (optional)
-                         └── Expo push service (optional)
-```
+Đăng ký yêu cầu email/họ tên/password. Access token HS256 hạn 15 phút; refresh opaque hạn 7 ngày, lưu SHA-256 ở DB và rotate atomic. Refresh reuse thu hồi family. Người dùng xem/revoke phiên, đổi mật khẩu và xóa tài khoản bằng password confirmation. Đổi mật khẩu thu hồi refresh session; access JWT đã phát hành không có blacklist tức thời.
 
-The API is the authorization and business-rule boundary. Web and mobile clients share contracts and selected domain/design packages but retain platform-specific UI and storage adapters.
+### 5.2 Tài chính và lập kế hoạch
 
-See [architecture.md](./architecture.md) and [erd.md](./erd.md) for details.
+Ví có số dư mutable trong `initialBalance`; income tăng số dư, expense thường ghi báo cáo/kiểm tra đủ số dư nhưng không trừ ví. Transfer và nạp/rút goal thực sự dịch chuyển tiền atomic. Giao dịch thường có soft delete và optimistic version tùy payload; transfer bất biến qua CRUD thường.
 
-## 5. Functional overview
+Budget là tổng hoặc theo danh mục của một tháng; ngưỡng 80%/100% tạo notification, vượt budget không tự chặn expense. Goal có progress/status tính từ dữ liệu và không được xóa nếu có tiền/lịch sử. Recurring hỗ trợ 4 chu kỳ, claim kỳ để chống trùng và catch up có giới hạn.
 
-### 5.1 Identity and sessions
+### 5.3 Báo cáo
 
-Registration creates a standard user. Login returns a 15-minute JWT access token and a seven-day rotating refresh session. Web uses an HttpOnly refresh cookie; mobile uses SecureStore with a response-body refresh token. Users can inspect and revoke sessions. Account deletion requires password confirmation.
+Dashboard/report/trend/year và export sử dụng các định nghĩa cụ thể trong service/repository, gồm số dư ví, khoản thực tế và khoản định kỳ dự kiến. Không gán mọi trường `income`/`savings` cho một công thức thu trừ chi thông thường. Snapshot kỳ đóng là cache có thể vô hiệu/tính lại, không phải sổ kế toán bất biến.
 
-Password reset by email is not implemented in the current baseline.
+### 5.4 File và thông báo
 
-### 5.2 Financial records
+Attachment thuộc giao dịch/user, giới hạn MIME và 5 MiB. Storage local hoặc S3-compatible tùy cấu hình. OCR đưa dữ liệu dự thảo để xem lại; PDF không có text/ảnh khó đọc có thể trả kết quả độ tin cậy thấp. Push là tác vụ ngoài DB, failure delivery không hoàn tác dữ liệu tài chính đã commit.
 
-Users manage wallets and system/custom categories, record income and expenses, and transfer between owned wallets. Transaction lists support search, filtering, sorting, and pagination. Mobile sync consumes versioned updates and deletion tombstones. Transfers use a dedicated immutable workflow.
+### 5.5 AI và Copilot
 
-### 5.3 Planning and automation
+AI REST có analysis/forecast/advisor/chat/OCR và fallback tùy tác vụ. CopilotKit web cần flag/key: 6 tool server đọc user-scoped, gồm tìm giao dịch có giới hạn; 10 tool web ghi có xác nhận, gồm sửa/xóa giao dịch thu/chi; 2 tool theme/navigation. Ghi chỉ xảy ra sau xác nhận REST qua quyền user, sửa/xóa kiểm tra version. Đóng/mở khung chat giữ hội thoại trong phiên đăng nhập. Native mobile dùng REST chat, không đăng ký bộ tool web.
 
-Budgets track global or category spending by month and issue threshold notifications. Savings goals accept atomic wallet deposits/withdrawals and expose derived progress/status. Recurring schedules support daily, weekly, monthly, and yearly generation with bounded catch-up.
+Luồng Copilot `transferFunds` đang có lỗi contract: backend trả object `WalletTransfer`, UI chờ boolean `true`. Transfer có thể đã commit trong khi UI báo lỗi và chưa invalidate cache; điều kiện chấp nhận báo thành công chưa đạt ở luồng này. Xem [kiến trúc](architecture.md).
 
-### 5.4 Reporting
+## 6. Chất lượng và ràng buộc
 
-The dashboard provides current summary values and recent transactions. Monthly, yearly, category, and trend endpoints power web/mobile visualizations. Authenticated monthly exports are available as PDF and Excel. Closed-period snapshots support repeatable historical reporting.
+- Ownership, input validation, password hash, refresh rotation, rate limits và idempotency là các cơ chế hiện có, cần giữ khi phát triển.
+- HTTPS, backup/restore, secret rotation, durable storage và giám sát là trách nhiệm triển khai; Compose không tự cung cấp đầy đủ.
+- Strict TypeScript và phân lớp backend hỗ trợ bảo trì; các workspace khác phiên bản React/TypeScript/Zod.
+- Latency, throughput và accessibility cần đo; repo chưa xác nhận SLA hay chứng nhận WCAG.
+- Ngày kỳ báo cáo/scheduler có phần phụ thuộc timezone backend. Currency chưa có quy đổi.
+- Scheduler chạy trong process mỗi 24 giờ và lúc startup; Copilot thread state/rate counters có phần in-memory, cần đánh giá trước multi-instance.
+- Outbox mobile tạo/sửa JSON không lưu file; retry phụ thuộc sự kiện kết nối, delta SQLite chưa nối đầy đủ với UI.
+- Biometrics có thao tác thử ở hồ sơ, chưa tự động app lock. Camera/push/screen privacy/deep link cần build và thiết bị phù hợp.
 
-### 5.5 Files and notifications
+## 7. Nghiệm thu và vận hành
 
-Users can manage transaction attachments. Uploads are limited by MIME type and size and may be stored locally or in S3-compatible storage. In-app notifications support read/delete workflows; mobile devices can register Expo push tokens.
+| Mảng | Cách kiểm chứng |
+| --- | --- |
+| Logic/security backend | Unit tests; auth/Copilot integration theo [testing](testing.md) |
+| Web | Vitest component/hooks/store, lint và production build |
+| Mobile | Lint/typecheck/export; native/device QA theo [mobile release](mobile_release.md) |
+| Database | Áp dụng migration trên DB riêng, kiểm tra constraint; staging/backup/restore trước production |
+| Provider tùy chọn | Smoke staging với key/bucket/device thật theo cấu hình được duyệt |
+| Production | HTTP, login/refresh, ownership, write/report/storage và monitoring sau deploy |
 
-### 5.6 AI and Copilot
+Tests có trong repo không đồng nghĩa đã chạy thành công cho mọi cấu hình. Không có bộ E2E browser/mobile tự động hoàn chỉnh hiện tại. CI chưa publish/deploy; phải áp dụng [deployment runbook](deployment.md).
 
-Optional AI endpoints provide analysis, forecasting, advisor insights, chat, and receipt OCR. The Copilot runtime supplies five read-only aggregate financial tools. Browser tools prepare an expense with human confirmation, apply a theme, or navigate to an allowlisted route.
-
-AI output is advisory. The model must call a user-scoped tool before presenting personal financial numbers and must never receive server secrets.
-
-## 6. External interfaces
-
-### 6.1 HTTP API
-
-- JSON APIs are rooted at `/api`.
-- OpenAPI/Swagger UI is served at `/api-docs`.
-- A health endpoint is served at `/health`.
-- Authenticated requests use `Authorization: Bearer <access-token>`.
-- Browser refresh uses credentials/cookies.
-- Errors use a consistent safe response envelope and may include stable error codes.
-
-### 6.2 Web interface
-
-The React SPA provides public login/register pages, authenticated finance pages, a protected admin area, responsive navigation, light/dark themes, receipt scanning, and an optional Copilot popup. Route-level screens are lazy loaded.
-
-### 6.3 Mobile interface
-
-The Expo application provides corresponding finance screens plus SecureStore sessions, SQLite offline support, camera/OCR, biometrics, screenshot protection, notifications, and deep links. Native features require a compatible development or production build.
-
-### 6.4 Third-party services
-
-- MySQL stores relational data.
-- S3-compatible storage is optional for attachments.
-- OpenAI is optional for AI and Copilot.
-- Expo/Apple/Google services are optional for mobile builds and notifications.
-
-## 7. Data and consistency
-
-- User data is isolated by authenticated ownership.
-- Financial amounts use decimal database fields and VND is the default currency.
-- Wallet and transaction soft deletion preserves historical/sync behavior.
-- Normal transaction updates/deletes use optimistic versions.
-- Supported mutation replay is guarded by user-scoped idempotency records.
-- Multi-record financial writes use database transactions.
-- Report snapshots are invalidated after relevant backdated changes.
-
-## 8. Security and privacy
-
-- Production requires HTTPS, strong JWT secrets, and exact configured browser origins.
-- Passwords use bcrypt; refresh tokens are stored as hashes and rotated.
-- Rate limits protect authentication and Copilot endpoints.
-- Request size, message length, upload, pagination, tool-step, output, and timeout limits reduce abuse risk.
-- Logs and model context must exclude credentials and unnecessary financial detail.
-- Account deletion and provider/backups retention require operational procedures documented in the privacy policy.
-
-## 9. Quality attributes
-
-- **Reliability:** atomic financial operations, idempotent replay, optimistic conflicts, graceful shutdown, and verified migrations.
-- **Maintainability:** strict TypeScript, layered backend, adjacent tests, and shared workspace packages.
-- **Usability:** responsive screens, explicit loading/error/offline states, Vietnamese currency/date behavior, and safe confirmations.
-- **Accessibility:** semantic controls, keyboard support, visible focus, reduced motion, and WCAG 2.1 AA intent.
-- **Portability:** browser plus iOS/Android clients using one authenticated API.
-- **Observability:** request IDs, safe structured error logging, health checks, and release monitoring.
-
-## 10. Constraints and known limits
-
-- CopilotKit and OpenAI features are disabled unless configured.
-- Copilot thread ownership is in memory and follows the current runtime process lifetime; Rich Threads are not enabled.
-- The recurring scheduler uses process startup plus a 24-hour interval, not an external distributed scheduler.
-- Local attachment storage is not durable across ephemeral container replacement.
-- Push, biometrics, camera, and deep-link behavior require physical-device validation.
-- Performance must be measured in the target deployment; no fixed production latency is guaranteed by this repository.
-- The Copilot can prepare an expense but cannot edit or delete transactions.
-
-## 11. Verification
-
-Acceptance requires proportionate checks across:
-
-- backend unit tests and MySQL-backed integration tests;
-- frontend Vitest, lint, type-check, and production build;
-- mobile type-check, lint, Expo doctor/export, and physical-device smoke tests;
-- migration rehearsal and restore testing;
-- security checks for ownership, role boundaries, session replay, CORS/HTTPS, upload validation, and secret handling;
-- end-to-end verification of optional OpenAI, storage, and push providers in staging.
+Thay đổi API/schema/nghiệp vụ phải cập nhật requirement/story tương ứng và [changelog](changelog.md).

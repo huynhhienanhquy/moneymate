@@ -7,6 +7,12 @@ import AuthField from '@/components/Auth/AuthField';
 import AuthShell from '@/components/Auth/AuthShell';
 import { useRegisterForm } from '@/hooks/useRegisterForm';
 
+/**
+ * Render the register page interface.
+ *
+ * Use it to keep the register page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered register page interface.
+ */
 const RegisterPage: React.FC = () => {
   const { form, showPassword, setShowPassword, loading, error, success, change, submit } = useRegisterForm();
   return (

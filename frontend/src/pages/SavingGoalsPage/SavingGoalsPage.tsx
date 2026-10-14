@@ -14,6 +14,13 @@ import { useWallets } from '@/hooks/useReferenceData';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
 
+/**
+ * Render the goal modal interface.
+ *
+ * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered goal modal interface.
+ */
 const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({ goal, onClose, onSave, loading }) => {
   const [form, setForm] = useState({
     title: goal?.title || '',
@@ -56,6 +63,13 @@ const GoalModal: React.FC<{ goal?: any; onClose: () => void; onSave: (d: any) =>
   );
 };
 
+/**
+ * Render the deposit modal interface.
+ *
+ * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered deposit modal interface.
+ */
 const DepositModal: React.FC<{ goal: any; wallets: any[]; type: 'deposit' | 'withdraw'; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({
   goal, wallets, type, onClose, onSave, loading,
 }) => {
@@ -85,6 +99,12 @@ const DepositModal: React.FC<{ goal: any; wallets: any[]; type: 'deposit' | 'wit
   );
 };
 
+/**
+ * Render the saving goals page interface.
+ *
+ * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered saving goals page interface.
+ */
 const SavingGoalsPage: React.FC = () => {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
@@ -96,38 +116,116 @@ const SavingGoalsPage: React.FC = () => {
 
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['saving-goals'],
+    /**
+     * Load saving goals page data for the query cache.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting saving goals page value for the caller.
+     */
     queryFn: () => api.get('/saving-goals').then(r => r.data.data),
   });
 
   const { data: wallets = [] } = useWallets();
 
   const createMutation = useMutation({
+    /**
+     * Execute the saving goals page mutation requested by the client.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @param d - The d value required by the operation.
+     * @returns The resulting saving goals page value for the caller.
+     */
     mutationFn: (d: any) => api.post('/saving-goals', d),
+    /**
+     * Finalize the saving goals page workflow after a successful operation.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['saving-goals'] }); setShowModal(false); },
   });
 
   const updateMutation = useMutation({
+    /**
+     * Execute the saving goals page mutation requested by the client.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting saving goals page value for the caller.
+     */
     mutationFn: ({ id, data }: any) => api.put(`/saving-goals/${id}`, data),
+    /**
+     * Finalize the saving goals page workflow after a successful operation.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['saving-goals'] }); setEditGoal(null); },
   });
 
   const deleteMutation = useMutation({
+    /**
+     * Execute the saving goals page mutation requested by the client.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting saving goals page value for the caller.
+     */
     mutationFn: (id: string) => api.delete(`/saving-goals/${id}`),
+    /**
+     * Finalize the saving goals page workflow after a successful operation.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting saving goals page value for the caller.
+     */
     onSuccess: () => qc.invalidateQueries({ queryKey: ['saving-goals'] }),
   });
 
   const depositMutation = useMutation({
+    /**
+     * Execute the saving goals page mutation requested by the client.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting saving goals page value for the caller.
+     */
     mutationFn: ({ id, data }: any) => api.post(`/saving-goals/${id}/deposit`, data),
+    /**
+     * Finalize the saving goals page workflow after a successful operation.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['saving-goals'] }); qc.invalidateQueries({ queryKey: ['wallets'] }); setAction(null); },
   });
 
   const withdrawMutation = useMutation({
+    /**
+     * Execute the saving goals page mutation requested by the client.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting saving goals page value for the caller.
+     */
     mutationFn: ({ id, data }: any) => api.post(`/saving-goals/${id}/withdraw`, data),
+    /**
+     * Finalize the saving goals page workflow after a successful operation.
+     *
+     * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['saving-goals'] }); qc.invalidateQueries({ queryKey: ['wallets'] }); setAction(null); },
   });
 
   const totalSaved = goals.reduce((sum: number, goal: any) => sum + Number(goal.currentAmount), 0);
   const completedGoals = goals.filter((goal: any) => goal.status === 'COMPLETED').length;
+  /**
+   * Return days left required by the saving goals page workflow.
+   *
+   * Use it to keep the saving goals page workflow's presentation and interactions in one reusable UI boundary.
+   * @param date - The date or reporting period used by the operation.
+   * @returns The resulting saving goals page value for the caller.
+   */
   const getDaysLeft = (date: string) => Math.max(0, Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000));
   const visibleGoals = goals
     .filter((goal: any) => statusFilter === 'ALL' || (statusFilter === 'COMPLETED' ? goal.status === 'COMPLETED' : goal.status !== 'COMPLETED'))

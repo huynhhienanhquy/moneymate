@@ -9,6 +9,14 @@ export class UserService {
   private attachmentRepository = new AttachmentRepository();
   private storage = createObjectStorage();
 
+  /**
+   * Return profile required by the user workflow.
+   *
+   * Use it from controllers or jobs that run the user business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting user value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async getProfile(userId: string) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -23,6 +31,15 @@ export class UserService {
     };
   }
 
+  /**
+   * Update profile while preserving the user workflow's rules.
+   *
+   * Use it from controllers or jobs that run the user business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to update profile while preserving the user workflow's rules.
+   * @returns A promise containing the resulting user value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async updateProfile(userId: string, data: { fullName?: string; avatarUrl?: string | null }) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -38,6 +55,16 @@ export class UserService {
     };
   }
 
+  /**
+   * Change password for user.
+   *
+   * Use it from controllers or jobs that run the user business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param currentPassword - The current password value required by the operation.
+   * @param newPassword - The new password value required by the operation.
+   * @returns A promise containing the resulting user value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -54,6 +81,15 @@ export class UserService {
     return true;
   }
 
+  /**
+   * Delete account through the user workflow.
+   *
+   * Use it from controllers or jobs that run the user business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param password - The password value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async deleteAccount(userId: string, password: string) {
     const user = await this.userRepository.findById(userId);
     if (!user || !await bcrypt.compare(password, user.passwordHash)) {

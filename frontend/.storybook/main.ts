@@ -15,6 +15,13 @@ const config: StorybookConfig = {
     options: {},
   },
   docs: { autodocs: 'tag' },
+  /**
+   * Vite final for .storybook.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @param viteConfig - The vite config value required by the operation.
+   * @returns A promise containing the resulting .storybook value.
+   */
   viteFinal: async (viteConfig) => {
     viteConfig.resolve = viteConfig.resolve || {};
     viteConfig.resolve.alias = {

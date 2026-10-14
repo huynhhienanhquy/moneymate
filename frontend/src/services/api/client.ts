@@ -26,6 +26,12 @@ api.interceptors.request.use(
 let refreshPromise: Promise<string> | null = null;
 let authTransitionCount = 0;
 
+/**
+ * Refresh access token used by the client workflow.
+ *
+ * Use it from controllers or jobs that run the client business workflow.
+ * @returns The resulting client value for the caller.
+ */
 export const refreshAccessToken = (): Promise<string> => {
   if (!refreshPromise) {
     refreshPromise = axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true })

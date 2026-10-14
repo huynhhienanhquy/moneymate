@@ -27,6 +27,13 @@ export type AppTheme = ReturnType<typeof buildTheme>;
 
 const THEME_KEY = 'moneymate.theme';
 
+/**
+ * Build theme used by the theme workflow.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param colorScheme - The color scheme value required by the operation.
+ * @returns The resulting theme value for the caller.
+ */
 function buildTheme(colorScheme: 'light' | 'dark') {
   return {
     colorScheme,
@@ -34,9 +41,25 @@ function buildTheme(colorScheme: 'light' | 'dark') {
     colors: {
       ...(colorScheme === 'dark' ? darkColors : lightColors),
       ...colors,
+      primary: '#004DCE',
+      primaryStrong: '#0053DB',
+      success: '#007652',
+      successStrong: '#007652',
+      danger: '#BE003B',
+      ...(!(colorScheme === 'dark')
+        ? {
+            background: '#FAF8FF',
+            surfaceRaised: '#F3F2FF',
+            primarySoft: '#DEE3FF',
+            neutralSoft: '#EAEDFF',
+            successSoft: '#68F6BC',
+            dangerSoft: '#FFDADD',
+            border: '#EFEDF6',
+          }
+        : {}),
     },
     gradients: {
-      brand: [...gradients.brand] as [string, string, ...string[]],
+      brand: ['#004BCC', '#326AF3'] as [string, string, ...string[]],
       background: [
         ...(colorScheme === 'dark'
           ? gradients.darkBackground
@@ -45,10 +68,10 @@ function buildTheme(colorScheme: 'light' | 'dark') {
     },
     spacing,
     radius,
-    typography,
+    typography: { ...typography, bodySmall: 14, body: 16, title: 20 },
     motion,
     touchTarget,
-    sizes: componentSizes,
+    sizes: { ...componentSizes, topbar: 76, screenGutter: 20, contentMax: 487 },
   } as const;
 }
 
@@ -67,10 +90,29 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue>({
   theme: lightTheme,
   mode: 'system',
+  /**
+   * Set mode used by the theme workflow.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @returns The resulting theme value for the caller.
+   */
   setMode: () => undefined,
+  /**
+   * Toggle theme in the theme interface.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @returns The resulting theme value for the caller.
+   */
   toggleTheme: () => undefined,
 });
 
+/**
+ * Provide theme state and services to descendant components.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered app theme provider interface.
+ */
 export function AppThemeProvider({ children }: PropsWithChildren) {
   const systemScheme = useColorScheme();
   const [mode, setModeState] = useState<ThemeMode>('system');
@@ -103,6 +145,12 @@ export function AppThemeProvider({ children }: PropsWithChildren) {
   );
 }
 
+/**
+ * Provide app theme state and actions to React consumers.
+ *
+ * Use it in React components that need this shared behavior.
+ * @returns The current app theme state and the actions that operate on it.
+ */
 export function useAppTheme() {
   return useContext(ThemeContext);
 }

@@ -17,6 +17,13 @@ const COLOR_MAP = {
   info: 'border-brand-500/20 bg-brand-500/5 text-brand-400',
 };
 
+/**
+ * Render the ai insight card interface.
+ *
+ * Use it to keep the ai insight card workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered ai insight card interface.
+ */
 export const AiInsightCard: React.FC<{
   type: keyof typeof ICON_MAP;
   title: string;

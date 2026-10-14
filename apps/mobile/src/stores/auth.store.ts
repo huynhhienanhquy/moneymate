@@ -28,6 +28,12 @@ interface AuthState {
 
 let deviceId: string | null = null;
 
+/**
+ * Return device id required by the auth workflow.
+ *
+ * Use it to keep auth client state consistent across consumers.
+ * @returns A promise containing the resulting auth value.
+ */
 async function getDeviceId() {
   if (deviceId) return deviceId;
   const stored = await sessionStorage.getUser();
@@ -41,6 +47,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialized: false,
   loading: false,
   error: null,
+  /**
+   * Restore the persisted mobile session and determine whether biometric unlock is required.
+   *
+   * Use it to keep auth client state consistent across consumers.
+   * @returns A promise that resolves after the operation completes.
+   */
   initialize: async () => {
     let cached: { user?: UserDto; deviceId?: string } | null = null;
     try {
@@ -86,6 +98,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: cached!.user!, initialized: true });
     }
   },
+  /**
+   * Authenticate the user and persist the resulting mobile session.
+   *
+   * Use it to keep auth client state consistent across consumers.
+   * @param email - The email value required by the operation.
+   * @param password - The password value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   login: async (email, password) => {
     set({ loading: true, error: null });
     try {
@@ -125,6 +146,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
+  /**
+   * Revoke the active session and clear all locally persisted credentials.
+   *
+   * Use it to keep auth client state consistent across consumers.
+   * @returns A promise that resolves after the operation completes.
+   */
   logout: async () => {
     const refreshToken = await sessionStorage
       .getRefreshToken()
@@ -158,6 +185,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       ).catch(() => undefined);
     void unregister;
   },
+  /**
+   * Delete account through the auth workflow.
+   *
+   * Use it to keep auth client state consistent across consumers.
+   * @param password - The password value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   deleteAccount: async (password) => {
     await apiRequest('/users/profile', {
       method: 'DELETE',
@@ -168,6 +202,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     setAccessToken(null);
     set({ user: null });
   },
+  /**
+   * Unlock the persisted session after successful device biometric verification.
+   *
+   * Use it to keep auth client state consistent across consumers.
+   * @returns A promise containing the resulting auth value.
+   */
   unlockWithBiometrics: async () => {
     if (
       !(await LocalAuthentication.hasHardwareAsync()) ||
@@ -181,6 +221,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     return result.success;
   },
+  /**
+   * Update cached user while preserving the auth workflow's rules.
+   *
+   * Use it to keep auth client state consistent across consumers.
+   * @param user - The user value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   updateCachedUser: async (user) => {
     const currentDeviceId = await getDeviceId();
     await sessionStorage.setUser(
@@ -188,6 +235,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     );
     set({ user });
   },
+  /**
+   * Clear expired credentials and return the auth store to a signed-out state.
+   *
+   * Use it to keep auth client state consistent across consumers.
+   * @returns A promise that resolves after the operation completes.
+   */
   expireSession: async () => {
     await sessionStorage.clear().catch(() => undefined);
     await keyValueStorage

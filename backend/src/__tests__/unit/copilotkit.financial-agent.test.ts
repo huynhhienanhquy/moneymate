@@ -57,7 +57,7 @@ describe('MoneyMate Copilot agent', () => {
       forwardSystemMessages: false,
       forwardDeveloperMessages: false,
     }));
-    expect(agent.options.tools).toHaveLength(5);
+    expect(agent.options.tools).toHaveLength(6);
   });
 
   it('aborts both the agent and its request clone at the configured timeout', () => {

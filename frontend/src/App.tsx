@@ -5,6 +5,12 @@ import { useThemeStore } from '@/stores/theme.store';
 import { refreshAccessToken } from '@/services/api/client';
 import AppProviders from '@/contexts/AppProviders';
 
+/**
+ * Render the app init interface.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @returns The rendered app init interface.
+ */
 const AppInit: React.FC = () => {
   const { isAuthenticated, isInitializing, accessToken, setInitializing } = useAuthStore();
   const { initTheme } = useThemeStore();
@@ -49,6 +55,12 @@ const AppInit: React.FC = () => {
   return <AppRoutes />;
 };
 
+/**
+ * Render the app interface.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @returns The rendered app interface.
+ */
 const App: React.FC = () => {
   return (
     <AppProviders>

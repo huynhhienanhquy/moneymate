@@ -1,12 +1,6 @@
+import { Text } from '@/components/design-text';
 import { useMemo, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -60,6 +54,13 @@ const menu = [
   },
 ] as const;
 
+/**
+ * Render the mobile top bar interface.
+ *
+ * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered mobile top bar interface.
+ */
 export function MobileTopBar({ title }: { title: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -71,22 +72,66 @@ export function MobileTopBar({ title }: { title: string }) {
   const [panel, setPanel] = useState(false);
   const notifications = useQuery({
     queryKey: ['notifications'],
+    /**
+     * Load navigation shell data for the query cache.
+     *
+     * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting navigation shell value for the caller.
+     */
     queryFn: () => apiRequest<NotificationResult>('/notifications?take=20'),
     refetchInterval: 60_000,
   });
   const markRead = useMutation({
+    /**
+     * Execute the navigation shell mutation requested by the client.
+     *
+     * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting navigation shell value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/notifications/${id}/read`, { method: 'PATCH' }),
+    /**
+     * Finalize the navigation shell workflow after a successful operation.
+     *
+     * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting navigation shell value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
   const markAll = useMutation({
+    /**
+     * Execute the navigation shell mutation requested by the client.
+     *
+     * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting navigation shell value for the caller.
+     */
     mutationFn: () =>
       apiRequest('/notifications/read-all', { method: 'PATCH' }),
+    /**
+     * Finalize the navigation shell workflow after a successful operation.
+     *
+     * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting navigation shell value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
   const remove = useMutation({
+    /**
+     * Execute the navigation shell mutation requested by the client.
+     *
+     * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting navigation shell value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/notifications/${id}`, { method: 'DELETE' }),
+    /**
+     * Finalize the navigation shell workflow after a successful operation.
+     *
+     * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting navigation shell value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   });
   const items = notifications.data?.notifications || [];
@@ -97,20 +142,47 @@ export function MobileTopBar({ title }: { title: string }) {
     (item) =>
       !('adminOnly' in item) || !item.adminOnly || user?.role === 'ADMIN',
   );
+  /**
+   * Navigate to a destination from the navigation shell interface.
+   *
+   * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+   * @param href - The href value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const go = (href: string) => {
     setDrawer(false);
     router.push(href as Href);
   };
+  /**
+   * Determine whether active applies.
+   *
+   * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+   * @param href - The href value required by the operation.
+   * @returns `true` when the condition is satisfied; otherwise `false`.
+   */
   const isActive = (href: string) =>
     href === '/(tabs)'
       ? pathname === '/' || pathname === '/(tabs)'
       : pathname.includes(href.replace('/(tabs)', ''));
+  /**
+   * Open notification in the navigation shell interface.
+   *
+   * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+   * @param item - The item value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const openNotification = (item: NotificationItem) => {
     if (!item.isRead) markRead.mutate(item.id);
     setPanel(false);
     if (item.path?.startsWith('/') && !item.path.startsWith('//'))
       router.push(item.path as Href);
   };
+  /**
+   * Handle logout for the navigation shell workflow.
+   *
+   * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const handleLogout = () => {
     setDrawer(false);
     void logout();
@@ -124,12 +196,9 @@ export function MobileTopBar({ title }: { title: string }) {
           style={styles.logoButton}
           onPress={() => setDrawer(true)}
         >
-          <Image
-            source={APP_IMAGES.logo}
-            accessibilityLabel="Logo MoneyMate"
-            contentFit="cover"
-            style={styles.logo}
-          />
+          <View style={styles.logo}>
+            <Text style={styles.logoText}>MM</Text>
+          </View>
         </Pressable>
         <Text style={styles.wordmark}>MoneyMate</Text>
         <View style={styles.divider} />
@@ -143,7 +212,7 @@ export function MobileTopBar({ title }: { title: string }) {
             style={styles.iconButton}
             onPress={() => setPanel(true)}
           >
-            <AppIcon name="bell-outline" size={24} color={theme.colors.muted} />
+            <AppIcon name="bell-outline" size={26} color={theme.colors.muted} />
             {unread > 0 && <View style={styles.notificationDot} />}
           </Pressable>
           <Pressable
@@ -390,6 +459,12 @@ const bottomItems = [
   },
 ] as const;
 
+/**
+ * Render the mobile bottom bar interface.
+ *
+ * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered mobile bottom bar interface.
+ */
 export function MobileBottomBar() {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -407,6 +482,13 @@ export function MobileBottomBar() {
     '/profile',
     '/admin',
   ];
+  /**
+   * Determine whether a navigation target is active in the navigation shell interface.
+   *
+   * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+   * @param href - The href value required by the operation.
+   * @returns The resulting navigation shell value for the caller.
+   */
   const active = (href: string) => {
     if (href === '/(tabs)')
       return (
@@ -416,6 +498,51 @@ export function MobileBottomBar() {
       return moreRoutes.some((route) => pathname.includes(route));
     return pathname.includes(href.replace('/(tabs)', ''));
   };
+  if (pathname.includes('/reports')) {
+    const reportItems = [
+      bottomItems[0],
+      bottomItems[1],
+      { label: 'Báo cáo', href: '/reports', icon: 'chart-bar' as const },
+      { ...bottomItems[2], icon: 'chart-donut' as const },
+      bottomItems[3],
+    ];
+    return (
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: Math.max(insets.bottom, 7) },
+        ]}
+      >
+        {reportItems.map((item) => (
+          <Pressable
+            key={item.href}
+            accessibilityRole="button"
+            accessibilityState={{ selected: item.href === '/reports' }}
+            style={styles.bottomItem}
+            onPress={() => router.navigate(item.href as Href)}
+          >
+            <AppIcon
+              name={item.icon}
+              size={24}
+              color={
+                item.href === '/reports'
+                  ? theme.colors.primaryStrong
+                  : theme.colors.muted
+              }
+            />
+            <Text
+              style={[
+                styles.bottomLabel,
+                item.href === '/reports' && styles.bottomLabelActive,
+              ]}
+            >
+              {item.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    );
+  }
   return (
     <View
       style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 7) }]}
@@ -484,11 +611,18 @@ export function MobileBottomBar() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the navigation shell interface.
+ *
+ * Use it to keep the navigation shell workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     flex: { flex: 1 },
     topbar: {
-      minHeight: theme.sizes.topbar + 4,
+      minHeight: theme.sizes.topbar,
       paddingHorizontal: theme.spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
@@ -497,17 +631,30 @@ const createStyles = (theme: AppTheme) =>
       borderBottomColor: theme.dark ? theme.colors.border : '#ECECF4',
     },
     logoButton: { width: 40, height: 40, borderRadius: 12, overflow: 'hidden' },
-    logo: { width: 40, height: 40 },
+    logo: {
+      width: 40,
+      height: 40,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoText: {
+      color: '#FFFFFF',
+      fontSize: 20,
+      fontWeight: '600',
+      letterSpacing: -1,
+    },
     wordmark: {
       marginLeft: 8,
       color: theme.colors.text,
-      fontSize: 19,
-      fontWeight: '900',
+      fontSize: 20,
+      fontWeight: '600',
       letterSpacing: -0.5,
     },
     divider: {
       width: 2,
-      height: 25,
+      height: 21,
       marginHorizontal: 10,
       backgroundColor: theme.dark ? theme.colors.borderStrong : '#D9DBE8',
     },
@@ -521,18 +668,18 @@ const createStyles = (theme: AppTheme) =>
     title: {
       flex: 1,
       color: theme.colors.text,
-      fontSize: theme.typography.body,
-      fontWeight: '800',
+      fontSize: 16,
+      fontWeight: '500',
     },
     actions: { flexDirection: 'row', alignItems: 'center', gap: 2 },
     avatar: {
-      width: 42,
-      height: 42,
+      width: 44,
+      height: 44,
       borderRadius: theme.radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    avatarText: { color: theme.colors.onBrand, fontWeight: '900' },
+    avatarText: { color: theme.colors.onBrand, fontWeight: '700' },
     count: {
       position: 'absolute',
       right: 3,
@@ -550,7 +697,7 @@ const createStyles = (theme: AppTheme) =>
     countText: {
       color: theme.colors.onBrand,
       fontSize: theme.typography.caption - 2,
-      fontWeight: '900',
+      fontWeight: '700',
     },
     notificationDot: {
       position: 'absolute',
@@ -568,12 +715,12 @@ const createStyles = (theme: AppTheme) =>
       left: 0,
       right: 0,
       bottom: 0,
-      minHeight: 74,
+      minHeight: 78,
       paddingTop: 7,
       flexDirection: 'row',
       alignItems: 'flex-start',
-      backgroundColor: theme.colors.surface,
-      borderTopWidth: 1,
+      backgroundColor: theme.colors.background,
+      borderTopWidth: 0,
       borderTopColor: theme.dark ? theme.colors.border : '#ECECF4',
       shadowColor: theme.colors.shadow,
       shadowOpacity: theme.dark ? 0.3 : 0.08,
@@ -589,19 +736,17 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       gap: 3,
     },
-    bottomLabel: { color: theme.colors.muted, fontSize: 11, fontWeight: '700' },
-    bottomLabelActive: { color: theme.colors.primary, fontWeight: '900' },
+    bottomLabel: { color: theme.colors.muted, fontSize: 13, fontWeight: '500' },
+    bottomLabelActive: { color: theme.colors.primary, fontWeight: '700' },
     addSlot: { flex: 1, alignItems: 'center' },
     addFab: {
       width: 60,
       height: 60,
-      marginTop: -24,
+      marginTop: -18,
       borderRadius: 30,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.colors.primary,
-      borderWidth: 5,
-      borderColor: theme.colors.background,
+      backgroundColor: '#2563F2',
       shadowColor: theme.colors.primary,
       shadowOpacity: 0.34,
       shadowRadius: 12,
@@ -637,7 +782,7 @@ const createStyles = (theme: AppTheme) =>
     brandName: {
       color: theme.colors.text,
       fontSize: theme.typography.heading - 1,
-      fontWeight: '900',
+      fontWeight: '700',
     },
     brandCaption: {
       color: theme.colors.subtle,
@@ -728,7 +873,7 @@ const createStyles = (theme: AppTheme) =>
     panelTitle: {
       color: theme.colors.text,
       fontSize: theme.typography.heading,
-      fontWeight: '900',
+      fontWeight: '700',
     },
     panelCaption: {
       color: theme.colors.muted,

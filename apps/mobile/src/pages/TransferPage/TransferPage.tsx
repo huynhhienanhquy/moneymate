@@ -15,6 +15,12 @@ import { money } from '@/components/finance';
 import { apiRequest } from '@/lib/api';
 import type { Wallet } from '@/types/api';
 
+/**
+ * Render the transfer page interface.
+ *
+ * Use it to keep the transfer page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered transfer page interface.
+ */
 export default function TransferPage() {
   const ui = useUiStyles();
   const router = useRouter();
@@ -25,6 +31,12 @@ export default function TransferPage() {
   const [note, setNote] = useState('');
   const wallets = useQuery({
     queryKey: ['wallets'],
+    /**
+     * Load transfer page data for the query cache.
+     *
+     * Use it to keep the transfer page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting transfer page value for the caller.
+     */
     queryFn: () => apiRequest<Wallet[]>('/wallets'),
   });
   const sourceWallet = wallets.data?.find(
@@ -33,6 +45,12 @@ export default function TransferPage() {
   const insufficientBalance =
     !!sourceWallet && Number(amount) > Number(sourceWallet.initialBalance);
   const transfer = useMutation({
+    /**
+     * Execute the transfer page mutation requested by the client.
+     *
+     * Use it to keep the transfer page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting transfer page value for the caller.
+     */
     mutationFn: () =>
       apiRequest('/transactions/transfer', {
         method: 'POST',
@@ -45,6 +63,12 @@ export default function TransferPage() {
           transferDate: new Date().toISOString(),
         }),
       }),
+    /**
+     * Finalize the transfer page workflow after a successful operation.
+     *
+     * Use it to keep the transfer page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns A promise that resolves after the operation completes.
+     */
     onSuccess: async () => {
       await Promise.all([
         client.invalidateQueries({ queryKey: ['wallets'] }),

@@ -12,6 +12,12 @@ import {
 } from '@/components/auth';
 import { apiRequest } from '@/lib/api';
 
+/**
+ * Render the register page interface.
+ *
+ * Use it to keep the register page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered register page interface.
+ */
 export default function RegisterPage() {
   const authStyles = useAuthTextStyles();
   const router = useRouter();
@@ -22,6 +28,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  /**
+   * Submit the current register page form.
+   *
+   * Use it to keep the register page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise containing the resulting register page value.
+   */
   const submit = async () => {
     if (password !== confirmPassword)
       return setError('Mật khẩu xác nhận không khớp.');

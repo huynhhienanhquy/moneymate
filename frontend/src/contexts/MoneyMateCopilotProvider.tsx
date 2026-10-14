@@ -25,6 +25,7 @@ import { useThemeStore } from '@/stores/theme.store';
 import { ExpenseTool } from '@/components/MoneyMateCopilot/ExpenseTool';
 import { AppControlTools } from '@/components/MoneyMateCopilot/AppControlTools';
 import { DataMutationTools } from '@/components/MoneyMateCopilot/DataMutationTools';
+import { TransactionTools } from '@/components/MoneyMateCopilot/TransactionTools';
 import { toLocalDateInputValue } from '@/utils/dateInput';
 
 type CopilotKitErrorEvent = Parameters<
@@ -46,6 +47,8 @@ interface MoneyMateCopilotProviderProps {
 
 const COPILOT_SUGGESTIONS = [
   { title: 'Ghi khoản chi', message: 'Hôm nay ăn uống hết 12 đ.' },
+  { title: 'Sửa giao dịch', message: 'Tìm khoản chi ăn uống gần đây để tôi chọn giao dịch cần sửa.' },
+  { title: 'Xóa giao dịch', message: 'Tìm khoản chi ăn uống gần đây để tôi chọn giao dịch cần xóa.' },
   {
     title: 'Thêm giao dịch định kỳ',
     message: 'Tạo khoản chi tiền Internet 250 nghìn hàng tháng.',
@@ -81,6 +84,13 @@ const MoneyMateCopilotStatusContext = createContext<MoneyMateCopilotStatus>({
   errorMessage: null,
 });
 
+/**
+ * Return copilot error message required by the money mate copilot provider workflow.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param event - The UI or runtime event that initiated the operation.
+ * @returns The resulting money mate copilot provider value for the caller.
+ */
 export const getCopilotErrorMessage = (event: CopilotKitErrorEvent): string => {
   const eventError = event.error as
     | { code?: unknown; message?: unknown }
@@ -116,6 +126,12 @@ export const getCopilotErrorMessage = (event: CopilotKitErrorEvent): string => {
   return 'MoneyMate AI đang gặp sự cố tạm thời. Vui lòng thử lại sau.';
 };
 
+/**
+ * Render the money mate copilot bindings interface.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @returns The rendered money mate copilot bindings interface.
+ */
 const MoneyMateCopilotBindings = () => {
   const location = useLocation();
   const theme = useThemeStore((state) => state.theme);
@@ -158,14 +174,28 @@ const MoneyMateCopilotBindings = () => {
     <>
       <ExpenseTool />
       <DataMutationTools />
+      <TransactionTools />
       <AppControlTools />
     </>
   );
 };
 
+/**
+ * Provide money mate copilot status state and actions to React consumers.
+ *
+ * Use it in React components that need this shared behavior.
+ * @returns The current money mate copilot status state and the actions that operate on it.
+ */
 export const useMoneyMateCopilotStatus = () =>
   useContext(MoneyMateCopilotStatusContext);
 
+/**
+ * Provide money mate copilot provider state and services to descendant components.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered money mate copilot provider interface.
+ */
 export const MoneyMateCopilotProvider = ({
   children,
   enabled = COPILOTKIT_FRONTEND_ENABLED,
@@ -174,6 +204,7 @@ export const MoneyMateCopilotProvider = ({
   const accessToken = useAuthStore((state) => state.accessToken);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isInitializing = useAuthStore((state) => state.isInitializing);
+  const userId = useAuthStore((state) => state.user?.id);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -216,6 +247,7 @@ export const MoneyMateCopilotProvider = ({
       value={{ mode: 'copilot', errorMessage }}
     >
       <CopilotKit
+        key={userId ?? 'authenticated-session'}
         runtimeUrl={runtimeUrl}
         headers={headers}
         credentials="include"

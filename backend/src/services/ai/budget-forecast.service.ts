@@ -18,6 +18,15 @@ export interface BudgetForecast {
 export class BudgetForecastService {
   private budgetService = new BudgetService();
 
+  /**
+   * Forecast for budget forecast.
+   *
+   * Use it from controllers or jobs that run the budget forecast business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting budget forecast value.
+   */
   async forecast(userId: string, month?: number, year?: number) {
     const now = new Date();
     const m = month || now.getMonth() + 1;

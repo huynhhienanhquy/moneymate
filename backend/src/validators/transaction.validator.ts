@@ -2,6 +2,13 @@ import { z } from 'zod';
 import { TransactionType } from '@prisma/client';
 
 const editableTransactionType = z.enum([TransactionType.INCOME, TransactionType.EXPENSE]);
+/**
+ * Not in future for transaction.
+ *
+ * Use it at a trust boundary before transaction data reaches business logic.
+ * @param date - The date or reporting period used by the operation.
+ * @returns The resulting transaction value for the caller.
+ */
 const notInFuture = (date: Date) => date.getTime() <= Date.now();
 const calendarDate = z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format')
   .refine((value) => {

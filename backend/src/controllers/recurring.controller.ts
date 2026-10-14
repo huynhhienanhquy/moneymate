@@ -7,6 +7,15 @@ import { AppError } from '../common/app-error';
 export class RecurringController {
   private recurringService = new RecurringService();
 
+  /**
+   * Create recurring for the recurring workflow.
+   *
+   * Use it as the HTTP boundary for the recurring route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public create = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -16,6 +25,15 @@ export class RecurringController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Return all required by the recurring workflow.
+   *
+   * Use it as the HTTP boundary for the recurring route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getAll = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -25,6 +43,15 @@ export class RecurringController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Return one required by the recurring workflow.
+   *
+   * Use it as the HTTP boundary for the recurring route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getOne = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -34,6 +61,15 @@ export class RecurringController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Update recurring while preserving the recurring workflow's rules.
+   *
+   * Use it as the HTTP boundary for the recurring route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public update = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -43,6 +79,15 @@ export class RecurringController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Delete recurring through the recurring workflow.
+   *
+   * Use it as the HTTP boundary for the recurring route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public delete = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -52,6 +97,15 @@ export class RecurringController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Toggle recurring in the recurring interface.
+   *
+   * Use it as the HTTP boundary for the recurring route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public toggle = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

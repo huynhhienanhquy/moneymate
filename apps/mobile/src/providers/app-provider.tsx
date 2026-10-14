@@ -21,6 +21,13 @@ const queryPersister = createAsyncStoragePersister({
   key: 'moneymate-query-cache',
 });
 
+/**
+ * Render the session bootstrap interface.
+ *
+ * Use it near the application root so descendants share the same app provider lifecycle.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered session bootstrap interface.
+ */
 function SessionBootstrap({ children }: PropsWithChildren) {
   const initialize = useAuthStore((state) => state.initialize);
   const expireSession = useAuthStore((state) => state.expireSession);
@@ -72,6 +79,12 @@ function SessionBootstrap({ children }: PropsWithChildren) {
   );
 }
 
+/**
+ * Render the notification navigation interface.
+ *
+ * Use it near the application root so descendants share the same app provider lifecycle.
+ * @returns The rendered notification navigation interface.
+ */
 function NotificationNavigation() {
   const router = useRouter();
   useEffect(() => {
@@ -81,6 +94,13 @@ function NotificationNavigation() {
     void import('expo-notifications')
       .then((Notifications) => {
         if (cancelled) return;
+        /**
+         * Redirect for app provider.
+         *
+         * Use it near the application root so descendants share the same app provider lifecycle.
+         * @param response - The response object used to return the operation result.
+         * @returns Nothing; the operation is complete when the function returns.
+         */
         const redirect = (
           response: import('expo-notifications').NotificationResponse | null,
         ) => {
@@ -106,6 +126,12 @@ function NotificationNavigation() {
   return null;
 }
 
+/**
+ * Render the auth navigation interface.
+ *
+ * Use it near the application root so descendants share the same app provider lifecycle.
+ * @returns The rendered auth navigation interface.
+ */
 function AuthNavigation() {
   const router = useRouter();
   const segments = useSegments();
@@ -130,6 +156,13 @@ function AuthNavigation() {
   return null;
 }
 
+/**
+ * Provide app provider state and services to descendant components.
+ *
+ * Use it near the application root so descendants share the same app provider lifecycle.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered app provider interface.
+ */
 export function AppProvider({ children }: PropsWithChildren) {
   return (
     <PersistQueryClientProvider
@@ -153,6 +186,13 @@ export function AppProvider({ children }: PropsWithChildren) {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the app provider interface.
+ *
+ * Use it near the application root so descendants share the same app provider lifecycle.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     privacyShield: {

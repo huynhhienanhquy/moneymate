@@ -2,8 +2,31 @@ import tokens from '@moneymate/design-tokens';
 import plugin from 'tailwindcss/plugin.js';
 
 const { webTheme: web } = tokens;
+/**
+ * Rgb for tailwind.config.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param hex - The hex value required by the operation.
+ * @returns The resulting tailwind.config value for the caller.
+ */
 const rgb = (hex) => hex.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16)).join(' ');
+/**
+ * Variables for tailwind.config.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param colors - The colors value required by the operation.
+ * @param prefix - The prefix value required by the operation.
+ * @returns The resulting tailwind.config value for the caller.
+ */
 const variables = (colors, prefix) => Object.fromEntries(Object.entries(colors).map(([name, value]) => [`--${prefix}-${name}`, rgb(value)]));
+/**
+ * Variable colors for tailwind.config.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param colors - The colors value required by the operation.
+ * @param prefix - The prefix value required by the operation.
+ * @returns The resulting tailwind.config value for the caller.
+ */
 const variableColors = (colors, prefix) => Object.fromEntries(Object.keys(colors).map((name) => [name, `rgb(var(--${prefix}-${name}) / <alpha-value>)`]));
 const neutral = {
   50: web.colors['surface-bright'], 100: web.colors['surface-container-low'], 200: web.colors['surface-container'],

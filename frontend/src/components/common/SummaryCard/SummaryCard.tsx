@@ -23,6 +23,13 @@ const tones: Record<SummaryTone, { icon: string; value: string; soft: string; so
   violet: { icon: 'bg-violet-600 text-white', value: 'text-violet-600', soft: 'border-violet-100 bg-gradient-to-br from-white to-violet-50/90 dark:border-violet-500/20 dark:from-slate-900 dark:to-violet-950/30', solid: 'border-violet-700/20 bg-gradient-to-br from-violet-500 via-violet-600 to-violet-800' },
 };
 
+/**
+ * Render the summary card interface.
+ *
+ * Use it to keep the summary card workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered summary card interface.
+ */
 const SummaryCard = ({ icon, label, value, tone = 'blue', badge, caption, variant = 'soft', iconPosition = 'left', className = '' }: SummaryCardProps) => {
   const palette = tones[tone];
   const isSolid = variant === 'solid';

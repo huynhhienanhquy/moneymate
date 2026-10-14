@@ -19,6 +19,12 @@ import type { Category, Transaction, Wallet } from '@/types/api';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { useAuthStore } from '@/stores/auth.store';
 
+/**
+ * Render the add transaction page interface.
+ *
+ * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered add transaction page interface.
+ */
 export default function AddTransactionPage() {
   const params = useLocalSearchParams<{
     id?: string;
@@ -34,6 +40,12 @@ export default function AddTransactionPage() {
   const { id, type: requestedType } = params;
   const existing = useQuery({
     queryKey: ['transaction', id],
+    /**
+     * Load add transaction page data for the query cache.
+     *
+     * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting add transaction page value for the caller.
+     */
     queryFn: () => apiRequest<Transaction>(`/transactions/${id}`),
     enabled: !!id,
   });
@@ -71,6 +83,13 @@ export default function AddTransactionPage() {
   );
 }
 
+/**
+ * Render the transaction editor interface.
+ *
+ * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered transaction editor interface.
+ */
 function TransactionEditor({
   id,
   requestedType,
@@ -99,10 +118,22 @@ function TransactionEditor({
   const queryClient = useQueryClient();
   const wallets = useQuery({
     queryKey: ['wallets'],
+    /**
+     * Load add transaction page data for the query cache.
+     *
+     * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting add transaction page value for the caller.
+     */
     queryFn: () => apiRequest<Wallet[]>('/wallets'),
   });
   const categories = useQuery({
     queryKey: ['categories'],
+    /**
+     * Load add transaction page data for the query cache.
+     *
+     * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting add transaction page value for the caller.
+     */
     queryFn: () => apiRequest<Category[]>('/categories'),
   });
   const [type, setType] = useState<'EXPENSE' | 'INCOME'>(() =>
@@ -166,6 +197,13 @@ function TransactionEditor({
   }
 
   const save = useMutation({
+    /**
+     * Execute the add transaction page mutation requested by the client.
+     *
+     * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns A promise containing the resulting add transaction page value.
+     * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+     */
     mutationFn: async () => {
       if (!effectiveWalletId) throw new Error('Vui lòng chọn ví');
       if (!effectiveCategoryId) throw new Error('Vui lòng chọn danh mục');
@@ -222,6 +260,13 @@ function TransactionEditor({
         return { transaction: null, queued: true };
       }
     },
+    /**
+     * Finalize the add transaction page workflow after a successful operation.
+     *
+     * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+     * @param result - The result value required by the operation.
+     * @returns A promise that resolves after the operation completes.
+     */
     onSuccess: async (result) => {
       await Promise.all(
         [
@@ -367,6 +412,13 @@ function TransactionEditor({
   );
 }
 
+/**
+ * Create theme-aware style definitions for the add transaction page interface.
+ *
+ * Use it to keep the add transaction page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },

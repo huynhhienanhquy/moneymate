@@ -7,6 +7,15 @@ import { AppError } from '../common/app-error';
 export class CategoryController {
   private categoryService = new CategoryService();
 
+  /**
+   * Create category for the category workflow.
+   *
+   * Use it as the HTTP boundary for the category route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public createCategory = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -20,6 +29,15 @@ export class CategoryController {
     }
   };
 
+  /**
+   * Return categories required by the category workflow.
+   *
+   * Use it as the HTTP boundary for the category route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getCategories = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -33,6 +51,15 @@ export class CategoryController {
     }
   };
 
+  /**
+   * Return category required by the category workflow.
+   *
+   * Use it as the HTTP boundary for the category route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getCategory = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -47,6 +74,15 @@ export class CategoryController {
     }
   };
 
+  /**
+   * Update category while preserving the category workflow's rules.
+   *
+   * Use it as the HTTP boundary for the category route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public updateCategory = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -61,6 +97,15 @@ export class CategoryController {
     }
   };
 
+  /**
+   * Delete category through the category workflow.
+   *
+   * Use it as the HTTP boundary for the category route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deleteCategory = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

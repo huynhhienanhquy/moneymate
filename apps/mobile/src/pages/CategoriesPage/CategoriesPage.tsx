@@ -1,11 +1,13 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import { SectionHeading, categoryAppearance } from '@/components/design';
+import { Text, TextInput } from '@/components/design-text';
 import { useMemo, useState } from 'react';
 import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppIcon, type AppIconName } from '@/components/app-icon';
@@ -16,7 +18,6 @@ import {
   Field,
   PageHero,
   Screen,
-  SectionTitle,
   Sheet,
   StateMessage,
   useUiStyles,
@@ -51,13 +52,23 @@ const MATERIAL_ICONS: Record<string, AppIconName> = {
   receipt: 'receipt-text-outline',
   briefcase: 'briefcase-outline',
   gift: 'gift-outline',
+  airplane: 'airplane',
+  plane: 'plane',
+  dumbbell: 'dumbbell',
   'more-horizontal': 'dots-horizontal',
 };
 
+/**
+ * Render the categories page interface.
+ *
+ * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered categories page interface.
+ */
 export default function CategoriesPage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { width } = useWindowDimensions();
+  const styles = useMemo(() => createStyles(theme, width), [theme, width]);
   const client = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
@@ -68,9 +79,21 @@ export default function CategoriesPage() {
   const [search, setSearch] = useState('');
   const categories = useQuery({
     queryKey: ['categories'],
+    /**
+     * Load categories page data for the query cache.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting categories page value for the caller.
+     */
     queryFn: () => apiRequest<Category[]>('/categories'),
   });
   const save = useMutation({
+    /**
+     * Execute the categories page mutation requested by the client.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting categories page value for the caller.
+     */
     mutationFn: () =>
       apiRequest(editing ? `/categories/${editing.id}` : '/categories', {
         method: editing ? 'PUT' : 'POST',
@@ -78,10 +101,23 @@ export default function CategoriesPage() {
           editing ? { name, color, icon } : { name, type, color, icon },
         ),
       }),
+    /**
+     * Finalize the categories page workflow after a successful operation.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['categories'] });
       setOpen(false);
     },
+    /**
+     * Map a failed categories page operation into user-visible state.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @param error - The failure value to classify, report, or propagate.
+     * @returns The resulting categories page value for the caller.
+     */
     onError: (error) =>
       Alert.alert(
         'Không thể lưu danh mục',
@@ -89,15 +125,42 @@ export default function CategoriesPage() {
       ),
   });
   const remove = useMutation({
+    /**
+     * Execute the categories page mutation requested by the client.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting categories page value for the caller.
+     */
     mutationFn: (id: string) =>
       apiRequest(`/categories/${id}`, { method: 'DELETE' }),
+    /**
+     * Finalize the categories page workflow after a successful operation.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting categories page value for the caller.
+     */
     onSuccess: () => client.invalidateQueries({ queryKey: ['categories'] }),
+    /**
+     * Map a failed categories page operation into user-visible state.
+     *
+     * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+     * @param error - The failure value to classify, report, or propagate.
+     * @returns The resulting categories page value for the caller.
+     */
     onError: (error) =>
       Alert.alert(
         'Không thể xóa danh mục',
         error instanceof Error ? error.message : 'Vui lòng thử lại.',
       ),
   });
+  /**
+   * Start categories page for the categories page workflow.
+   *
+   * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+   * @param item - The item value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const start = (item?: Category) => {
     setEditing(item || null);
     setName(item?.name || '');
@@ -112,17 +175,54 @@ export default function CategoriesPage() {
       item.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
   const custom = visible.filter((item) => item.userId !== null);
-  const system = visible.filter((item) => item.userId === null);
+  const defaultOrder = [
+    'Ăn uống',
+    'Di chuyển',
+    'Giải trí',
+    'Giáo dục',
+    'Hóa đơn & Tiện ích',
+    'Mua sắm',
+    'Sức khỏe',
+    'Thuê nhà',
+    'Khác (Chi tiêu)',
+  ];
+  const system = visible
+    .filter((item) => item.userId === null)
+    .sort((a, b) => {
+      const left = defaultOrder.indexOf(a.name);
+      const right = defaultOrder.indexOf(b.name);
+      return (left < 0 ? 99 : left) - (right < 0 ? 99 : right);
+    });
 
   return (
     <Screen title="Danh mục">
       <PageHero
         title="Danh mục"
         subtitle="Quản lý danh mục chi tiêu & thu nhập"
+        subtitleStyle={{ maxWidth: width - theme.sizes.screenGutter * 2 - 104 }}
       >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Chọn loại danh mục"
+          style={styles.heroFilter}
+          onPress={() =>
+            Alert.alert('Loại danh mục', undefined, [
+              { text: 'Chi tiêu', onPress: () => setType('EXPENSE') },
+              { text: 'Thu nhập', onPress: () => setType('INCOME') },
+              { text: 'Hủy', style: 'cancel' },
+            ])
+          }
+        >
+          <AppIcon name="tune-variant" size={25} color={theme.colors.onBrand} />
+        </Pressable>
         <View style={styles.searchRow}>
           <View style={styles.search}>
-            <AppIcon name="magnify" size={23} color="rgba(255,255,255,.9)" />
+            <AppIcon
+              name="magnify"
+              size={23}
+              color="rgba(255,255,255,.9)"
+              style={{ flexShrink: 0 }}
+            />
             <TextInput
               value={search}
               onChangeText={setSearch}
@@ -176,8 +276,11 @@ export default function CategoriesPage() {
           </Pressable>
         ))}
       </View>
-      <SectionTitle
-        title="Danh mục của bạn"
+      <SectionHeading
+        style={{ marginTop: 0, marginBottom: -10 }}
+        icon="tag-outline"
+        pill
+        title="DANH MỤC CỦA BẠN"
         caption={`${custom.length} danh mục`}
       />
       {categories.isLoading && (
@@ -204,6 +307,12 @@ export default function CategoriesPage() {
                 {
                   text: 'Xóa',
                   style: 'destructive',
+                  /**
+                   * Handle press for the categories page workflow.
+                   *
+                   * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+                   * @returns The resulting categories page value for the caller.
+                   */
                   onPress: () => remove.mutate(item.id),
                 },
               ])
@@ -213,7 +322,12 @@ export default function CategoriesPage() {
       </View>
       {!!system.length && (
         <>
-          <SectionTitle title="Danh mục mặc định" caption="Hệ thống" />
+          <SectionHeading
+            style={{ marginTop: 0, marginBottom: -10 }}
+            icon="view-grid-outline"
+            title="DANH MỤC MẶC ĐỊNH"
+            caption="Hệ thống"
+          />
           <View style={styles.grid}>
             {system.map((item) => (
               <CategoryTile key={item.id} item={item} />
@@ -262,6 +376,13 @@ export default function CategoriesPage() {
     </Screen>
   );
 
+  /**
+   * Render the category tile interface.
+   *
+   * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+   * @param props - The properties that configure this React component.
+   * @returns The rendered category tile interface.
+   */
   function CategoryTile({
     item,
     editable,
@@ -273,42 +394,94 @@ export default function CategoriesPage() {
     onEdit?: () => void;
     onDelete?: () => void;
   }) {
-    const tileIcon = MATERIAL_ICONS[item.icon || 'tag'] || 'tag-outline';
+    const appearance = categoryAppearance(item.name);
+    const tileIcon =
+      !editable && defaultOrder.includes(item.name)
+        ? appearance.icon
+        : MATERIAL_ICONS[item.icon || 'tag'] || appearance.icon;
+    const other = !editable && /khác/i.test(item.name);
     return (
       <Pressable
         onLongPress={editable ? onDelete : undefined}
-        style={[styles.tile, editable && styles.customTile]}
+        style={[
+          styles.tile,
+          editable && styles.customTile,
+          other && styles.otherTile,
+        ]}
       >
-        <View style={styles.tileTop}>
-          <Text style={[styles.tileBadge, { color: item.color }]}>
-            {editable ? 'TÙY BIẾN' : 'MẶC ĐỊNH'}
-          </Text>
-          {editable && (
-            <Pressable accessibilityLabel={`Sửa ${item.name}`} onPress={onEdit}>
-              <AppIcon
-                name="pencil-outline"
-                size={18}
-                color={theme.colors.muted}
-              />
-            </Pressable>
-          )}
-        </View>
-        <View style={[styles.tileIcon, { backgroundColor: item.color }]}>
+        {editable && (
+          <View style={styles.tileTop}>
+            <Text style={[styles.tileBadge, { color: item.color }]}>
+              {editable ? 'TÙY BIẾN' : 'MẶC ĐỊNH'}
+            </Text>
+            {editable && (
+              <Pressable
+                accessibilityLabel={`Sửa ${item.name}`}
+                onPress={onEdit}
+              >
+                <AppIcon
+                  name="pencil-outline"
+                  size={18}
+                  color={theme.colors.muted}
+                />
+              </Pressable>
+            )}
+          </View>
+        )}
+        <LinearGradient
+          colors={
+            editable ? [item.color, item.color] : [...appearance.gradient]
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.tileIcon, other && { marginTop: 0 }]}
+        >
           <AppIcon name={tileIcon} size={25} color={theme.colors.onBrand} />
-        </View>
-        <Text numberOfLines={2} style={styles.tileName}>
-          {item.name}
-        </Text>
+        </LinearGradient>
+        {other ? (
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              style={[styles.tileName, { textAlign: 'left', marginTop: 0 }]}
+            >
+              {item.name}
+            </Text>
+            <Text style={styles.otherDescription}>
+              Các chi tiêu vặt phát sinh
+            </Text>
+          </View>
+        ) : (
+          <Text numberOfLines={2} style={styles.tileName}>
+            {item.name}
+          </Text>
+        )}
         {!editable && <Text style={styles.defaultPill}>Mặc định</Text>}
       </Pressable>
     );
   }
 }
 
-const createStyles = (theme: AppTheme) =>
+/**
+ * Create theme-aware style definitions for the categories page interface.
+ *
+ * Use it to keep the categories page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
+const createStyles = (theme: AppTheme, screenWidth: number) =>
   StyleSheet.create({
+    heroFilter: {
+      position: 'absolute',
+      top: 26,
+      right: 20,
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(255,255,255,.2)',
+    },
     heroAction: {
-      height: 48,
+      height: 42,
       paddingHorizontal: 18,
       borderRadius: 12,
       flexDirection: 'row',
@@ -319,7 +492,7 @@ const createStyles = (theme: AppTheme) =>
     heroActionText: {
       color: theme.colors.primaryStrong,
       fontSize: 15,
-      fontWeight: '900',
+      fontWeight: '600',
     },
     searchRow: { marginTop: 16, flexDirection: 'row', gap: 8 },
     search: {
@@ -334,12 +507,13 @@ const createStyles = (theme: AppTheme) =>
     },
     searchInput: {
       flex: 1,
+      minWidth: 0,
       color: theme.colors.onBrand,
-      fontSize: 14,
-      fontWeight: '700',
+      fontSize: 16,
+      fontWeight: '600',
     },
     segment: {
-      minHeight: 54,
+      minHeight: 52,
       padding: 5,
       flexDirection: 'row',
       borderRadius: 16,
@@ -360,34 +534,42 @@ const createStyles = (theme: AppTheme) =>
       shadowRadius: 7,
       elevation: 2,
     },
-    segmentText: { color: theme.colors.muted, fontSize: 15, fontWeight: '800' },
-    segmentTextActive: { fontWeight: '900' },
+    segmentText: { color: theme.colors.muted, fontSize: 15, fontWeight: '500' },
+    segmentTextActive: { fontWeight: '600' },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-    customGrid: { flexWrap: 'nowrap' },
+    customGrid: { flexWrap: 'wrap' },
     tile: {
-      width: '48.6%',
-      minHeight: 154,
-      padding: 14,
+      width: (screenWidth - theme.sizes.screenGutter * 2 - 10) / 2,
+      minHeight: 168,
+      padding: 20,
       alignItems: 'center',
-      borderRadius: 17,
+      justifyContent: 'center',
+      borderRadius: 16,
       backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.dark ? theme.colors.border : '#ECECF4',
-      shadowColor: theme.colors.shadow,
-      shadowOpacity: 0.05,
-      shadowRadius: 10,
-      elevation: 1,
+      boxShadow: '0px 2px 2px rgba(19,27,46,.035)',
     },
-    customTile: { flex: 1, width: 'auto', minWidth: 0, paddingHorizontal: 10 },
+    customTile: {
+      width: (screenWidth - theme.sizes.screenGutter * 2 - 20) / 3,
+      minWidth: 0,
+      minHeight: 160,
+      paddingHorizontal: 15,
+    },
+    otherTile: {
+      width: '100%',
+      minHeight: 100,
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      gap: 12,
+    },
     tileTop: {
       width: '100%',
       flexDirection: 'row',
       justifyContent: 'space-between',
     },
-    tileBadge: { fontSize: 9, fontWeight: '900' },
+    tileBadge: { fontSize: 11, fontWeight: '600' },
     tileIcon: {
-      width: 53,
-      height: 53,
+      width: 60,
+      height: 60,
       marginTop: 12,
       borderRadius: 27,
       alignItems: 'center',
@@ -397,8 +579,12 @@ const createStyles = (theme: AppTheme) =>
       marginTop: 11,
       color: theme.colors.text,
       fontSize: 14,
-      fontWeight: '800',
+      fontWeight: '500',
       textAlign: 'center',
+    },
+    otherDescription: {
+      color: theme.colors.muted,
+      fontSize: 14,
     },
     defaultPill: {
       marginTop: 7,
@@ -408,7 +594,7 @@ const createStyles = (theme: AppTheme) =>
       overflow: 'hidden',
       color: theme.colors.muted,
       backgroundColor: theme.colors.primarySoft,
-      fontSize: 10,
-      fontWeight: '700',
+      fontSize: 13,
+      fontWeight: '600',
     },
   });

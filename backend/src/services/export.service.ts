@@ -2,12 +2,28 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { TransactionService } from './transaction.service';
 
+/**
+ * Format a monetary amount for display in Vietnamese dong.
+ *
+ * Use it from controllers or jobs that run the export business workflow.
+ * @param n - The numeric value to format or calculate.
+ * @returns The resulting export value for the caller.
+ */
 const formatVND = (n: number) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
 
 export class ExportService {
   private transactionService = new TransactionService();
 
+  /**
+   * Return monthly transactions required by the export workflow.
+   *
+   * Use it from controllers or jobs that run the export business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting export value.
+   */
   private async getMonthlyTransactions(userId: string, month: number, year: number) {
     const pageSize = 500;
     const transactions: any[] = [];
@@ -31,6 +47,15 @@ export class ExportService {
     return transactions;
   }
 
+  /**
+   * Generate monthly excel for export.
+   *
+   * Use it from controllers or jobs that run the export business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting export value.
+   */
   async generateMonthlyExcel(userId: string, month: number, year: number): Promise<Buffer> {
     const report = await this.transactionService.getMonthlyReport(userId, month, year);
     const transactions = await this.getMonthlyTransactions(userId, month, year);
@@ -63,6 +88,15 @@ export class ExportService {
     return Buffer.from(await workbook.xlsx.writeBuffer());
   }
 
+  /**
+   * Generate monthly pdf for export.
+   *
+   * Use it from controllers or jobs that run the export business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting export value.
+   */
   async generateMonthlyPdf(userId: string, month: number, year: number): Promise<Buffer> {
     const report = await this.transactionService.getMonthlyReport(userId, month, year);
 

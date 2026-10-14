@@ -1,124 +1,153 @@
-# MoneyMate Requirements
+# Yêu cầu chức năng và phi chức năng
 
-> Current product baseline, verified against the repository on 2026-09-24.
+> Đối chiếu mã nguồn ngày 13/10/2026. Giữ các ID yêu cầu của bộ docs cũ để truy vết. [Mục lục](README.md).
 
-The keywords **must**, **should**, and **may** indicate required, recommended, and optional behavior. This document describes the current web/API/mobile scope; Swagger and executable validation remain authoritative for wire-level details.
+**Có:** đã có implementation; không đồng nghĩa kiểm thử toàn bộ đã chạy trong đợt viết docs. **Một phần:** có code nhưng còn giới hạn nêu trong bảng. **Vận hành/mục tiêu:** cần cấu hình, quy trình hoặc kiểm chứng ngoài mã nguồn. Các yêu cầu mô tả phạm vi hiện tại, không cam kết SLA hay chức năng tương lai chưa thực hiện.
 
-## 1. Functional requirements
+## 1. Tài khoản và phiên
 
-### 1.1 Accounts and sessions
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-AUTH-01 | Đăng ký bằng họ tên, email duy nhất và mật khẩu tối thiểu 8 ký tự | Có |
+| FR-AUTH-02 | Đăng nhập trên web, iOS và Android | Có; native cần kiểm tra thiết bị |
+| FR-AUTH-03 | Access token ngắn hạn và refresh phiên luân chuyển theo platform | Có; access JWT 15 phút, refresh opaque 7 ngày |
+| FR-AUTH-04 | Xem phiên còn hoạt động, thu hồi một hoặc tất cả phiên | Có |
+| FR-AUTH-05 | Xem/sửa hồ sơ và đổi mật khẩu sau khi xác nhận mật khẩu cũ | Có; đổi mật khẩu thu hồi refresh sessions |
+| FR-AUTH-06 | Xóa tài khoản cần xác nhận mật khẩu và xóa dữ liệu quan hệ | Có; xóa file ngoài DB theo best effort |
+| FR-AUTH-07 | Khu vực admin chỉ cho role `ADMIN` | Có |
 
-- **FR-AUTH-01**: A visitor must be able to register with full name, unique email, and password.
-- **FR-AUTH-02**: A user must be able to sign in on web, iOS, and Android.
-- **FR-AUTH-03**: The system must issue a short-lived access token and a rotating refresh session appropriate to the client platform.
-- **FR-AUTH-04**: A user must be able to list active sessions and revoke one or all sessions.
-- **FR-AUTH-05**: A user must be able to view and update profile information and change their password.
-- **FR-AUTH-06**: Account deletion must require password confirmation and remove relational user data.
-- **FR-AUTH-07**: Administrator functionality must be restricted to users with the `ADMIN` role.
+Nguồn: [auth routes](../backend/src/routes/auth.routes.ts), [user routes](../backend/src/routes/user.routes.ts), [auth service](../backend/src/services/auth.service.ts), [auth sessions](auth_sessions.md).
 
-### 1.2 Wallets and categories
+## 2. Ví và danh mục
 
-- **FR-WALLET-01**: Users must be able to create, list, view, update, and archive multiple wallets.
-- **FR-WALLET-02**: Wallets must support cash, bank, credit-card, e-wallet, and savings types with a currency value.
-- **FR-WALLET-03**: Users must be able to transfer a positive amount between two owned wallets when the source balance is sufficient.
-- **FR-CATEGORY-01**: The system must provide shared system categories.
-- **FR-CATEGORY-02**: Users must be able to manage custom income and expense categories with color and icon metadata.
-- **FR-CATEGORY-03**: Category ownership and type must be validated anywhere a category is referenced.
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-WALLET-01 | Tạo, xem, sửa và archive nhiều ví | Có; archive là soft delete |
+| FR-WALLET-02 | Ví có loại tiền mặt, ngân hàng, thẻ tín dụng, ví điện tử, tiết kiệm và currency | Có ở API/schema; không có quy đổi tỷ giá |
+| FR-WALLET-03 | Chuyển số tiền dương giữa hai ví khác nhau của mình, ví nguồn đủ số dư | Có; atomic |
+| FR-CATEGORY-01 | Có danh mục hệ thống dùng chung | Có; seed không tạo tài khoản |
+| FR-CATEGORY-02 | Quản lý danh mục thu/chi cá nhân với màu và icon | Có |
+| FR-CATEGORY-03 | Kiểm tra quyền dùng và loại danh mục khi tham chiếu | Có |
 
-### 1.3 Transactions and synchronization
+Nguồn: [wallet service](../backend/src/services/wallet.service.ts), [category service](../backend/src/services/category.service.ts), [schema](../backend/prisma/schema.prisma).
 
-- **FR-TX-01**: Users must be able to create, list, view, update, and soft-delete income and expense records.
-- **FR-TX-02**: Transaction lists must support search, filters, sorting, and pagination.
-- **FR-TX-03**: Normal transaction dates must not be in the future.
-- **FR-TX-04**: Updates and deletes must detect stale versions when a version is supplied.
-- **FR-TX-05**: Supported mutation endpoints must accept idempotency keys to prevent duplicate replay.
-- **FR-TX-06**: Mobile clients must be able to request transaction deltas and deletion tombstones using an opaque cursor.
-- **FR-TX-07**: Transfers must use a dedicated atomic workflow and remain immutable through normal transaction endpoints.
+## 3. Giao dịch và đồng bộ
 
-### 1.4 Budgets and savings goals
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-TX-01 | Tạo, xem, sửa và soft delete khoản thu/chi | Có; expense không trừ ví theo nghiệp vụ hiện tại |
+| FR-TX-02 | Tìm kiếm, lọc, sắp xếp và phân trang giao dịch | Có |
+| FR-TX-03 | Ngày giao dịch thường không nằm trong tương lai | Có |
+| FR-TX-04 | Phát hiện version cũ khi update/delete có cung cấp version | Có; không tuyên bố mọi client luôn gửi version |
+| FR-TX-05 | Endpoint mutation được hỗ trợ nhận `Idempotency-Key` để hạn chế ghi trùng khi replay | Có; không áp dụng mặc định cho mọi POST |
+| FR-TX-06 | API delta trả thay đổi và tombstone bằng cursor | Có ở API; mobile lưu vào SQLite, UI chưa đọc cache delta như nguồn đầy đủ |
+| FR-TX-07 | Chuyển ví có endpoint riêng, không sửa/xóa bằng CRUD giao dịch thường | Có |
 
-- **FR-BUDGET-01**: Users must be able to manage one global or category budget per month and year.
-- **FR-BUDGET-02**: Budget responses must include amount, spent, remaining, percentage, and status.
-- **FR-BUDGET-03**: The system must create one warning and one exceeded notification when the relevant thresholds are first reached.
-- **FR-GOAL-01**: Users must be able to manage savings goals with target amount and target date.
-- **FR-GOAL-02**: Users must be able to deposit from and withdraw to owned wallets atomically.
-- **FR-GOAL-03**: Goal progress and active/completed/expired status must be derived from current values.
-- **FR-GOAL-04**: Funded goal history must not be discarded through deletion.
+Chi tiết validator, cursor, replay và lỗi conflict nằm trong [API](api.md); quy tắc số dư nằm trong [business rules](business_rules.md).
 
-### 1.5 Recurring transactions
+## 4. Ngân sách và mục tiêu tiết kiệm
 
-- **FR-REC-01**: Users must be able to create, update, pause/resume, list, and delete recurring income or expense schedules.
-- **FR-REC-02**: Daily, weekly, monthly, and yearly frequencies must be supported.
-- **FR-REC-03**: The processor must create due occurrences without duplicate concurrent claims.
-- **FR-REC-04**: The processor must catch up missed occurrences within a bounded run and retain the link from generated transactions to their schedule.
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-BUDGET-01 | Một ngân sách tổng hoặc theo danh mục cho mỗi tháng/năm/phạm vi | Có; constraint và kiểm tra service |
+| FR-BUDGET-02 | Trả amount, spent, remaining, percentage và status | Có |
+| FR-BUDGET-03 | Gửi thông báo warning khi đạt 80%, exceeded khi đạt 100%, deduplicate theo ngưỡng/kỳ | Có; không chặn expense hợp lệ khi vượt budget |
+| FR-GOAL-01 | Quản lý mục tiêu có số tiền đích và ngày đích | Có |
+| FR-GOAL-02 | Nạp từ ví hoặc rút về ví của mình trong transaction atomic | Có |
+| FR-GOAL-03 | Tính progress và active/completed/expired từ số tiền/ngày hiện có | Có |
+| FR-GOAL-04 | Không xóa mục tiêu có tiền hoặc có lịch sử nạp/rút | Có |
 
-### 1.6 Dashboard, reports, and exports
+Nguồn: [budget service](../backend/src/services/budget.service.ts), [goal service](../backend/src/services/saving-goal.service.ts).
 
-- **FR-REPORT-01**: The dashboard must show wallet totals, current-period income/expense/savings information, and recent transactions.
-- **FR-REPORT-02**: Monthly reports must include category breakdowns and comparison-ready aggregates.
-- **FR-REPORT-03**: The system must provide a bounded monthly trend and a yearly report.
-- **FR-REPORT-04**: Users must be able to export an authenticated monthly report as Excel or PDF.
-- **FR-REPORT-05**: Closed-period snapshot caches must be invalidated after backdated changes.
+## 5. Giao dịch định kỳ
 
-### 1.7 Attachments, notifications, and native capabilities
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-REC-01 | Tạo, sửa, tạm dừng/tiếp tục, xem và xóa lịch thu/chi | Có |
+| FR-REC-02 | Hỗ trợ daily, weekly, monthly và yearly | Có |
+| FR-REC-03 | Claim kỳ đến hạn để hạn chế sinh trùng khi processor chạy chồng | Có; không phải distributed scheduler ngoài app |
+| FR-REC-04 | Catch up kỳ bỏ lỡ trong giới hạn và giữ liên kết schedule → giao dịch | Có; tối đa 100 occurrence mỗi schedule mỗi lần chạy |
 
-- **FR-FILE-01**: Users must be able to upload, list, download, and delete owned transaction attachments.
-- **FR-FILE-02**: Uploads must enforce allowlisted types and a 5 MiB limit.
-- **FR-NOTIFY-01**: Users must be able to list, mark read, mark all read, and delete notifications.
-- **FR-NOTIFY-02**: Mobile clients must be able to register and unregister push devices.
-- **FR-MOBILE-01**: The mobile application must support secure credential storage, an offline mutation outbox, and cursor-based transaction synchronization.
-- **FR-MOBILE-02**: Camera/OCR, biometrics, privacy protection, push notifications, and deep links must be available in compatible native builds.
+Scheduler chạy khi server khởi động và mỗi 24 giờ. Xem [recurring service](../backend/src/services/recurring.service.ts), [server](../backend/src/server.ts) và [nghiệp vụ](business_rules.md).
 
-### 1.8 AI and Copilot
+## 6. Dashboard, báo cáo và export
 
-- **FR-AI-01**: Authenticated users must be able to request expense analysis, budget forecasts, advisor insights, chat, and receipt OCR when AI is configured.
-- **FR-COPILOT-01**: The Copilot must expose only user-scoped aggregate financial reads from server tools.
-- **FR-COPILOT-02**: Recording an expense through Copilot must display a human confirmation UI before any write.
-- **FR-COPILOT-03**: The Copilot must be able to set light/dark mode and navigate only to allowlisted internal pages.
-- **FR-COPILOT-04**: The application must provide a safe fallback chat experience when CopilotKit is disabled.
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-REPORT-01 | Dashboard có tổng ví, chỉ số kỳ hiện tại và giao dịch gần đây | Có; `netWorth` là tổng ví active |
+| FR-REPORT-02 | Báo cáo tháng có phân loại chi và số liệu tổng hợp | Có; cần đọc định nghĩa `totalIncome`/chi dự kiến |
+| FR-REPORT-03 | Có monthly trend giới hạn kỳ và báo cáo năm | Có |
+| FR-REPORT-04 | Export tháng dạng Excel/PDF cần xác thực | Có |
+| FR-REPORT-05 | Vô hiệu snapshot kỳ đã đóng khi sửa dữ liệu quá khứ liên quan | Có; snapshot cache có thể được tính lại |
 
-### 1.9 Administration
+Các tên `monthlySavings`, `totalIncome`, `income` không đồng nghĩa một công thức kế toán duy nhất ở mọi endpoint. Nguồn: [transaction service](../backend/src/services/transaction.service.ts), [repository](../backend/src/repositories/transaction.repository.ts), [business rules](business_rules.md).
 
-- **FR-ADMIN-01**: Administrators must be able to list, inspect, update, and delete users.
-- **FR-ADMIN-02**: Admin operations must be protected independently of normal authenticated routes.
+## 7. File, thông báo và native mobile
 
-## 2. Non-functional requirements
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-FILE-01 | Upload, list, download, delete attachment thuộc giao dịch của mình | Có |
+| FR-FILE-02 | Chấp nhận JPEG/PNG/WEBP/PDF, tối đa 5 MiB | Có; MIME allowlist không phải antivirus |
+| FR-NOTIFY-01 | Xem, đánh dấu đã đọc/tất cả đã đọc và xóa thông báo | Có |
+| FR-NOTIFY-02 | Đăng ký/hủy đăng ký thiết bị push mobile | Có; delivery cần cấu hình và quyền native |
+| FR-MOBILE-01 | Native SecureStore, outbox persistent và transaction delta sync | Một phần: outbox tạo/sửa JSON; không replay attachment; delta chưa liên kết đầy đủ UI |
+| FR-MOBILE-02 | Camera/OCR, biometrics, bảo vệ màn hình, push và deep link trên build tương thích | Một phần: code tích hợp có; biometrics hiện là thao tác kiểm tra hồ sơ, cần QA thiết bị |
 
-### 2.1 Security and privacy
+Nguồn: [mobile architecture](architecture.md), [mobile release](mobile_release.md), [upload middleware](../backend/src/middlewares/upload.ts).
 
-- **NFR-SEC-01**: Production traffic must use HTTPS; exact browser origins must be configured.
-- **NFR-SEC-02**: Passwords must use bcrypt and refresh tokens must be stored only as hashes.
-- **NFR-SEC-03**: All private resources must enforce authentication, role checks where applicable, and user ownership.
-- **NFR-SEC-04**: Inputs, uploads, pagination, AI messages, and Copilot requests must be bounded and validated.
-- **NFR-SEC-05**: Secrets must remain server-side and must never enter logs, frontend bundles, or model context.
-- **NFR-SEC-06**: Production JWT secrets must be independent, non-example values of at least 32 characters.
+## 8. AI và Copilot
 
-### 2.2 Data integrity and reliability
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-AI-01 | Analysis, forecast, advisor, chat và OCR; có provider hoặc fallback tùy tác vụ | Có; không phải tất cả đều cần key, chất lượng OCR/AI cần người dùng kiểm tra |
+| FR-COPILOT-01 | Server tools đọc tài chính và tìm giao dịch theo user đã xác thực | Có; 6 tool, tìm giao dịch có giới hạn/phân trang |
+| FR-COPILOT-02 | Mọi thao tác ghi từ Copilot web có UI xác nhận trước khi gửi REST | Một phần: 10 tool có xác nhận, gồm sửa/xóa thu/chi; `transferFunds` kiểm tra sai kiểu response, có thể báo lỗi sau khi server đã commit |
+| FR-COPILOT-03 | Đổi theme light/dark và điều hướng theo allowlist nội bộ | Có; 2 tool giao diện |
+| FR-COPILOT-04 | Chat dự phòng khi CopilotKit bị tắt | Có; fallback không có cùng bộ tool mutation |
+| FR-COPILOT-05 | Giữ hội thoại khi đóng/mở khung Copilot | Có trong phiên đăng nhập; chưa lưu qua refresh/đăng xuất |
 
-- **NFR-DATA-01**: Multi-record financial mutations must be atomic.
-- **NFR-DATA-02**: Retryable mutations must use stable idempotency keys.
-- **NFR-DATA-03**: Concurrent transaction edits must not silently overwrite newer versions.
-- **NFR-DATA-04**: Soft-deleted sync entities must remain available as tombstones.
-- **NFR-DATA-05**: Database migrations require backup, verified restore, staging validation, and forward-fix rollback planning.
+Nguồn: [financial-tools](../backend/src/copilotkit/financial-tools.ts), [Copilot provider web](../frontend/src/contexts/MoneyMateCopilotProvider.tsx), [API](api.md). Mobile dùng REST chat, không dùng runtime/tool web.
 
-### 2.3 Performance and scalability
+## 9. Quản trị
 
-- **NFR-PERF-01**: Lists and sync endpoints must use bounded page sizes.
-- **NFR-PERF-02**: Queries for user/date, recurring due items, sync cursors, sessions, and idempotency expiry should use indexed access paths.
-- **NFR-PERF-03**: Route-level web pages should remain lazy loaded.
-- **NFR-PERF-04**: Performance targets must be measured in the deployment environment; the repository does not claim a guaranteed latency without load-test evidence.
+| ID | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| FR-ADMIN-01 | Admin list/detail/update/delete user | Có |
+| FR-ADMIN-02 | Auth và role middleware bảo vệ độc lập API admin | Có; không chỉ dựa vào route UI |
 
-### 2.4 Accessibility and usability
+Nguồn: [admin routes](../backend/src/routes/admin.routes.ts), [admin middleware](../backend/src/middlewares/admin.ts).
 
-- **NFR-UX-01**: Web and mobile must support light/dark themes and responsive layouts.
-- **NFR-UX-02**: Keyboard navigation, visible focus, semantic labels, reduced motion, and accessible chart summaries should meet WCAG 2.1 AA intent.
-- **NFR-UX-03**: Loading, empty, error, offline, and conflict states must be explicit.
-- **NFR-UX-04**: Currency and dates must be formatted consistently for the Vietnamese product locale.
+## 10. Yêu cầu phi chức năng
 
-### 2.5 Maintainability and observability
+| ID | Yêu cầu | Đối chiếu hiện tại |
+| --- | --- | --- |
+| NFR-SEC-01 | Production dùng HTTPS và origin rõ ràng | Vận hành: Compose chưa có TLS; cấu hình CORS/Copilot có kiểm tra |
+| NFR-SEC-02 | bcrypt mật khẩu, refresh token chỉ lưu hash ở DB | Có |
+| NFR-SEC-03 | Bảo vệ private resource bằng auth, role và ownership | Có middleware/service; cần giữ tests cross-user |
+| NFR-SEC-04 | Validate và giới hạn input/upload/message/pagination/Copilot | Có ở các validator/middleware; review khi thêm endpoint |
+| NFR-SEC-05 | Secret ở server, không vào bundle/log/model context | Quy tắc phát triển/vận hành; không có chứng minh DLP toàn hệ thống |
+| NFR-SEC-06 | Hai JWT secret production khác nhau, không mẫu, ít nhất 32 ký tự | Có runtime validator; refresh hiện opaque, không ký bằng refresh secret |
+| NFR-DATA-01 | Write tài chính nhiều bản ghi atomic | Có Prisma transaction và cập nhật điều kiện |
+| NFR-DATA-02 | Retry mutation giữ idempotency key | Có ở endpoint hỗ trợ và outbox; không bảo đảm exactly-once mọi write |
+| NFR-DATA-03 | Không ghi đè edit stale khi có version | Có conflict detection; client cần truyền version |
+| NFR-DATA-04 | Tombstone giữ dấu soft delete cho đồng bộ | Có với transaction |
+| NFR-DATA-05 | Backup/restore/staging và kế hoạch migration | Yêu cầu vận hành; CI chưa kiểm thử restore production |
+| NFR-PERF-01 | Giới hạn page size và số vòng sync | Có với transaction/sync; xem giới hạn mỗi endpoint |
+| NFR-PERF-02 | Index cho truy vấn user/date, lịch, phiên, sync và idempotency | Có schema/index; cần đo query plan thực tế |
+| NFR-PERF-03 | Lazy load page web | Có |
+| NFR-PERF-04 | Đo hiệu năng trong môi trường mục tiêu | Mục tiêu; chưa có load test/SLA trong repo |
+| NFR-UX-01 | Theme light/dark và layout thích nghi | Có code; cần QA màn hình/thiết bị |
+| NFR-UX-02 | Keyboard, focus, label, reduced motion và chart summary phù hợp WCAG AA | Mục tiêu chất lượng; không tuyên bố chứng nhận |
+| NFR-UX-03 | Có trạng thái loading/empty/error/offline/conflict rõ ràng | Một phần; UI offline/sync có giới hạn đã nêu |
+| NFR-UX-04 | Định dạng tiền/ngày thống nhất với locale Việt Nam | Có helpers; biên timezone cần test |
+| NFR-MAINT-01 | Strict TypeScript và backend phân lớp | Có cấu hình/cấu trúc |
+| NFR-MAINT-02 | Dùng shared contracts/token khi cần liên nền tảng | Có một phần; contracts hiện chưa bao phủ tài chính |
+| NFR-MAINT-03 | Đổi hành vi có tests phù hợp và docs | Quy trình đóng góp; xem conventions/testing |
+| NFR-OPS-01 | Request ID trong phản hồi/log lỗi, tránh log dữ liệu nhạy cảm | Có middleware/error logger; không phải tracing toàn hệ thống |
+| NFR-OPS-02 | Đóng HTTP server và disconnect Prisma khi nhận signal | Có; chưa có orchestrator shutdown policy riêng |
 
-- **NFR-MAINT-01**: TypeScript strict mode and layered backend boundaries must be preserved.
-- **NFR-MAINT-02**: Shared contracts and tokens should remain in workspace packages rather than being duplicated across clients.
-- **NFR-MAINT-03**: Material behavior changes require focused unit/integration tests and updated documentation.
-- **NFR-OPS-01**: API responses and logs should carry request IDs without exposing credentials or personal financial payloads.
-- **NFR-OPS-02**: Services must shut down gracefully and disconnect database clients.
+## 11. Ngoài phạm vi và truy vết
+
+Chưa có email password reset, social login, đồng bộ ngân hàng hoặc FX conversion. Không xem khả năng export mobile là bằng chứng native QA hoặc release store; CI hiện là validation, không phải deploy tự động.
+
+[User stories](user_stories.md) chuyển các nhóm yêu cầu thành kịch bản chấp nhận. [Testing](testing.md) nêu phạm vi kiểm thử thật, [SRS](srs.md) mô tả giao diện/ràng buộc và [deployment](deployment.md) nêu trách nhiệm vận hành.

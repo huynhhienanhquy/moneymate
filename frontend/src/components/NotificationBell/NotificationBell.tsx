@@ -4,6 +4,12 @@ import React from 'react';
 import { Bell, Check, Trash2, Loader2, X } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 
+/**
+ * Render the notification bell interface.
+ *
+ * Use it to keep the notification bell workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered notification bell interface.
+ */
 const NotificationBell: React.FC = () => {
   const { open, setOpen, containerRef, notifications, unreadCount, isLoading, markRead, markAllRead, remove } = useNotifications();
 

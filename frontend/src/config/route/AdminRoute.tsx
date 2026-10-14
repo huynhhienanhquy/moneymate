@@ -2,6 +2,12 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 
+/**
+ * Render the admin route route after enforcing its navigation requirements.
+ *
+ * Use it in the React Router tree to keep non-admin users out of privileged screens.
+ * @returns The rendered admin route interface.
+ */
 export const AdminRoute: React.FC = () => {
   const { user, isAuthenticated, isInitializing } = useAuthStore();
 

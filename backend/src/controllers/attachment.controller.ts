@@ -8,6 +8,15 @@ import { AppError } from '../common/app-error';
 export class AttachmentController {
   private attachmentService = new AttachmentService();
 
+  /**
+   * Upload attachment required by the attachment workflow.
+   *
+   * Use it as the HTTP boundary for the attachment route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public upload = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -20,6 +29,15 @@ export class AttachmentController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Return attachments required by the attachment workflow.
+   *
+   * Use it as the HTTP boundary for the attachment route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public getAttachments = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -29,6 +47,15 @@ export class AttachmentController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Delete attachment through the attachment workflow.
+   *
+   * Use it as the HTTP boundary for the attachment route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public deleteAttachment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -38,6 +65,15 @@ export class AttachmentController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Download attachment produced by the attachment workflow.
+   *
+   * Use it as the HTTP boundary for the attachment route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public downloadAttachment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -59,6 +95,15 @@ export class AttachmentController {
 export class ExportController {
   private exportService = new ExportService();
 
+  /**
+   * Export excel from the attachment workflow.
+   *
+   * Use it as the HTTP boundary for the attachment route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public exportExcel = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
@@ -73,6 +118,15 @@ export class ExportController {
     } catch (error) { next(error); }
   };
 
+  /**
+   * Export pdf from the attachment workflow.
+   *
+   * Use it as the HTTP boundary for the attachment route.
+   * @param req - The incoming request and its authenticated or validated input.
+   * @param res - The response object used to return the operation result.
+   * @param next - The callback that continues the middleware pipeline or receives an error.
+   * @returns A promise that resolves after the response is sent or an error is forwarded.
+   */
   public exportPdf = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;

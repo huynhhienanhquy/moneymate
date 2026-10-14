@@ -4,6 +4,7 @@ import { ContextBuilderService } from '../services/ai/context-builder.service';
 import { BudgetService } from '../services/budget.service';
 import { SavingGoalService } from '../services/saving-goal.service';
 import { TransactionService } from '../services/transaction.service';
+import { AppError } from '../common/app-error';
 
 const DEFAULT_CATEGORY_LIMIT = 5;
 const MAX_CATEGORY_LIMIT = 8;
@@ -20,7 +21,7 @@ interface FinancialToolDependencies {
   contextBuilder: Pick<ContextBuilderService, 'build'>;
   budgetService: Pick<BudgetService, 'getBudgets'>;
   savingGoalService: Pick<SavingGoalService, 'getGoals'>;
-  transactionService: Pick<TransactionService, 'getMonthlyReport'>;
+  transactionService: Pick<TransactionService, 'getMonthlyReport' | 'getTransactions' | 'getTransaction'>;
 }
 
 interface FinancialToolLogEvent {
@@ -29,7 +30,7 @@ interface FinancialToolLogEvent {
   toolName: string;
   latencyMs: number;
   success: boolean;
-  errorCode?: 'TOOL_TIMEOUT' | 'FINANCIAL_DATA_UNAVAILABLE';
+  errorCode?: 'TOOL_TIMEOUT' | 'FINANCIAL_DATA_UNAVAILABLE' | 'INVALID_TOOL_INPUT' | 'TRANSACTION_NOT_FOUND';
 }
 
 export interface FinancialToolLogger {
@@ -44,12 +45,23 @@ export interface FinancialToolContext {
 }
 
 class FinancialToolTimeoutError extends Error {
+  /**
+   * Initialize a financial tools instance with its required dependencies.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+   */
   constructor() {
     super('Financial tool timed out');
     this.name = 'FinancialToolTimeoutError';
   }
 }
 
+/**
+ * Default dependencies for financial tools.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+ * @returns The resulting financial tools value for the caller.
+ */
 const defaultDependencies = (): FinancialToolDependencies => ({
   contextBuilder: new ContextBuilderService(),
   budgetService: new BudgetService(),
@@ -58,10 +70,32 @@ const defaultDependencies = (): FinancialToolDependencies => ({
 });
 
 const defaultLogger: FinancialToolLogger = {
+  /**
+   * Info for financial tools.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+   * @param event - The UI or runtime event that initiated the operation.
+   * @returns The resulting financial tools value for the caller.
+   */
   info: (event) => console.info(event),
+  /**
+   * Error for financial tools.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+   * @param event - The UI or runtime event that initiated the operation.
+   * @returns The resulting financial tools value for the caller.
+   */
   error: (event) => console.error(event),
 };
 
+/**
+ * Resolve period from the available financial tools context.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+ * @param month - The date or reporting period used by the operation.
+ * @param year - The date or reporting period used by the operation.
+ * @returns The resulting financial tools value for the caller.
+ */
 const resolvePeriod = (month?: number, year?: number) => {
   const now = new Date();
   return {
@@ -70,11 +104,26 @@ const resolvePeriod = (month?: number, year?: number) => {
   };
 };
 
+/**
+ * Previous period for financial tools.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+ * @param props - The properties that configure this React component.
+ * @returns The resulting financial tools value for the caller.
+ */
 const previousPeriod = ({ month, year }: { month: number; year: number }) => ({
   month: month === 1 ? 12 : month - 1,
   year: month === 1 ? year - 1 : year,
 });
 
+/**
+ * With timeout for financial tools.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+ * @param operation - The operation value required by the operation.
+ * @param timeoutMs - The timeout ms value required by the operation.
+ * @returns The resulting financial tools value for the caller.
+ */
 const withTimeout = <T>(operation: Promise<T>, timeoutMs: number): Promise<T> =>
   new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new FinancialToolTimeoutError()), timeoutMs);
@@ -90,6 +139,15 @@ const withTimeout = <T>(operation: Promise<T>, timeoutMs: number): Promise<T> =>
     );
   });
 
+/**
+ * Build financial tools used by the financial tools workflow.
+ *
+ * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+ * @param userId - The identifier of the user whose data is being processed.
+ * @param context - The context value required by the operation.
+ * @param dependencies - The dependencies value required by the operation.
+ * @returns The resulting financial tools value for the caller.
+ */
 export const buildFinancialTools = (
   userId: string,
   context: FinancialToolContext = {},
@@ -98,6 +156,14 @@ export const buildFinancialTools = (
   const timeoutMs = context.timeoutMs ?? DEFAULT_TOOL_TIMEOUT_MS;
   const logger = context.logger ?? defaultLogger;
 
+  /**
+   * Execute safely for the financial tools workflow.
+   *
+   * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+   * @param toolName - The tool name value required by the operation.
+   * @param operation - The operation value required by the operation.
+   * @returns A promise containing the resulting financial tools value.
+   */
   const executeSafely = async <T>(toolName: string, operation: () => Promise<T>) => {
     const startedAt = Date.now();
     try {
@@ -112,7 +178,12 @@ export const buildFinancialTools = (
       return { success: true as const, data };
     } catch (error) {
       const timedOut = error instanceof FinancialToolTimeoutError;
-      const errorCode = timedOut ? 'TOOL_TIMEOUT' : 'FINANCIAL_DATA_UNAVAILABLE';
+      const invalidInput = toolName === 'findTransactions' && error instanceof AppError && error.statusCode === 400;
+      const missingTransaction = toolName === 'findTransactions' && error instanceof AppError && error.statusCode === 404;
+      const errorCode = timedOut ? 'TOOL_TIMEOUT'
+        : invalidInput ? 'INVALID_TOOL_INPUT'
+        : missingTransaction ? 'TRANSACTION_NOT_FOUND'
+        : 'FINANCIAL_DATA_UNAVAILABLE';
       logger.error({
         operation: 'copilotkit-financial-tool',
         requestId: context.requestId,
@@ -127,8 +198,10 @@ export const buildFinancialTools = (
           code: errorCode,
           message: timedOut
             ? 'Financial data request timed out. Please try again.'
+            : invalidInput ? 'Invalid search input. Use valid YYYY-MM-DD dates with startDate on or before endDate.'
+            : missingTransaction ? 'No accessible transaction matches this ID. Do not guess IDs. Search again with transactionId=null and ask the user to choose from the returned transactions.'
             : 'Financial data is temporarily unavailable. Please try again.',
-          retryable: true,
+          retryable: !invalidInput && !missingTransaction,
         },
       };
     }
@@ -141,6 +214,13 @@ export const buildFinancialTools = (
       month: monthParameter.describe('Month from 1 to 12. Defaults to the current month.'),
       year: yearParameter.describe(`Year from ${MIN_YEAR} to ${MAX_YEAR}. Defaults to the current year.`),
     }).strict(),
+    /**
+     * Execute financial tools for the financial tools workflow.
+     *
+     * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+     * @param props - The properties that configure this React component.
+     * @returns A promise containing the resulting financial tools value.
+     */
     execute: async ({ month, year }) => executeSafely('getFinancialOverview', async () => {
       const period = resolvePeriod(month, year);
       const financialContext = await dependencies.contextBuilder.build(userId, period.month, period.year);
@@ -166,6 +246,13 @@ export const buildFinancialTools = (
       limit: z.number().int().min(1).max(MAX_CATEGORY_LIMIT).optional()
         .describe(`Maximum number of categories. Defaults to ${DEFAULT_CATEGORY_LIMIT}, maximum ${MAX_CATEGORY_LIMIT}.`),
     }).strict(),
+    /**
+     * Execute financial tools for the financial tools workflow.
+     *
+     * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+     * @param props - The properties that configure this React component.
+     * @returns A promise containing the resulting financial tools value.
+     */
     execute: async ({ month, year, limit }) => executeSafely('getExpenseBreakdown', async () => {
       const period = resolvePeriod(month, year);
       const financialContext = await dependencies.contextBuilder.build(userId, period.month, period.year);
@@ -198,6 +285,13 @@ export const buildFinancialTools = (
       month: monthParameter.describe('Month from 1 to 12. Defaults to the current month.'),
       year: yearParameter.describe(`Year from ${MIN_YEAR} to ${MAX_YEAR}. Defaults to the current year.`),
     }).strict(),
+    /**
+     * Execute financial tools for the financial tools workflow.
+     *
+     * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+     * @param props - The properties that configure this React component.
+     * @returns A promise containing the resulting financial tools value.
+     */
     execute: async ({ month, year }) => executeSafely('getBudgetStatus', async () => {
       const period = resolvePeriod(month, year);
       const budgets = await dependencies.budgetService.getBudgets(userId, period.month, period.year);
@@ -222,6 +316,12 @@ export const buildFinancialTools = (
     name: 'getSavingGoals',
     description: 'Get a bounded list of saving goals belonging to the authenticated user, including amounts, progress, and status. Read-only.',
     parameters: z.object({}).strict(),
+    /**
+     * Execute financial tools for the financial tools workflow.
+     *
+     * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+     * @returns A promise containing the resulting financial tools value.
+     */
     execute: async () => executeSafely('getSavingGoals', async () => {
       const goals = await dependencies.savingGoalService.getGoals(userId);
       const limitedGoals = goals.slice(0, MAX_SAVING_GOALS);
@@ -249,6 +349,13 @@ export const buildFinancialTools = (
       compareMonth: monthParameter.describe('Comparison month. Defaults to the month before the primary period.'),
       compareYear: yearParameter.describe('Comparison year. Defaults consistently with compareMonth.'),
     }).strict(),
+    /**
+     * Execute financial tools for the financial tools workflow.
+     *
+     * Use it at the CopilotKit boundary so AI-driven operations follow the application's financial tools rules.
+     * @param props - The properties that configure this React component.
+     * @returns A promise containing the resulting financial tools value.
+     */
     execute: async ({ month, year, compareMonth, compareYear }) => executeSafely('compareMonthlySpending', async () => {
       const primaryPeriod = resolvePeriod(month, year);
       const defaultComparison = previousPeriod(primaryPeriod);
@@ -279,11 +386,66 @@ export const buildFinancialTools = (
     }),
   });
 
+  const findTransactions = defineTool({
+    name: 'findTransactions',
+    description: 'Find existing income/expense transactions belonging to the authenticated user before updating or deleting one. Search notes, wallet names and category names; filter by calendar dates/type, or fetch an exact transactionId. Read-only. Never guess an ID or select an ambiguous match without asking the user.',
+    parameters: z.object({
+      // Responses API may require every property. Nullable fields let the model
+      // leave absent filters unset rather than inventing an ID/date to fill them.
+      transactionId: z.string().uuid().nullish().describe('Set null when searching a list. Only use an exact ID returned by an earlier tool or save receipt; NEVER invent an ID.'),
+      search: z.string().trim().max(200).nullish().describe('Text in the note, wallet name or category name. Set null for no text filter.'),
+      type: z.enum(['INCOME', 'EXPENSE']).nullish().describe('EXPENSE for spending, INCOME for income, null for either.'),
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish().describe('First calendar day, YYYY-MM-DD. Set null unless the user specifies a period; recent transactions are already sorted newest first.'),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish().describe('Last calendar day, inclusive, YYYY-MM-DD. Set null for no end date.'),
+      limit: z.number().int().min(1).max(20).nullish().describe('Maximum records, default 10 when null.'),
+      offset: z.number().int().min(0).max(1_000_000).nullish().describe('Pagination offset, default 0 when null.'),
+    }).strict(),
+    execute: async ({ transactionId, search, type, startDate, endDate, limit, offset }) => executeSafely('findTransactions', async () => {
+      const parseDate = (value: string | null | undefined, endOfDay = false) => {
+        if (!value) return undefined;
+        const date = new Date(`${value}T00:00:00.000Z`);
+        if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+          throw new AppError('Invalid calendar date', 400);
+        }
+        if (endOfDay) date.setUTCHours(23, 59, 59, 999);
+        return date;
+      };
+      const start = parseDate(startDate);
+      const end = parseDate(endDate, true);
+      if (start && end && start > end) throw new AppError('Invalid date range', 400);
+      const take = limit ?? 10;
+      const skip = offset ?? 0;
+      const result = transactionId
+        ? { transactions: [await dependencies.transactionService.getTransaction(userId, transactionId)], pagination: { total: 1 } }
+        : await dependencies.transactionService.getTransactions(userId, {
+            search: search ?? undefined, type: type ?? undefined, startDate: start, endDate: end, take, skip,
+            sortBy: 'transactionDate', order: 'desc',
+          });
+      return {
+        transactions: result.transactions.map(transaction => ({
+          id: transaction.id,
+          version: transaction.version,
+          type: transaction.type,
+          amount: Number(transaction.amount),
+          currency: 'VND',
+          date: transaction.transactionDate.toISOString(),
+          walletName: transaction.wallet.name,
+          categoryName: transaction.category.name,
+          note: transaction.note,
+          editable: transaction.type !== 'TRANSFER',
+        })),
+        total: result.pagination.total,
+        hasMore: !transactionId && skip + result.transactions.length < result.pagination.total,
+      };
+    }),
+  });
+
   return [
     getFinancialOverview,
     getExpenseBreakdown,
     getBudgetStatus,
     getSavingGoals,
     compareMonthlySpending,
+    findTransactions,
   ];
 };

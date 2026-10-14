@@ -13,6 +13,12 @@ const PAGE_SIZE = 6;
 type RoleFilter = 'ALL' | 'USER' | 'ADMIN';
 const EMPTY_USERS: AdminUser[] = [];
 
+/**
+ * Render the admin page interface.
+ *
+ * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered admin page interface.
+ */
 export default function AdminPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -28,10 +34,35 @@ export default function AdminPage() {
   const { data: users = EMPTY_USERS, isLoading, isError, refetch } = useQuery<AdminUser[]>({
     queryKey: ['admin-users'], queryFn: () => api.get('/admin/users').then((response) => response.data.data),
   });
+  /**
+   * Close modal in the admin page interface.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const closeModal = () => { setModal(null); setFormError(''); };
+  /**
+   * Finalize the admin page workflow after a successful operation.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const onSuccess = () => { void qc.invalidateQueries({ queryKey: ['admin-users'] }); closeModal(); };
+  /**
+   * Map a failed admin page operation into user-visible state.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns The resulting admin page value for the caller.
+   */
   const onError = () => setFormError('Không thể lưu thay đổi. Kiểm tra thông tin, email trùng hoặc kết nối rồi thử lại.');
   const saveMutation = useMutation({
+    /**
+     * Execute the admin page mutation requested by the client.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns A promise that resolves after the operation completes.
+     */
     mutationFn: async ({ user, form }: { user: AdminUser | 'create'; form: UserForm }) => {
       if (user === 'create') await api.post('/auth/register', { fullName: form.fullName.trim(), email: form.email.trim(), password: form.password });
       else await api.put(`/admin/users/${user.id}`, { fullName: form.fullName.trim(), role: form.role });
@@ -42,6 +73,13 @@ export default function AdminPage() {
   const pending = saveMutation.isPending || deleteMutation.isPending;
 
   useEffect(() => {
+    /**
+     * Handle key down for the admin page workflow.
+     *
+     * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+     * @param event - The UI or runtime event that initiated the operation.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     const onKeyDown = (event: KeyboardEvent) => {
       if (!modal && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault(); searchInput.current?.focus();
@@ -75,14 +113,41 @@ export default function AdminPage() {
   const currentPage = Math.min(page, totalPages);
   const pageUsers = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const pageNumbers = [...new Set([1, currentPage - 1, currentPage, currentPage + 1, totalPages])].filter((value) => value >= 1 && value <= totalPages).sort((a, b) => a - b);
+  /**
+   * Apply a new admin-user search term and reset pagination to the first page.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @param value - The value to transform or evaluate.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const changeSearch = (value: string) => { setSearch(value); setPage(1); };
+  /**
+   * Open modal in the admin page interface.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @param value - The value to transform or evaluate.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const openModal = (value: AdminUser | 'create') => { setFormError(''); setModal(value); };
+  /**
+   * Handle logout for the admin page workflow.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns A promise that resolves after the operation completes.
+   */
   const handleLogout = async () => {
     if (!confirm('Bạn có chắc chắn muốn đăng xuất không?')) return;
     try { await runAuthSessionTransition(() => api.post('/auth/logout')); }
     finally { logout(); qc.clear(); navigate('/login', { replace: true }); }
   };
   const unavailable = isLoading || isError;
+  /**
+   * Read an admin dashboard metric while providing a stable zero fallback.
+   *
+   * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+   * @param value - The value to transform or evaluate.
+   * @returns The resulting admin page value for the caller.
+   */
   const metric = (value: number) => unavailable ? '—' : value.toLocaleString('vi-VN');
 
   return (
@@ -178,12 +243,33 @@ const tones = {
   violet: 'bg-violet-50 text-violet-500 dark:bg-violet-500/10 dark:text-violet-300',
   amber: 'bg-amber-50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-300',
 };
+/**
+ * Render the stat card interface.
+ *
+ * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered stat card interface.
+ */
 function StatCard({ title, value, description, icon, tone }: { title: string; value: string; description: ReactNode; icon: ReactNode; tone: keyof typeof tones }) {
   return <article className="relative rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="pr-10"><h2 className="text-badge font-medium uppercase tracking-wide text-slate-400">{title}</h2><p className={`mt-1.5 text-2xl font-bold ${tone === 'violet' ? 'text-violet-600 dark:text-violet-400' : ''}`}>{value}</p></div><span className={`absolute right-5 top-5 flex size-10 items-center justify-center rounded-xl ${tones[tone]}`}>{icon}</span><p className="mt-2 flex flex-wrap items-center gap-2 text-badge text-slate-400">{description}</p></article>;
 }
+/**
+ * Render the count badge interface.
+ *
+ * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered count badge interface.
+ */
 function CountBadge({ value, icon, admin }: { value: number; icon: ReactNode; admin: boolean }) {
   return <span className={`inline-flex items-center justify-center gap-1 rounded border px-1.5 py-0.5 text-badge ${admin ? 'border-violet-100 bg-violet-50/40 text-violet-500 dark:border-violet-900 dark:bg-violet-500/10' : value ? 'border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-900 dark:bg-blue-500/10 dark:text-blue-300' : 'border-slate-100 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800'}`}>{icon}{value.toLocaleString('vi-VN')}</span>;
 }
+/**
+ * Render the page button interface.
+ *
+ * Use it to keep the admin page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered page button interface.
+ */
 function PageButton({ children, label, active, disabled, onClick }: { children: ReactNode; label: string; active?: boolean; disabled?: boolean; onClick: () => void }) {
   return <AppButton unstyled aria-label={label} aria-current={active ? 'page' : undefined} disabled={disabled} onClick={onClick} className={`flex size-8 items-center justify-center rounded-lg border font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${active ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:hover:bg-slate-800'}`}>{children}</AppButton>;
 }

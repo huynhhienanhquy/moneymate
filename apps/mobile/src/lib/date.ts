@@ -1,5 +1,12 @@
 const DATE_INPUT_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+/**
+ * To local date input value for date.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param date - The date or reporting period used by the operation.
+ * @returns The resulting date value for the caller.
+ */
 export function toLocalDateInputValue(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -7,6 +14,15 @@ export function toLocalDateInputValue(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * To transaction timestamp for date.
+ *
+ * Use it from callers that need this operation without duplicating its rules.
+ * @param value - The value to transform or evaluate.
+ * @param now - The reference time used to make the calculation deterministic.
+ * @returns The resulting date value for the caller.
+ * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+ */
 export function toTransactionTimestamp(value: string, now = new Date()) {
   const match = DATE_INPUT_PATTERN.exec(value);
   if (!match) throw new Error('Ngày giao dịch phải có định dạng YYYY-MM-DD');

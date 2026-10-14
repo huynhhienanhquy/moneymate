@@ -7,6 +7,12 @@ import AuthField from '@/components/Auth/AuthField';
 import AuthShell from '@/components/Auth/AuthShell';
 import { useLoginForm } from '@/hooks/useLoginForm';
 
+/**
+ * Render the login page interface.
+ *
+ * Use it to keep the login page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered login page interface.
+ */
 const LoginPage: React.FC = () => {
   const { form, showPassword, setShowPassword, loading, error, change, submit } = useLoginForm();
   return (

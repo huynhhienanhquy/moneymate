@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { AnyZodObject, ZodError } from 'zod';
 import { AppError } from '../common/app-error';
 
+/**
+ * Validate request before the validate workflow continues.
+ *
+ * Use it in the request pipeline when validate processing is required.
+ * @param schema - The schema value required by the operation.
+ * @returns The resulting validate value for the caller.
+ */
 export const validateRequest = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {

@@ -15,6 +15,13 @@ interface Props {
   onDelete: () => void;
 }
 
+/**
+ * Render the user modal interface.
+ *
+ * Use it to keep the user modal workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered user modal interface.
+ */
 export default function UserModal({ user, ownAccount, error, loading, onClose, onSave, onDelete }: Props) {
   const [form, setForm] = useState<UserForm>({ fullName: user?.fullName ?? '', email: user?.email ?? '', password: '', role: user?.role ?? 'USER' });
   return <AppModal title={user ? 'Cập nhật tài khoản' : 'Thêm người dùng'} onClose={onClose}>

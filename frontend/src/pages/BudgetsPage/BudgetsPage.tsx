@@ -19,6 +19,13 @@ import CategoryIcon from '@/components/common/CategoryIcon/CategoryIcon';
 
 const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
 
+/**
+ * Render the progress ring interface.
+ *
+ * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered progress ring interface.
+ */
 const ProgressRing = ({ percentage, tone }: { percentage: number; tone: 'safe' | 'warning' | 'danger' }) => {
   const progress = Math.min(100, Math.max(0, Number(percentage) || 0));
   const stroke = tone === 'danger' ? chartTheme.expense : tone === 'warning' ? chartTheme.warning : chartTheme.income;
@@ -35,6 +42,13 @@ const ProgressRing = ({ percentage, tone }: { percentage: number; tone: 'safe' |
   );
 };
 
+/**
+ * Render the budget modal interface.
+ *
+ * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+ * @param props - The properties that configure this React component.
+ * @returns The rendered budget modal interface.
+ */
 const BudgetModal: React.FC<{ budget?: any; categories: any[]; month: number; year: number; onClose: () => void; onSave: (d: any) => void; loading: boolean }> = ({
   budget, categories, month, year, onClose, onSave, loading,
 }) => {
@@ -81,6 +95,12 @@ const BudgetModal: React.FC<{ budget?: any; categories: any[]; month: number; ye
   );
 };
 
+/**
+ * Render the budgets page interface.
+ *
+ * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered budgets page interface.
+ */
 const BudgetsPage: React.FC = () => {
   const qc = useQueryClient();
   const now = new Date();
@@ -91,6 +111,12 @@ const BudgetsPage: React.FC = () => {
 
   const { data: budgets = [], isLoading } = useQuery({
     queryKey: ['budgets', month, year],
+    /**
+     * Load budgets page data for the query cache.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting budgets page value for the caller.
+     */
     queryFn: () => api.get('/budgets', { params: { month, year } }).then(r => r.data.data),
   });
 
@@ -98,6 +124,12 @@ const BudgetsPage: React.FC = () => {
 
   const { data: forecast } = useQuery({
     queryKey: ['ai-forecast', month, year],
+    /**
+     * Load budgets page data for the query cache.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting budgets page value for the caller.
+     */
     queryFn: () => api.get('/ai/budget/forecast', { params: { month, year } }).then(r => r.data.data),
     staleTime: 120_000,
   });
@@ -107,21 +139,72 @@ const BudgetsPage: React.FC = () => {
   );
 
   const createMutation = useMutation({
+    /**
+     * Execute the budgets page mutation requested by the client.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param d - The d value required by the operation.
+     * @returns The resulting budgets page value for the caller.
+     */
     mutationFn: (d: any) => api.post('/budgets', d),
+    /**
+     * Finalize the budgets page workflow after a successful operation.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['budgets'] }); setShowModal(false); },
   });
 
   const updateMutation = useMutation({
+    /**
+     * Execute the budgets page mutation requested by the client.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting budgets page value for the caller.
+     */
     mutationFn: ({ id, data }: any) => api.put(`/budgets/${id}`, data),
+    /**
+     * Finalize the budgets page workflow after a successful operation.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns Nothing; the operation is complete when the function returns.
+     */
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['budgets'] }); setEditBudget(null); },
   });
 
   const deleteMutation = useMutation({
+    /**
+     * Execute the budgets page mutation requested by the client.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @param id - The stable identifier of the record targeted by the operation.
+     * @returns The resulting budgets page value for the caller.
+     */
     mutationFn: (id: string) => api.delete(`/budgets/${id}`),
+    /**
+     * Finalize the budgets page workflow after a successful operation.
+     *
+     * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting budgets page value for the caller.
+     */
     onSuccess: () => qc.invalidateQueries({ queryKey: ['budgets'] }),
   });
 
+  /**
+   * Move the selected budgets page period backward.
+   *
+   * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const prev = () => { if (month === 1) { setMonth(12); setYear(y => y - 1); } else setMonth(m => m - 1); };
+  /**
+   * Move the selected budgets page period forward.
+   *
+   * Use it to keep the budgets page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const next = () => { if (month === 12) { setMonth(1); setYear(y => y + 1); } else setMonth(m => m + 1); };
 
   const totalBudget = budgets.reduce((s: number, b: any) => s + Number(b.amount), 0);

@@ -4,6 +4,12 @@ import React from 'react';
 import { Bot, X, Send, Loader2, Sparkles } from 'lucide-react';
 import { useAiChat } from '@/hooks/useAiChat';
 
+/**
+ * Render the ai chat widget interface.
+ *
+ * Use it to keep the ai chat widget workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered ai chat widget interface.
+ */
 const AiChatWidget: React.FC = () => {
   const { open, setOpen, input, setInput, messages, suggestions, bottomRef, send, isSending } = useAiChat();
 

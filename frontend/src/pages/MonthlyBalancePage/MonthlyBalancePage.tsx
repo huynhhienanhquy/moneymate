@@ -22,11 +22,23 @@ import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
 
 const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 
+/**
+ * Render the monthly balance page interface.
+ *
+ * Use it to keep the monthly balance page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered monthly balance page interface.
+ */
 const MonthlyBalancePage: React.FC = () => {
   const [year, setYear] = useState(new Date().getFullYear());
 
   const { data, isLoading } = useQuery({
     queryKey: ['monthly-balance-v7', year],
+    /**
+     * Load monthly balance page data for the query cache.
+     *
+     * Use it to keep the monthly balance page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting monthly balance page value for the caller.
+     */
     queryFn: () => api.get('/transactions/report/yearly', { params: { year } }).then((r) => r.data.data),
     staleTime: 0,
   });

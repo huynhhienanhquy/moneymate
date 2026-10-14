@@ -32,6 +32,14 @@ export class ReceiptOcrService {
   private categoryRepository = new CategoryRepository();
   private llm = new LlmProvider();
 
+  /**
+   * Scan receipt for receipt ocr.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param file - The file-system location or file value used by the operation.
+   * @returns A promise containing the resulting receipt ocr value.
+   */
   async scanReceipt(userId: string, file: Express.Multer.File): Promise<ReceiptScanResult> {
     const filePath = path.join(os.tmpdir(), `moneymate-ocr-${randomUUID()}${path.extname(file.originalname)}`);
     let rawText = '';
@@ -74,6 +82,13 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
     }
   }
 
+  /**
+   * Extract pdf text for receipt ocr.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param filePath - The file-system location or file value used by the operation.
+   * @returns A promise containing the resulting receipt ocr value.
+   */
   private async extractPdfText(filePath: string): Promise<string> {
     let parser: { destroy(): Promise<void> } | undefined;
     try {
@@ -90,6 +105,13 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
     }
   }
 
+  /**
+   * Extract image text for receipt ocr.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param filePath - The file-system location or file value used by the operation.
+   * @returns A promise containing the resulting receipt ocr value.
+   */
   private async extractImageText(filePath: string): Promise<string> {
     try {
       const { createWorker } = await import('tesseract.js');
@@ -102,6 +124,14 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
     }
   }
 
+  /**
+   * Parse and validate receipt text for the receipt ocr workflow.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param text - The text value required by the operation.
+   * @returns A promise containing the resulting receipt ocr value.
+   */
   private async parseReceiptText(userId: string, text: string): Promise<ReceiptScanResult> {
     const amount = this.extractAmount(text);
     const transactionDate = this.extractDate(text);
@@ -121,6 +151,14 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
     };
   }
 
+  /**
+   * Build result used by the receipt ocr workflow.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param data - The input data required to build result used by the receipt ocr workflow.
+   * @returns A promise containing the resulting receipt ocr value.
+   */
   private async buildResult(userId: string, data: {
     amount: number | null;
     date: string | null;
@@ -143,6 +181,13 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
     };
   }
 
+  /**
+   * Extract amount for receipt ocr.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param text - The text value required by the operation.
+   * @returns The resulting receipt ocr value for the caller.
+   */
   private extractAmount(text: string): number | null {
     const patterns = [
       /(?:tổng|total|thành tiền|thanh toán|amount)[:\s]*([\d.,]+)/gi,
@@ -162,6 +207,13 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
     return candidates.length > 0 ? Math.max(...candidates) : null;
   }
 
+  /**
+   * Extract date for receipt ocr.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param text - The text value required by the operation.
+   * @returns The resulting receipt ocr value for the caller.
+   */
   private extractDate(text: string): string | null {
     const patterns = [
       /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/,
@@ -180,11 +232,26 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
     return null;
   }
 
+  /**
+   * Extract merchant for receipt ocr.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param text - The text value required by the operation.
+   * @returns The resulting receipt ocr value for the caller.
+   */
   private extractMerchant(text: string): string | null {
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     return lines[0]?.slice(0, 80) || null;
   }
 
+  /**
+   * Suggest category for receipt ocr.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param text - The text value required by the operation.
+   * @returns A promise containing the resulting receipt ocr value.
+   */
   private async suggestCategory(userId: string, text: string): Promise<{ id: string; name: string } | null> {
     const categories = await this.categoryRepository.findAllByUserId(userId);
     const expenseCats = categories.filter(c => c.type === CategoryType.EXPENSE);
@@ -202,6 +269,13 @@ amount là tổng tiền VND (số nguyên). Nếu không đọc được thì n
       : expenseCats[0] ? { id: expenseCats[0].id, name: expenseCats[0].name } : null;
   }
 
+  /**
+   * Parse and validate json from text for the receipt ocr workflow.
+   *
+   * Use it from controllers or jobs that run the receipt ocr business workflow.
+   * @param text - The text value required by the operation.
+   * @returns The resulting receipt ocr value for the caller.
+   */
   private parseJsonFromText(text: string): { amount: number | null; date: string | null; merchant: string | null; items: string | null } | null {
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);

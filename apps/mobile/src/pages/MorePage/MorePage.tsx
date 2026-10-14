@@ -46,6 +46,12 @@ const items: MenuItem[] = [
   { href: '/(tabs)/profile', label: 'Hồ sơ', icon: 'account-outline' },
 ];
 
+/**
+ * Render the more page interface.
+ *
+ * Use it to keep the more page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered more page interface.
+ */
 export default function MorePage() {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -86,6 +92,13 @@ export default function MorePage() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the more page interface.
+ *
+ * Use it to keep the more page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     menu: {

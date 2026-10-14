@@ -7,6 +7,13 @@ import tailwindcss from 'tailwindcss';
 // `@tailwind base` directive.
 const unwrapCompiledCopilotKitLayers = {
   postcssPlugin: 'unwrap-compiled-copilotkit-layers',
+  /**
+   * Once for postcss.config.
+   *
+   * Use it from callers that need this operation without duplicating its rules.
+   * @param root - The root value required by the operation.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   Once(root) {
     const sourceFile = root.source?.input.file?.replaceAll('\\', '/');
     if (!sourceFile?.includes('/@copilotkit/react-core/dist/v2/index.css')) return;

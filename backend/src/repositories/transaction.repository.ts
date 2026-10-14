@@ -24,6 +24,16 @@ export interface TransactionSyncCursor {
 }
 
 export class TransactionRepository {
+  /**
+   * Return projected recurring amount required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param startDate - The date or reporting period used by the operation.
+   * @param endDate - The date or reporting period used by the operation.
+   * @param type - The operation or report variant to process.
+   * @returns A promise containing the resulting transaction value.
+   */
   private async getProjectedRecurringAmount(
     userId: string,
     startDate: Date,
@@ -98,14 +108,39 @@ export class TransactionRepository {
     return { total, byCategory };
   }
 
+  /**
+   * Return projected recurring expenses required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param startDate - The date or reporting period used by the operation.
+   * @param endDate - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   private async getProjectedRecurringExpenses(userId: string, startDate: Date, endDate: Date) {
     return this.getProjectedRecurringAmount(userId, startDate, endDate, CategoryType.EXPENSE);
   }
 
+  /**
+   * Return projected recurring income required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param startDate - The date or reporting period used by the operation.
+   * @param endDate - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   private async getProjectedRecurringIncome(userId: string, startDate: Date, endDate: Date) {
     return this.getProjectedRecurringAmount(userId, startDate, endDate, CategoryType.INCOME);
   }
 
+  /**
+   * Create transaction for the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param data - The input data required to create transaction for the transaction workflow.
+   * @returns A promise containing the resulting transaction value.
+   */
   async create(data: {
     userId: string;
     walletId: string;
@@ -128,6 +163,13 @@ export class TransactionRepository {
     });
   }
 
+  /**
+   * Find by id in the transaction data source.
+   *
+   * Use it from services that need transaction persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async findById(id: string) {
     return prisma.transaction.findFirst({
       where: { id, deletedAt: null },
@@ -138,6 +180,13 @@ export class TransactionRepository {
     });
   }
 
+  /**
+   * Find all in the transaction data source.
+   *
+   * Use it from services that need transaction persistence.
+   * @param filter - The filter value required by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async findAll(filter: TransactionFilter) {
     const where: Prisma.TransactionWhereInput = {
       userId: filter.userId,
@@ -195,6 +244,13 @@ export class TransactionRepository {
     });
   }
 
+  /**
+   * Count for transaction.
+   *
+   * Use it from services that need transaction persistence.
+   * @param filter - The filter value required by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async count(filter: TransactionFilter): Promise<number> {
     const where: Prisma.TransactionWhereInput = {
       userId: filter.userId,
@@ -238,6 +294,14 @@ export class TransactionRepository {
     return prisma.transaction.count({ where });
   }
 
+  /**
+   * Update transaction while preserving the transaction workflow's rules.
+   *
+   * Use it from services that need transaction persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to update transaction while preserving the transaction workflow's rules.
+   * @returns A promise containing the resulting transaction value.
+   */
   async update(id: string, data: {
     walletId?: string;
     categoryId?: string;
@@ -259,6 +323,13 @@ export class TransactionRepository {
     });
   }
 
+  /**
+   * Delete transaction through the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async delete(id: string) {
     return prisma.transaction.update({
       where: { id },
@@ -266,6 +337,15 @@ export class TransactionRepository {
     });
   }
 
+  /**
+   * Find sync delta in the transaction data source.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param cursor - The synchronization cursor that bounds the processed change set.
+   * @param take - The take value required by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async findSyncDelta(userId: string, cursor: TransactionSyncCursor | undefined, take: number) {
     return prisma.transaction.findMany({
       where: {
@@ -296,6 +376,13 @@ export class TransactionRepository {
   }
 
   // Inter-wallet transfers executed as an atomic Prisma transaction
+  /**
+   * Transfer funds for transaction.
+   *
+   * Use it from services that need transaction persistence.
+   * @param data - The input data required to transfer funds for transaction.
+   * @returns A promise containing the resulting transaction value.
+   */
   async transferFunds(data: {
     userId: string;
     sourceWalletId: string;
@@ -390,6 +477,15 @@ export class TransactionRepository {
   }
 
   // Get Monthly Summary statistics (Income, Expense, Net)
+  /**
+   * Return monthly summary required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getMonthlySummary(userId: string, month: number, year: number) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -513,6 +609,15 @@ export class TransactionRepository {
 
 
   // Get Category breakdown for Pie Chart
+  /**
+   * Return category breakdown required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getCategoryBreakdown(userId: string, month: number, year: number) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -561,6 +666,14 @@ export class TransactionRepository {
     return Object.values(categoriesMap);
   }
 
+  /**
+   * Return monthly trend required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param months - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getMonthlyTrend(userId: string, months: number) {
     const today = new Date();
     const trend = [];
@@ -585,11 +698,26 @@ export class TransactionRepository {
     return trend;
   }
 
+  /**
+   * Return wallet balance total required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getWalletBalanceTotal(userId: string): Promise<number> {
     const wallets = await prisma.wallet.findMany({ where: { userId, deletedAt: null } });
     return wallets.reduce((sum, wallet) => sum + Number(wallet.initialBalance), 0);
   }
 
+  /**
+   * Return yearly summary required by the transaction workflow.
+   *
+   * Use it from services that need transaction persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting transaction value.
+   */
   async getYearlySummary(userId: string, year: number) {
     const currentFormulaVersion = 9;
     const monthlyData = [];

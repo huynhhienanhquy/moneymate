@@ -8,10 +8,27 @@ export class AttachmentService {
   private transactionRepository = new TransactionRepository();
   private storage = createObjectStorage();
 
+  /**
+   * To client attachment for attachment.
+   *
+   * Use it from controllers or jobs that run the attachment business workflow.
+   * @param attachment - The attachment value required by the operation.
+   * @returns The resulting attachment value for the caller.
+   */
   private toClientAttachment<T extends { id: string }>(attachment: T) {
     return { ...attachment, url: `/api/attachments/${attachment.id}/content` };
   }
 
+  /**
+   * Upload attachment required by the attachment workflow.
+   *
+   * Use it from controllers or jobs that run the attachment business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param transactionId - The stable identifier of the record targeted by the operation.
+   * @param file - The file-system location or file value used by the operation.
+   * @returns A promise containing the resulting attachment value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async uploadAttachment(
     userId: string,
     transactionId: string,
@@ -36,6 +53,15 @@ export class AttachmentService {
     }
   }
 
+  /**
+   * Return attachments required by the attachment workflow.
+   *
+   * Use it from controllers or jobs that run the attachment business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param transactionId - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting attachment value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async getAttachments(userId: string, transactionId: string) {
     const tx = await this.transactionRepository.findById(transactionId);
     if (!tx || tx.userId !== userId) throw new AppError('Transaction not found', 404);
@@ -43,6 +69,15 @@ export class AttachmentService {
     return attachments.map((attachment) => this.toClientAttachment(attachment));
   }
 
+  /**
+   * Download attachment produced by the attachment workflow.
+   *
+   * Use it from controllers or jobs that run the attachment business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting attachment value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async downloadAttachment(userId: string, id: string) {
     const attachment = await this.attachmentRepository.findById(id);
     if (!attachment?.transactionId) throw new AppError('Attachment not found', 404);
@@ -52,6 +87,15 @@ export class AttachmentService {
     return { attachment, data };
   }
 
+  /**
+   * Delete attachment through the attachment workflow.
+   *
+   * Use it from controllers or jobs that run the attachment business workflow.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting attachment value.
+   * @throws {Error} When validation fails or a required dependency cannot complete the operation.
+   */
   async deleteAttachment(userId: string, id: string) {
     const attachment = await this.attachmentRepository.findById(id);
     if (!attachment) throw new AppError('Attachment not found', 404);

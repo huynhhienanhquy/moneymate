@@ -1,3 +1,7 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import { money } from '@/components/finance';
+import { categoryAppearance } from '@/components/design';
+import { Text, TextInput } from '@/components/design-text';
 import { useEffect, useMemo, useState } from 'react';
 import {
   useInfiniteQuery,
@@ -6,21 +10,12 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { Link, useRouter } from 'expo-router';
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { AppIcon } from '@/components/app-icon';
 import {
   Button,
   Card,
-  ChoiceChips,
   EmptyState,
-  PageHero,
   Screen,
   StateMessage,
   useUiStyles,
@@ -31,6 +26,12 @@ import { useAppTheme, type AppTheme } from '@/theme';
 import { useOfflineStorage } from '@/storage/offline';
 import { useAuthStore } from '@/stores/auth.store';
 
+/**
+ * Render the transactions page interface.
+ *
+ * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+ * @returns The rendered transactions page interface.
+ */
 export default function TransactionsPage() {
   const ui = useUiStyles();
   const { theme } = useAppTheme();
@@ -51,6 +52,13 @@ export default function TransactionsPage() {
   const query = useInfiniteQuery({
     queryKey: ['transactions', month, year, search.trim(), type],
     initialPageParam: 0,
+    /**
+     * Load transactions page data for the query cache.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @param props - The properties that configure this React component.
+     * @returns The resulting transactions page value for the caller.
+     */
     queryFn: ({ pageParam }) => {
       const params = new URLSearchParams({
         skip: String(pageParam),
@@ -66,6 +74,14 @@ export default function TransactionsPage() {
         pagination: { total: number };
       }>(`/transactions?${params.toString()}`);
     },
+    /**
+     * Return next page param required by the transactions page workflow.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @param lastPage - The last page value required by the operation.
+     * @param pages - The pages value required by the operation.
+     * @returns The resulting transactions page value for the caller.
+     */
     getNextPageParam: (lastPage, pages) => {
       const loaded = pages.reduce(
         (sum, page) => sum + page.transactions.length,
@@ -76,17 +92,35 @@ export default function TransactionsPage() {
   });
   const report = useQuery({
     queryKey: ['monthly-report', month, year],
+    /**
+     * Load transactions page data for the query cache.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns The resulting transactions page value for the caller.
+     */
     queryFn: () =>
       apiRequest<{ summary: { totalExpense: number } }>(
         `/transactions/report?month=${month}&year=${year}`,
       ),
   });
+  /**
+   * Move the selected transactions page period backward.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const previousMonth = () => {
     if (month === 1) {
       setMonth(12);
       setYear((value) => value - 1);
     } else setMonth((value) => value - 1);
   };
+  /**
+   * Move the selected transactions page period forward.
+   *
+   * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+   * @returns Nothing; the operation is complete when the function returns.
+   */
   const nextMonth = () => {
     if (month === 12) {
       setMonth(1);
@@ -94,10 +128,23 @@ export default function TransactionsPage() {
     } else setMonth((value) => value + 1);
   };
   const remove = useMutation({
+    /**
+     * Execute the transactions page mutation requested by the client.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @param item - The item value required by the operation.
+     * @returns The resulting transactions page value for the caller.
+     */
     mutationFn: (item: Transaction) =>
       apiRequest(`/transactions/${item.id}?version=${item.version}`, {
         method: 'DELETE',
       }),
+    /**
+     * Finalize the transactions page workflow after a successful operation.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @returns A promise that resolves after the operation completes.
+     */
     onSuccess: async () => {
       await Promise.all(
         [
@@ -111,6 +158,13 @@ export default function TransactionsPage() {
         ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
       );
     },
+    /**
+     * Map a failed transactions page operation into user-visible state.
+     *
+     * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+     * @param error - The failure value to classify, report, or propagate.
+     * @returns The resulting transactions page value for the caller.
+     */
     onError: (error) =>
       Alert.alert(
         'Không thể xóa',
@@ -134,114 +188,82 @@ export default function TransactionsPage() {
   const filtered = monthItems;
   const monthTotal = -Number(report.data?.summary.totalExpense || 0);
   return (
-    <Screen title="Giao dịch">
-      <PageHero
-        eyebrow={`THÁNG ${month}/${year}`}
-        title="Giao dịch"
-        subtitle={`${total} giao dịch trong kỳ`}
-        icon="receipt-text-outline"
+    <Screen title="Giao dịch" bottomNav={false}>
+      <LinearGradient
+        colors={theme.gradients.brand}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.transactionHero}
       >
-        <View
-          style={{
-            marginTop: 15,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Text
-            style={{
-              color: theme.colors.onBrand,
-              fontSize: 13,
-              fontWeight: '800',
-            }}
+        <View style={styles.heroTop}>
+          <Pressable
+            style={styles.monthChip}
+            onPress={() =>
+              Alert.alert('Chọn tháng', undefined, [
+                { text: 'Tháng trước', onPress: previousMonth },
+                { text: 'Tháng sau', onPress: nextMonth },
+                { text: 'Hủy', style: 'cancel' },
+              ])
+            }
           >
-            TỔNG CHI THÁNG
-          </Text>
-          <Text
-            style={{
-              color: theme.colors.onBrand,
-              fontSize: 22,
-              fontWeight: '900',
-            }}
-          >
-            {monthTotal.toLocaleString('vi-VN')} ₫
-          </Text>
-        </View>
-        <View style={{ marginTop: 14, flexDirection: 'row', gap: 9 }}>
-          <Link href="/scan-receipt" asChild>
-            <Pressable
+            <AppIcon name="calendar-blank-outline" size={15} color="#FFFFFF" />
+            <Text style={{ fontSize: 12, color: '#FFFFFF' }}>
+              Tháng {month}/{year}
+            </Text>
+          </Pressable>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '500' }}>
+              TỔNG CHI THÁNG
+            </Text>
+            <Text
               style={{
-                flex: 1,
-                minHeight: 43,
-                borderRadius: 12,
-                backgroundColor: 'rgba(255,255,255,.18)',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 7,
+                color: '#FFFFFF',
+                fontSize: 22,
+                fontWeight: '600',
+                marginTop: 3,
               }}
             >
-              <AppIcon
-                name="line-scan"
-                size={20}
-                color={theme.colors.onBrand}
-              />
-              <Text style={{ color: theme.colors.onBrand, fontWeight: '900' }}>
+              {money(monthTotal)}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.heroTitle}>Giao dịch</Text>
+        <Text style={styles.heroSubtitle}>
+          Thu chi tháng {month}/{year} • Tổng {total} hoạt động
+        </Text>
+        <View style={styles.heroButtons}>
+          <Link href="/scan-receipt" asChild>
+            <Pressable style={styles.scanButton}>
+              <View style={styles.scanIcon}>
+                <AppIcon name="line-scan" size={17} color="#FFFFFF" />
+              </View>
+              <Text
+                style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '500' }}
+              >
                 Quét hóa đơn
               </Text>
             </Pressable>
           </Link>
           <Link href="/add-transaction" asChild>
-            <Pressable
-              style={{
-                flex: 1,
-                minHeight: 43,
-                borderRadius: 12,
-                backgroundColor: theme.colors.onBrand,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 7,
-              }}
-            >
+            <Pressable style={styles.addButton}>
               <AppIcon
                 name="plus-circle-outline"
-                size={20}
+                size={19}
                 color={theme.colors.primaryStrong}
               />
               <Text
-                style={{ color: theme.colors.primaryStrong, fontWeight: '900' }}
+                style={{
+                  color: theme.colors.primaryStrong,
+                  fontSize: 14,
+                  fontWeight: '500',
+                }}
               >
                 Thêm giao dịch
               </Text>
             </Pressable>
           </Link>
         </View>
-      </PageHero>
-      <View style={styles.period}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Tháng trước"
-          onPress={previousMonth}
-        >
-          <AppIcon name="chevron-left" size={27} color={theme.colors.primary} />
-        </Pressable>
-        <Text style={styles.periodText}>
-          Tháng {month}/{year}
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Tháng sau"
-          onPress={nextMonth}
-        >
-          <AppIcon
-            name="chevron-right"
-            size={27}
-            color={theme.colors.primary}
-          />
-        </Pressable>
-      </View>
+      </LinearGradient>
       <View style={styles.searchBox}>
         <AppIcon name="magnify" size={20} color={theme.colors.muted} />
         <TextInput
@@ -253,15 +275,47 @@ export default function TransactionsPage() {
         />
         <AppIcon name="tune-variant" size={18} color={theme.colors.muted} />
       </View>
-      <ChoiceChips
-        value={type}
-        options={[
-          { label: `Tất cả (${total})`, value: 'ALL' },
+      <View style={styles.filters}>
+        {[
+          { label: 'Tất cả (' + total + ')', value: 'ALL' },
           { label: 'Chi tiêu', value: 'EXPENSE' },
           { label: 'Thu nhập', value: 'INCOME' },
-        ]}
-        onChange={setType}
-      />
+        ].map((item) => (
+          <Pressable
+            key={item.value}
+            onPress={() => setType(item.value)}
+            style={[
+              styles.filterChip,
+              type === item.value && { backgroundColor: theme.colors.primary },
+            ]}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                color:
+                  type === item.value ? '#FFFFFF' : theme.colors.primaryStrong,
+                fontWeight: type === item.value ? '500' : '400',
+              }}
+            >
+              {item.label}
+            </Text>
+          </Pressable>
+        ))}
+        <Pressable
+          style={styles.filterChip}
+          onPress={() =>
+            Alert.alert('Chọn thời gian', undefined, [
+              { text: 'Tháng trước', onPress: previousMonth },
+              { text: 'Tháng sau', onPress: nextMonth },
+              { text: 'Hủy', style: 'cancel' },
+            ])
+          }
+        >
+          <Text style={{ fontSize: 13, color: theme.colors.primaryStrong }}>
+            Thời gian⌄
+          </Text>
+        </Pressable>
+      </View>
       {failedCount > 0 && (
         <Card>
           <Text style={ui.negative}>
@@ -285,13 +339,41 @@ export default function TransactionsPage() {
           }
         />
       )}
-      {filtered.map((item) => {
+      {filtered.map((item, index) => {
+        const day = new Date(item.transactionDate).toLocaleDateString('vi-VN');
+        const firstInDay =
+          index === 0 ||
+          new Date(filtered[index - 1].transactionDate).toLocaleDateString(
+            'vi-VN',
+          ) !== day;
+        const dayTotal = filtered
+          .filter(
+            (t) =>
+              new Date(t.transactionDate).toLocaleDateString('vi-VN') === day,
+          )
+          .reduce(
+            (sum, t) => sum + (t.type === 'INCOME' ? 1 : -1) * Number(t.amount),
+            0,
+          );
+        const appearance = categoryAppearance(item.category?.name);
         const income = item.type === 'INCOME';
+        /**
+         * Edit for transactions page.
+         *
+         * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+         * @returns The resulting transactions page value for the caller.
+         */
         const edit = () =>
           router.push({
             pathname: '/add-transaction',
             params: { id: item.id },
           });
+        /**
+         * Confirm delete for transactions page.
+         *
+         * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+         * @returns The resulting transactions page value for the caller.
+         */
         const confirmDelete = () =>
           Alert.alert(
             'Xóa giao dịch?',
@@ -303,83 +385,121 @@ export default function TransactionsPage() {
               {
                 text: 'Xóa',
                 style: 'destructive',
+                /**
+                 * Handle press for the transactions page workflow.
+                 *
+                 * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+                 * @returns The resulting transactions page value for the caller.
+                 */
                 onPress: () => remove.mutate(item),
               },
             ],
           );
         return (
-          <Pressable
-            key={item.id}
-            onPress={edit}
-            onLongPress={confirmDelete}
-            style={styles.transaction}
-          >
-            <View
-              style={[
-                styles.transactionIcon,
-                {
-                  backgroundColor: income
-                    ? theme.colors.successSoft
-                    : theme.colors.dangerSoft,
-                },
-              ]}
+          <View key={item.id} style={{ gap: 12 }}>
+            {firstInDay && (
+              <View style={styles.dayHeading}>
+                <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
+                  <Text
+                    style={{
+                      color: theme.colors.primaryStrong,
+                      fontWeight: '500',
+                    }}
+                  >
+                    •{' '}
+                    {day === new Date().toLocaleDateString('vi-VN')
+                      ? 'Hôm nay'
+                      : day}
+                  </Text>
+                  {' ' +
+                    new Date(item.transactionDate).toLocaleDateString('vi-VN', {
+                      weekday: 'long',
+                    })}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color:
+                      dayTotal >= 0
+                        ? theme.colors.success
+                        : theme.colors.danger,
+                  }}
+                >
+                  {dayTotal >= 0 ? '+' : ''}
+                  {money(dayTotal)}
+                </Text>
+              </View>
+            )}
+            <Pressable
+              onPress={edit}
+              onLongPress={confirmDelete}
+              style={styles.transaction}
             >
-              <AppIcon
-                name={income ? 'cash-plus' : 'shopping-outline'}
-                size={20}
-                color={
-                  income ? theme.colors.successStrong : theme.colors.danger
-                }
-              />
-            </View>
-            <View style={styles.transactionBody}>
-              <Text numberOfLines={1} style={styles.transactionTitle}>
-                {item.category?.name || 'Giao dịch'}
-              </Text>
-              <Text numberOfLines={1} style={styles.transactionMeta}>
-                {item.wallet?.name || 'Ví'} ·{' '}
-                {new Date(item.transactionDate).toLocaleTimeString('vi-VN', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </Text>
-            </View>
-            <View style={styles.transactionRight}>
-              <Text
+              <View
                 style={[
-                  styles.transactionAmount,
-                  income ? ui.positive : ui.negative,
+                  styles.transactionIcon,
+                  {
+                    backgroundColor: income
+                      ? theme.colors.successSoft
+                      : appearance.soft,
+                  },
                 ]}
               >
-                {income ? '+' : '-'}
-                {Number(item.amount).toLocaleString('vi-VN')} ₫
-              </Text>
-              <View style={styles.miniActions}>
-                <Pressable
-                  accessibilityLabel="Chỉnh sửa giao dịch"
-                  onPress={edit}
-                  style={styles.miniButton}
-                >
-                  <AppIcon
-                    name="pencil-outline"
-                    size={14}
-                    color={theme.colors.muted}
-                  />
-                </Pressable>
-                <Pressable
-                  accessibilityLabel="Xóa giao dịch"
-                  onPress={confirmDelete}
-                  style={styles.miniButton}
-                >
-                  <AppIcon
-                    name="trash-can-outline"
-                    size={14}
-                    color={theme.colors.muted}
-                  />
-                </Pressable>
+                <AppIcon
+                  name={income ? 'cash-plus' : appearance.icon}
+                  size={20}
+                  color={income ? theme.colors.successStrong : appearance.color}
+                />
               </View>
-            </View>
-          </Pressable>
+              <View style={styles.transactionBody}>
+                <Text numberOfLines={1} style={styles.transactionTitle}>
+                  {item.category?.name || 'Giao dịch'}
+                </Text>
+                <Text numberOfLines={1} style={styles.transactionMeta}>
+                  Ví: {item.wallet?.name || 'Ví'} ·{' '}
+                  {new Date(item.transactionDate).toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+              </View>
+              <View style={styles.transactionRight}>
+                <Text
+                  style={[
+                    styles.transactionAmount,
+                    income ? ui.positive : ui.negative,
+                  ]}
+                >
+                  {income ? '+' : '-'}
+                  {Number(item.amount).toLocaleString('vi-VN')} ₫
+                </Text>
+                <View style={styles.miniActions}>
+                  <Pressable
+                    accessibilityLabel="Chỉnh sửa giao dịch"
+                    onPress={edit}
+                    style={styles.miniButton}
+                  >
+                    <AppIcon
+                      name="pencil-outline"
+                      size={14}
+                      color={theme.colors.muted}
+                    />
+                  </Pressable>
+                  <Pressable
+                    accessibilityLabel="Xóa giao dịch"
+                    onPress={confirmDelete}
+                    style={styles.miniButton}
+                  >
+                    <AppIcon
+                      name="trash-can-outline"
+                      size={14}
+                      color={theme.colors.muted}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            </Pressable>
+          </View>
         );
       })}
       {!!filtered.length && (
@@ -401,8 +521,79 @@ export default function TransactionsPage() {
   );
 }
 
+/**
+ * Create theme-aware style definitions for the transactions page interface.
+ *
+ * Use it to keep the transactions page workflow's presentation and interactions in one reusable UI boundary.
+ * @param theme - The theme value required by the operation.
+ * @returns The style map derived from the active theme.
+ */
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    transactionHero: { padding: 20, borderRadius: 16, minHeight: 238 },
+    heroTop: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+    },
+    monthChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 15,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: 'rgba(255,255,255,.15)',
+    },
+    heroTitle: {
+      color: '#FFFFFF',
+      fontSize: 30,
+      fontWeight: '600',
+      marginTop: 4,
+    },
+    heroSubtitle: { color: '#DCE6FF', fontSize: 13, marginTop: 4 },
+    heroButtons: { flexDirection: 'row', gap: 10, marginTop: 20 },
+    scanButton: {
+      flex: 1,
+      minHeight: 48,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      backgroundColor: 'rgba(255,255,255,.2)',
+    },
+    scanIcon: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: '#68F6BC',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addButton: {
+      flex: 1,
+      minHeight: 48,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: '#FFFFFF',
+    },
+    filters: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+    filterChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: theme.colors.neutralSoft,
+    },
+    dayHeading: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
     period: {
       minHeight: 58,
       paddingHorizontal: 20,
@@ -428,7 +619,7 @@ const createStyles = (theme: AppTheme) =>
     },
     searchInput: { flex: 1, color: theme.colors.text, fontSize: 13 },
     transaction: {
-      minHeight: 74,
+      minHeight: 88,
       paddingHorizontal: 13,
       paddingVertical: 10,
       borderRadius: 14,
@@ -436,8 +627,7 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       gap: 11,
       backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      boxShadow: '0px 2px 2px rgba(19,27,46,.035)',
     },
     transactionIcon: {
       width: 42,
@@ -449,12 +639,12 @@ const createStyles = (theme: AppTheme) =>
     transactionBody: { flex: 1, minWidth: 0 },
     transactionTitle: {
       color: theme.colors.text,
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: '800',
     },
-    transactionMeta: { marginTop: 3, color: theme.colors.muted, fontSize: 10 },
+    transactionMeta: { marginTop: 3, color: theme.colors.muted, fontSize: 12 },
     transactionRight: { alignItems: 'flex-end', gap: 5 },
-    transactionAmount: { fontSize: 13, fontWeight: '900' },
+    transactionAmount: { fontSize: 17, fontWeight: '900' },
     miniActions: { flexDirection: 'row', gap: 5 },
     miniButton: {
       width: 26,

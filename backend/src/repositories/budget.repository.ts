@@ -2,6 +2,13 @@ import prisma from '../config/db';
 import { Prisma } from '@prisma/client';
 
 export class BudgetRepository {
+  /**
+   * Create budget for the budget workflow.
+   *
+   * Use it from services that need budget persistence.
+   * @param data - The input data required to create budget for the budget workflow.
+   * @returns A promise containing the resulting budget value.
+   */
   async create(data: {
     userId: string;
     categoryId?: string | null;
@@ -22,6 +29,13 @@ export class BudgetRepository {
     });
   }
 
+  /**
+   * Find by id in the budget data source.
+   *
+   * Use it from services that need budget persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting budget value.
+   */
   async findById(id: string) {
     return prisma.budget.findUnique({
       where: { id },
@@ -29,6 +43,15 @@ export class BudgetRepository {
     });
   }
 
+  /**
+   * Find by user month year in the budget data source.
+   *
+   * Use it from services that need budget persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting budget value.
+   */
   async findByUserMonthYear(userId: string, month: number, year: number) {
     return prisma.budget.findMany({
       where: { userId, month, year },
@@ -37,6 +60,17 @@ export class BudgetRepository {
     });
   }
 
+  /**
+   * Find duplicate in the budget data source.
+   *
+   * Use it from services that need budget persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param categoryId - The stable identifier of the record targeted by the operation.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @param excludeId - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting budget value.
+   */
   async findDuplicate(userId: string, categoryId: string | null, month: number, year: number, excludeId?: string) {
     return prisma.budget.findFirst({
       where: {
@@ -49,6 +83,14 @@ export class BudgetRepository {
     });
   }
 
+  /**
+   * Update budget while preserving the budget workflow's rules.
+   *
+   * Use it from services that need budget persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param data - The input data required to update budget while preserving the budget workflow's rules.
+   * @returns A promise containing the resulting budget value.
+   */
   async update(id: string, data: { amount?: number; categoryId?: string | null }) {
     const resetAlerts = data.amount !== undefined || data.categoryId !== undefined;
     return prisma.budget.update({
@@ -64,10 +106,25 @@ export class BudgetRepository {
     });
   }
 
+  /**
+   * Delete budget through the budget workflow.
+   *
+   * Use it from services that need budget persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @returns A promise containing the resulting budget value.
+   */
   async delete(id: string) {
     return prisma.budget.delete({ where: { id } });
   }
 
+  /**
+   * Claim alert for budget.
+   *
+   * Use it from services that need budget persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param level - The level value required by the operation.
+   * @returns A promise containing the resulting budget value.
+   */
   async claimAlert(id: string, level: 'WARNING' | 'EXCEEDED') {
     const field = level === 'WARNING' ? 'warningNotified' : 'exceededNotified';
     const result = await prisma.budget.updateMany({
@@ -77,11 +134,29 @@ export class BudgetRepository {
     return result.count === 1;
   }
 
+  /**
+   * Release alert for budget.
+   *
+   * Use it from services that need budget persistence.
+   * @param id - The stable identifier of the record targeted by the operation.
+   * @param level - The level value required by the operation.
+   * @returns A promise that resolves after the operation completes.
+   */
   async releaseAlert(id: string, level: 'WARNING' | 'EXCEEDED') {
     const field = level === 'WARNING' ? 'warningNotified' : 'exceededNotified';
     await prisma.budget.update({ where: { id }, data: { [field]: false } });
   }
 
+  /**
+   * Return spent amount required by the budget workflow.
+   *
+   * Use it from services that need budget persistence.
+   * @param userId - The identifier of the user whose data is being processed.
+   * @param categoryId - The stable identifier of the record targeted by the operation.
+   * @param month - The date or reporting period used by the operation.
+   * @param year - The date or reporting period used by the operation.
+   * @returns A promise containing the resulting budget value.
+   */
   async getSpentAmount(userId: string, categoryId: string | null, month: number, year: number): Promise<number> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
