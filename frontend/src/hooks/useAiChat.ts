@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import api from '@/services/api/client';
+import { useReducedMotion } from './useReducedMotion';
 
 export interface ChatMessage {
   id: string;
@@ -15,6 +16,7 @@ export interface ChatMessage {
  * @returns The current ai chat state and the actions that operate on it.
  */
 export const useAiChat = () => {
+  const reducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -46,8 +48,8 @@ export const useAiChat = () => {
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, chatMutation.isPending]);
+    if (open) bottomRef.current?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+  }, [messages, chatMutation.isPending, open, reducedMotion]);
 
   /**
    * Send use ai chat through the use ai chat boundary.

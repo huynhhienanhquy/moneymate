@@ -1,6 +1,6 @@
 import type { UserDto } from '@moneymate/contracts';
 import { Link } from 'react-router-dom';
-import { Menu, Moon, Sun, User as UserIcon } from 'lucide-react';
+import { CalendarDays, ChevronDown, Menu, Moon, Sun, User as UserIcon } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell/NotificationBell';
 import { APP_ROUTES } from '@/constants/routes';
 
@@ -20,22 +20,23 @@ type TopbarProps = {
  * @returns The rendered topbar interface.
  */
 const Topbar = ({ user, theme, currentPage, onMenuOpen, onThemeToggle }: TopbarProps) => (
-  <header className="dashboard-topbar sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200/70 bg-white/95 px-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 md:px-8">
-    <button onClick={onMenuOpen} aria-label="Mở menu" className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 focus:outline-none"><Menu className="size-6" /></button>
+  <header className="dashboard-topbar sticky top-0 z-40 flex h-[76px] items-center justify-between gap-2 border-b border-ui-border bg-ui-surface/95 px-4 backdrop-blur-xl md:px-8 xl:px-10">
+    <button onClick={onMenuOpen} aria-label="Mở menu" aria-haspopup="dialog" className="app-icon-button md:hidden"><Menu className="size-5" /></button>
     <div className="min-w-0 md:pl-1">
-      <p className="truncate text-sm font-medium text-slate-500 dark:text-slate-400"><span className="hidden sm:inline">Hệ thống&nbsp;&nbsp;/&nbsp;&nbsp;</span><strong className="font-bold text-slate-900 dark:text-slate-100">{currentPage}</strong></p>
+      <p className="truncate text-xs font-medium text-ui-muted"><span className="hidden lg:inline">Không gian cá nhân<span className="mx-3 text-slate-300 dark:text-slate-600">/</span></span><strong className="font-semibold text-ui-text">{currentPage}</strong></p>
     </div>
     <div className="flex items-center gap-2 sm:gap-3">
-      <div className="hidden items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-600 sm:flex dark:bg-slate-800 dark:text-slate-300">
-        <span aria-hidden="true">▣</span>{new Date().toLocaleDateString('vi-VN', { weekday: 'short', month: 'numeric', day: 'numeric', year: 'numeric' })}
+      <div className="mr-2 hidden items-center gap-2 text-xs font-medium text-ui-muted xl:flex">
+        <CalendarDays aria-hidden="true" className="size-4" />{new Date().toLocaleDateString('vi-VN', { month: 'long', day: 'numeric', year: 'numeric' })}
       </div>
-      <button onClick={onThemeToggle} aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'} className="hidden md:flex p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+      <button onClick={onThemeToggle} aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'} className="app-icon-button">
         {theme === 'dark' ? <Sun  className="size-4.5 text-amber-400" /> : <Moon  className="size-4.5 text-brand-500" />}
       </button>
       <NotificationBell />
-      <Link to={APP_ROUTES.profile} aria-label="Mở hồ sơ" className="flex items-center gap-2 rounded-xl p-1 pr-2 transition hover:bg-slate-50 dark:hover:bg-slate-800">
+      <Link to={APP_ROUTES.profile} aria-label="Mở hồ sơ" className="ml-1 flex min-h-11 items-center gap-2.5 rounded-xl border-l border-ui-border py-1 pl-3 pr-1 transition hover:bg-slate-50 dark:hover:bg-slate-800 sm:pl-4">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-sm font-extrabold text-white shadow-sm">{user?.fullName ? user.fullName[0].toUpperCase() : <UserIcon className="size-icon-small" />}</span>
-        <span className="hidden min-w-0 text-left lg:block"><strong className="block max-w-32 truncate text-body-small font-bold text-slate-900 dark:text-white">{user?.fullName || 'Người dùng'}</strong><small className="block text-caption text-slate-500">Premium Plan</small></span>
+        <span className="hidden min-w-0 text-left lg:block"><strong className="block max-w-32 truncate text-xs font-bold text-ui-text">{user?.fullName || 'Người dùng'}</strong><small className="mt-0.5 block text-[10px] text-ui-muted">{user?.role === 'ADMIN' ? 'Quản trị viên' : 'Tài khoản cá nhân'}</small></span>
+        <ChevronDown aria-hidden="true" className="hidden size-3.5 text-ui-muted lg:block" />
       </Link>
     </div>
   </header>

@@ -1,8 +1,9 @@
 import AppInput from '@/components/common/AppInput/AppInput';
 import AppButton from '@/components/common/AppButton/AppButton';
-import React from 'react';
+import React, { useRef } from 'react';
 import { Bot, X, Send, Loader2, Sparkles } from 'lucide-react';
 import { useAiChat } from '@/hooks/useAiChat';
+import { useAnimatedPresence } from '@/hooks/useAnimatedPresence';
 
 /**
  * Render the ai chat widget interface.
@@ -12,25 +13,38 @@ import { useAiChat } from '@/hooks/useAiChat';
  */
 const AiChatWidget: React.FC = () => {
   const { open, setOpen, input, setInput, messages, suggestions, bottomRef, send, isSending } = useAiChat();
+  const { isPresent, motionState } = useAnimatedPresence(open);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  const closeChat = () => {
+    setOpen(false);
+    launcherRef.current?.focus();
+  };
 
   return (
     <>
       <AppButton unstyled
+        ref={launcherRef}
+        aria-label="Mở trò chuyện MoneyMate AI"
+        aria-expanded={open}
+        aria-controls={open ? 'ai-chat-panel' : undefined}
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-105 hover:bg-blue-700"
+        className="app-chat-launcher fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/30 hover:bg-blue-700"
         title="MoneyMate AI Chat"
       >
         <Bot className="size-6" />
       </AppButton>
 
-      {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-chat-width max-w-chat-viewport h-chat-height flex flex-col bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      {isPresent && (
+        <div id="ai-chat-panel" role="dialog" aria-label="MoneyMate AI" data-state={motionState}
+          aria-hidden={!open || undefined} {...(!open ? { inert: '' } : {})}
+          onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); closeChat(); } }}
+          className="app-chat-panel fixed bottom-24 right-6 z-50 w-chat-width max-w-chat-viewport h-chat-height max-h-[calc(100dvh-7.5rem)] flex flex-col bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-800 bg-brand-600/10">
             <div className="flex items-center gap-2">
               <Sparkles  className="size-4.5 text-brand-400" />
               <span className="font-semibold text-sm text-gray-900 dark:text-slate-100">MoneyMate AI</span>
             </div>
-            <AppButton unstyled onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300"><X className="size-4.5" /></AppButton>
+            <AppButton unstyled aria-label="Đóng trò chuyện" onClick={closeChat} className="app-icon-button min-h-8 min-w-8"><X className="size-4.5" /></AppButton>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -52,7 +66,7 @@ const AiChatWidget: React.FC = () => {
               </div>
             )}
             {messages.map((m) => (
-              <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={m.id} className={`app-chat-message flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-chat-message px-3 py-2 rounded-xl text-sm ${m.role === 'user'
                   ? 'bg-brand-600 text-white rounded-br-sm'
                   : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-bl-sm'}`}>

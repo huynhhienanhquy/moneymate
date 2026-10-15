@@ -1,349 +1,149 @@
-import { chartTheme } from '@/theme/charts';
-import AppTitle from '@/components/common/AppTitle/AppTitle';
+import type { ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowDownLeft, ArrowDownRight, ArrowRight, ArrowUpRight, BarChart3, CalendarDays, ChevronRight, PiggyBank, ReceiptText, Sparkles, Target, Wallet } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import AppCard from '@/components/common/AppCard/AppCard';
 import AppButton from '@/components/common/AppButton/AppButton';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { TrendingDown, Wallet, Sparkles, Loader2, ArrowUpRight, ArrowDownLeft, ChevronRight, ScanLine, ArrowLeftRight, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
-} from 'recharts';
+import { APP_ROUTES } from '@/constants/routes';
+import { chartTheme } from '@/theme/charts';
 import api from '@/services/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import { formatVND } from '@/utils/formatCurrency';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
+const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 const PIE_COLORS = chartTheme.palette;
 
-/**
- * Render the stat card interface.
- *
- * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
- * @param props - The properties that configure this React component.
- * @returns The rendered stat card interface.
- */
-const StatCard: React.FC<{
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  variant: 'asset' | 'expense' | 'savings';
-  trend?: string;
-  trendColor?: string;
-}> = ({ title, value, icon, iconBg, variant, trend, trendColor }) => {
-  const variantClass = {
-    asset: 'app-stat-card-asset',
-    expense: 'app-stat-card-expense',
-    savings: 'app-stat-card-savings',
-  }[variant];
-
-  return (
-    <div className={`app-stat-card ${variantClass}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
-          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100 truncate tracking-tight">{value}</p>
-        </div>
-        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl flex-shrink-0 shadow-md ${iconBg}`}>
-          {icon}
-        </div>
-      </div>
-      {trend && (
-        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-          <p className={`text-xs font-semibold ${trendColor || 'text-slate-500 dark:text-slate-400'} truncate`}>
-            {trend}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+const StatCard = ({ title, value, icon, tone, caption }: { title: string; value: number; icon: ReactNode; tone: 'income' | 'expense' | 'savings'; caption: string }) => {
+  const colors = {
+    income: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
+    expense: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400',
+    savings: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300',
+  };
+  return <div className="app-stat-card flex min-h-[156px] flex-col justify-between p-4 sm:min-h-[188px] sm:p-5">
+    <div className="flex items-center justify-between gap-2"><p className="text-[11px] font-medium text-ui-muted sm:text-xs">{title}</p><span className={`flex size-8 shrink-0 items-center justify-center rounded-xl sm:size-9 ${colors[tone]}`}>{icon}</span></div>
+    <p data-money className="my-3 break-words text-lg font-extrabold leading-tight tracking-tight text-ui-text sm:text-[clamp(1.2rem,1.65vw,1.65rem)]">{formatVND(value)}</p>
+    <p className="text-[10px] leading-5 text-ui-muted">{caption}</p>
+  </div>;
 };
 
-const MONTHS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
-
-/**
- * Render the dashboard page interface.
- *
- * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
- * @returns The rendered dashboard page interface.
- */
-const DashboardPage: React.FC = () => {
+const DashboardPage = () => {
+  const reducedMotion = useReducedMotion();
   const { user } = useAuthStore();
-
-  const dashboardQuery = useQuery({
-    queryKey: ['dashboard'],
-    /**
-     * Load dashboard page data for the query cache.
-     *
-     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
-     * @returns The resulting dashboard page value for the caller.
-     */
-    queryFn: () => api.get('/transactions/dashboard').then(r => r.data.data),
-    staleTime: 60_000,
-  });
-
   const now = new Date();
-  const reportQuery = useQuery({
-    queryKey: ['monthly-report', now.getMonth() + 1, now.getFullYear()],
-    /**
-     * Load dashboard page data for the query cache.
-     *
-     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
-     * @returns The resulting dashboard page value for the caller.
-     */
-    queryFn: () =>
-      api.get('/transactions/report', { params: { month: now.getMonth() + 1, year: now.getFullYear() } })
-        .then(r => r.data.data),
-    staleTime: 60_000,
-  });
+  const dashboardQuery = useQuery({ queryKey: ['dashboard'], queryFn: () => api.get('/transactions/dashboard').then(r => r.data.data), staleTime: 60_000 });
+  const reportQuery = useQuery({ queryKey: ['monthly-report', now.getMonth() + 1, now.getFullYear()], queryFn: () => api.get('/transactions/report', { params: { month: now.getMonth() + 1, year: now.getFullYear() } }).then(r => r.data.data), staleTime: 60_000 });
+  const trendQuery = useQuery({ queryKey: ['monthly-trend', 6], queryFn: () => api.get('/transactions/trend', { params: { months: 6 } }).then(r => r.data.data), staleTime: 60_000 });
+  const { data: aiInsight } = useQuery({ queryKey: ['ai-analysis-dash'], queryFn: () => api.get('/ai/analyze/expenses').then(r => r.data.data), staleTime: 120_000 });
 
-  const trendQuery = useQuery({
-    queryKey: ['monthly-trend', 6],
-    /**
-     * Load dashboard page data for the query cache.
-     *
-     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
-     * @returns The resulting dashboard page value for the caller.
-     */
-    queryFn: () => api.get('/transactions/trend', { params: { months: 6 } }).then(r => r.data.data),
-    staleTime: 60_000,
-  });
-
-  const { data: aiInsight } = useQuery({
-    queryKey: ['ai-analysis-dash'],
-    /**
-     * Load dashboard page data for the query cache.
-     *
-     * Use it to keep the dashboard page workflow's presentation and interactions in one reusable UI boundary.
-     * @returns The resulting dashboard page value for the caller.
-     */
-    queryFn: () => api.get('/ai/analyze/expenses').then(r => r.data.data),
-    staleTime: 120_000,
-  });
-
-  if (dashboardQuery.isLoading) {
-    return (
-      <div className="flex h-full min-h-empty-large items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2  className="size-9 animate-spin text-brand-500" />
-          <p className="text-slate-400 font-medium text-sm">Đang tải tổng quan tài chính...</p>
-        </div>
-      </div>
-    );
+  if (dashboardQuery.isLoading || reportQuery.isLoading || trendQuery.isLoading) {
+    return <div role="status" className="space-y-6"><p className="text-sm font-medium text-ui-muted">Đang tải tổng quan tài chính...</p><div className="app-skeleton h-20" /><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">{[0, 1, 2, 3].map(key => <div key={key} className="app-skeleton h-44" />)}</div><div className="app-skeleton h-80" /></div>;
   }
-
   if (dashboardQuery.isError || reportQuery.isError || trendQuery.isError) {
-    return (
-      <AppCard padding="none" className="flex min-h-empty-half flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
-        <p className="text-base font-bold text-rose-600 dark:text-rose-400">Không thể tải tổng quan tài chính</p>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Dữ liệu hiện tại chưa được thay bằng số 0. Vui lòng kiểm tra kết nối và thử lại.</p>
-        <AppButton onClick={() => {
-          void dashboardQuery.refetch();
-          void reportQuery.refetch();
-          void trendQuery.refetch();
-        }}>Thử lại</AppButton>
-      </AppCard>
-    );
+    return <AppCard padding="none" className="flex min-h-empty-half flex-col items-center justify-center gap-3 p-8 text-center" role="alert">
+      <span className="dashboard-empty-icon"><BarChart3 className="size-6" /></span>
+      <p className="text-base font-bold text-rose-600 dark:text-rose-400">Không thể tải tổng quan tài chính</p>
+      <p className="max-w-sm text-sm text-ui-muted">Vui lòng kiểm tra kết nối và thử lại để xem số liệu mới nhất của bạn.</p>
+      <AppButton onClick={() => { void dashboardQuery.refetch(); void reportQuery.refetch(); void trendQuery.refetch(); }}>Thử lại</AppButton>
+    </AppCard>;
   }
 
   const dashData = dashboardQuery.data;
-  const reportData = reportQuery.data;
-  const trendData = trendQuery.data ?? [];
+  const netWorth = Number(dashData?.netWorth ?? 0);
+  const monthlyIncome = Number(dashData?.monthlyIncome ?? 0);
+  const monthlyExpense = Number(dashData?.monthlyExpense ?? 0);
+  const monthlySavings = Number(dashData?.monthlySavings ?? 0);
+  const recentTransactions: any[] = (dashData?.recentTransactions || []).filter((tx: any) => tx.type !== 'TRANSFER');
+  const categoryExpenses: any[] = reportQuery.data?.categoryExpenses || [];
+  const categoryTotal = categoryExpenses.reduce((total, category) => total + Number(category.amount), 0);
+  const barData = (trendQuery.data ?? []).map((item: any) => ({ name: item.label || (item.month ? MONTHS[item.month - 1] : ''), income: item.income, expense: item.expense }));
+  const hasTrend = barData.some((item: any) => Number(item.income) > 0 || Number(item.expense) > 0);
 
-  const netWorth: number = dashData?.netWorth || 0;
-  const monthlyExpense: number = dashData?.monthlyExpense || 0;
-  const monthlySavings: number = dashData?.monthlySavings || 0;
-  const recentTransactions: any[] = (dashData?.recentTransactions || []).filter((transaction: any) => transaction.type !== 'TRANSFER');
-  const categoryExpenses: any[] = reportData?.categoryExpenses || [];
+  return <div className="dashboard-page space-y-6 animate-fade-in">
+    <PageHeader size="hero" eyebrow="Không gian tài chính của bạn" title="Tổng quan tài chính"
+      description={`Chào ${user?.fullName?.split(' ').pop() || 'bạn'}, cùng nhìn lại bức tranh tài chính hôm nay.`}
+      actions={<><Link to={APP_ROUTES.reports} className="app-secondary-button"><BarChart3 className="size-4" /> Xem báo cáo</Link><Link to={APP_ROUTES.transactions} className="app-primary-button"><ReceiptText className="size-4" /> Quản lý giao dịch</Link></>} />
 
-  const barData = trendData.map((item: any) => ({
-    name: item.label || (item.month ? MONTHS[item.month - 1] : ''),
-    income: item.income,
-    expense: item.expense,
-  }));
+    <div className="flex items-center justify-between gap-2 border-b border-ui-border pb-3">
+      <div className="flex items-center gap-2 text-xs font-semibold text-ui-text"><CalendarDays className="size-4 text-ui-muted" />Tháng {now.getMonth() + 1}, {now.getFullYear()}</div>
+      <span className="text-[11px] text-ui-muted">Đơn vị: VND</span>
+    </div>
 
-  return (
-    <div className="dashboard-page space-y-6 animate-fade-in">
-      {/* Page Header */}
-      <PageHeader
-        size="hero"
-        eyebrow="Tổng quan tài chính"
-        title={`Xin chào, ${user?.fullName?.split(' ').pop() || 'bạn'} 👋`}
-        description={<><span className="mr-1">Tổng tài sản</span><strong className="ml-1 text-xl text-white">{formatVND(netWorth)}</strong><span className="ml-2 text-xs">· đồng bộ tháng {now.getMonth() + 1}/{now.getFullYear()}</span></>}
-        actions={<><Link to="/transactions" className="app-primary-button"><Plus className="size-4" /> Thêm giao dịch</Link><Link to="/transactions" className="app-secondary-button"><ScanLine className="size-4" /> Quét hóa đơn</Link><Link to="/wallets" className="app-secondary-button"><ArrowLeftRight className="size-4" /> Chuyển khoản</Link></>}
-      />
+    <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      <section className="dashboard-balance" aria-label="Tổng tài sản">
+        <div className="flex items-center justify-between gap-2"><p className="text-xs font-medium text-blue-100">Tổng tài sản</p><Wallet className="size-5 text-blue-200" /></div>
+        <p data-money className="my-3 break-words text-lg font-extrabold leading-tight tracking-tight sm:text-[clamp(1.2rem,1.65vw,1.65rem)]">{formatVND(netWorth)}</p>
+        <Link to={APP_ROUTES.wallets} className="flex items-center justify-between border-t border-white/15 pt-3 text-[10px] font-medium text-blue-100 transition-colors hover:text-white">Số dư trên các ví<ArrowUpRight className="size-3.5" /></Link>
+      </section>
+      <StatCard title="Thu nhập tháng này" value={monthlyIncome} icon={<ArrowDownLeft className="size-4.5" />} tone="income" caption="Tổng các khoản thu trong tháng" />
+      <StatCard title="Chi tiêu tháng này" value={monthlyExpense} icon={<ArrowUpRight className="size-4.5" />} tone="expense" caption="Tổng các khoản chi trong tháng" />
+      <StatCard title="Tiết kiệm tháng này" value={monthlySavings} icon={<PiggyBank className="size-4.5" />} tone="savings" caption="Theo tổng quan tài chính hiện tại" />
+    </div>
 
-      {/* AI Insight Banner */}
-      {aiInsight?.insights?.[0] && (
-        <Link to="/ai" className="dashboard-insight app-card flex items-center gap-4 p-3.5 group">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-cyan-400 text-white shadow-lg shadow-brand-500/25 flex-shrink-0">
-            <Sparkles  className="size-icon-medium animate-pulse" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="app-badge app-badge-info">AI Advisor</span>
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{aiInsight.insights[0].title}</p>
-            </div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">{aiInsight.insights[0].message}</p>
-          </div>
-          <ChevronRight  className="size-4.5 text-brand-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
-        </Link>
-      )}
+    <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-5">
+      <AppCard padding="none" className="min-w-0 p-5 sm:p-6 xl:col-span-3">
+        <div className="dashboard-chart-heading"><div><h2>Dòng tiền của bạn</h2><p>Thu nhập và chi tiêu trong 6 tháng gần nhất</p></div><div className="flex items-center gap-3 pt-1 text-[10px] text-ui-muted"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-chart-income" />Thu nhập</span><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-chart-savings" />Chi tiêu</span></div></div>
+        {hasTrend ? <div role="img" aria-label="Biểu đồ so sánh thu nhập và chi tiêu 6 tháng" className="min-w-0">
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={barData} barGap={5} margin={{ top: 15, right: 0, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 5" stroke={chartTheme.grid} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: chartTheme.muted, fontSize: 10 }} axisLine={false} tickLine={false} dy={8} />
+              <YAxis tick={{ fill: chartTheme.muted, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1_000_000).toFixed(0)}tr`} />
+              <Tooltip contentStyle={chartTheme.tooltip} cursor={{ fill: 'rgb(var(--ui-raised))' }} formatter={(value: any) => formatVND(Number(value))} />
+              <Bar dataKey="income" name="Thu nhập" fill={chartTheme.income} radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={!reducedMotion} animationDuration={650} animationEasing="ease-out" />
+              <Bar dataKey="expense" name="Chi tiêu" fill={chartTheme.savings} radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={!reducedMotion} animationBegin={80} animationDuration={650} animationEasing="ease-out" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div> : <div className="dashboard-empty"><span className="dashboard-empty-icon"><BarChart3 className="size-6" /></span><div><p className="text-sm font-semibold text-ui-text">Bắt đầu bức tranh tài chính của bạn</p><p className="mt-1 max-w-xs text-xs leading-5">Biểu đồ sẽ xuất hiện khi bạn có giao dịch thu nhập hoặc chi tiêu.</p></div><Link to={APP_ROUTES.transactions} className="text-xs font-semibold text-blue-600 dark:text-blue-300">Đến trang giao dịch <span aria-hidden="true">→</span></Link></div>}
+      </AppCard>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatCard
-          title="Tổng thu nhập tháng này"
-          value={formatVND(netWorth)}
-          icon={<Wallet  className="size-6 text-brand-500" />}
-          iconBg="bg-brand-500/10"
-          variant="asset"
-          trendColor="text-slate-500 dark:text-slate-400"
-        />
-        <StatCard
-          title="Chi tiêu tháng này"
-          value={formatVND(monthlyExpense)}
-          icon={<TrendingDown  className="size-6 text-rose-500" />}
-          iconBg="bg-rose-500/10"
-          variant="expense"
-          trendColor="text-slate-500 dark:text-slate-400"
-        />
-        <StatCard
-          title="Tiết kiệm tháng này"
-          value={formatVND(monthlySavings)}
-          icon={<Sparkles  className="size-6 text-amber-500" />}
-          iconBg="bg-amber-500/10"
-          variant="savings"
-          trendColor={monthlySavings >= 0 ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}
-        />
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Pie Chart - Category Breakdown */}
-        <AppCard padding="none" className="lg:col-span-2 p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Chi tiêu theo danh mục</AppTitle>
-              <span className="text-xs font-semibold text-slate-400 uppercase">Tháng này</span>
-            </div>
-            {categoryExpenses.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={chartTheme.donutHeight}>
-                  <PieChart>
-                    <Pie
-                      data={categoryExpenses}
-                      dataKey="amount"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={chartTheme.donutInnerRadius}
-                      outerRadius={chartTheme.donutOuterRadius}
-                      paddingAngle={4}
-                      strokeWidth={0}
-                    >
-                      {categoryExpenses.map((entry, index) => (
-                        <Cell key={entry.id} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: any) => formatVND(value)}
-                      contentStyle={chartTheme.tooltip}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <ul className="mt-4 space-y-2.5">
-                  {categoryExpenses.slice(0, 5).map((cat, i) => (
-                    <li key={cat.id} className="flex items-center justify-between text-xs font-medium">
-                      <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: cat.color || PIE_COLORS[i % PIE_COLORS.length] }}></span>
-                        {cat.name}
-                      </span>
-                      <span className="font-bold text-slate-900 dark:text-slate-100">{formatVND(cat.amount)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-52 text-slate-400 text-sm">
-                <Wallet  className="size-9 mb-2 opacity-30" />
-                <p>Chưa có dữ liệu chi tiêu tháng này</p>
-              </div>
-            )}
-          </div>
-        </AppCard>
-
-        {/* Bar Chart - Income vs Expense */}
-        <AppCard padding="none" className="lg:col-span-3 p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Thu nhập & Chi tiêu 6 tháng</AppTitle>
-              <span className="text-xs font-semibold text-brand-500 uppercase">Xu hướng</span>
-            </div>
-
-            <ResponsiveContainer width="100%" height={chartTheme.dashboardHeight}>
-              <BarChart data={barData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} opacity={0.3} />
-                <XAxis dataKey="name" tick={{ fill: chartTheme.muted, fontSize: chartTheme.tickSize, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: chartTheme.muted, fontSize: chartTheme.smallTickSize }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}M`} />
-                <Tooltip
-                  contentStyle={chartTheme.tooltip}
-                  formatter={(value: any) => formatVND(value)}
-                />
-                <Legend wrapperStyle={{ fontSize: chartTheme.tickSize, fontWeight: 600, color: chartTheme.muted, paddingTop: '10px' }} />
-                <Bar dataKey="income" name="Thu nhập" fill={chartTheme.income} radius={[chartTheme.barRadius, chartTheme.barRadius, 0, 0]} />
-                <Bar dataKey="expense" name="Chi tiêu" fill={chartTheme.expense} radius={[chartTheme.barRadius, chartTheme.barRadius, 0, 0]} />
-              </BarChart>
+      <AppCard padding="none" className="min-w-0 p-5 sm:p-6 xl:col-span-2">
+        <div className="dashboard-chart-heading"><div><h2>Chi tiêu theo danh mục</h2><p>Tiền của bạn đang đi đâu?</p></div><span className="app-badge-neutral">Tháng này</span></div>
+        {categoryTotal > 0 ? <>
+          <div className="relative" role="img" aria-label={`Phân bổ chi tiêu theo danh mục, tổng ${formatVND(categoryTotal)}`}>
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart><Pie data={categoryExpenses} dataKey="amount" nameKey="name" cx="50%" cy="50%" innerRadius={62} outerRadius={82} paddingAngle={4} strokeWidth={0} isAnimationActive={!reducedMotion} animationDuration={750} animationEasing="ease-out">
+                {categoryExpenses.map((entry, index) => <Cell key={entry.id} fill={entry.color || PIE_COLORS[index % PIE_COLORS.length]} />)}
+              </Pie><Tooltip formatter={(value: any) => formatVND(Number(value))} contentStyle={chartTheme.tooltip} /></PieChart>
             </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"><span className="text-[10px] text-ui-muted">Tổng chi tiêu</span><span className="mt-1 max-w-[115px] break-words text-center text-sm font-extrabold text-ui-text" data-money>{formatVND(categoryTotal)}</span></div>
           </div>
-        </AppCard>
-      </div>
-
-      {/* Recent Transactions */}
-      <AppCard padding="none" className="p-6">
-        <div className="flex items-center justify-between mb-5">
-          <AppTitle unstyled level={2} className="text-base font-bold text-slate-900 dark:text-slate-100">Giao dịch gần đây</AppTitle>
-          <Link to="/transactions" className="text-xs font-bold text-brand-500 hover:text-brand-400 transition">
-            Xem tất cả →
-          </Link>
-        </div>
-        {recentTransactions.length > 0 ? (
-          <div className="space-y-2.5">
-            {recentTransactions.map((tx: any) => {
-              const isIncome = tx.type === 'INCOME';
-              return (
-                <div key={tx.id} className="flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 hover:border-brand-300 dark:hover:border-slate-700 transition-all group">
-                  <div
-                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${isIncome ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}
-                  >
-                    {isIncome
-                      ? <ArrowUpRight className="size-4.5" />
-                      : <ArrowDownLeft className="size-4.5" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{tx.note || tx.category?.name}</p>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                      {tx.category?.name} · {new Date(tx.transactionDate).toLocaleDateString('vi-VN')}
-                    </p>
-                  </div>
-                  <span className={`text-base font-extrabold flex-shrink-0 ${isIncome ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {isIncome ? '+' : '-'}{formatVND(Number(tx.amount))}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-            <Wallet  className="size-10 mb-3 opacity-30" />
-            <p className="text-sm font-medium">Chưa có giao dịch nào. Hãy thêm giao dịch đầu tiên!</p>
-          </div>
-        )}
+          <ul className="mt-1 space-y-3">{categoryExpenses.slice(0, 4).map((cat, index) => <li key={cat.id} className="flex items-center justify-between gap-2 text-[11px]"><span className="flex min-w-0 items-center gap-2 text-ui-muted"><span className="size-2 shrink-0 rounded-full" style={{ background: cat.color || PIE_COLORS[index % PIE_COLORS.length] }} /><span className="truncate">{cat.name}</span></span><span className="shrink-0 font-semibold text-ui-text">{formatVND(Number(cat.amount))}<span className="ml-2 inline-block w-8 text-right font-normal text-ui-muted">{Math.round(Number(cat.amount) / categoryTotal * 100)}%</span></span></li>)}</ul>
+        </> : <div className="dashboard-empty"><span className="dashboard-empty-icon"><Wallet className="size-6" /></span><div><p className="text-sm font-semibold text-ui-text">Chưa có chi tiêu tháng này</p><p className="mt-1 text-xs leading-5">Các danh mục sẽ xuất hiện sau khoản chi đầu tiên.</p></div></div>}
       </AppCard>
     </div>
-  );
+
+    {aiInsight?.insights?.[0] && <Link to={APP_ROUTES.aiAdvisor} className="dashboard-insight group">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300"><Sparkles className="size-4.5" /></span>
+      <div className="min-w-0 flex-1"><p className="text-xs font-bold text-ui-text"><span className="mr-2 text-blue-600 dark:text-blue-300">Góc nhìn AI</span>{aiInsight.insights[0].title}</p><p className="mt-1 text-xs leading-5 text-ui-muted">{aiInsight.insights[0].message || aiInsight.insights[0].description}</p></div><ChevronRight className="mt-2 size-4 shrink-0 text-blue-600 dark:text-blue-300" />
+    </Link>}
+
+    <div className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-5">
+      <AppCard padding="none" className="min-w-0 p-5 sm:p-6 xl:col-span-3">
+        <div className="dashboard-chart-heading"><div><h2>Giao dịch gần đây</h2><p>Những chuyển động tài chính mới nhất</p></div><Link to={APP_ROUTES.transactions} className="flex min-h-8 items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-300">Xem tất cả <ChevronRight className="size-3.5" /></Link></div>
+        {recentTransactions.length > 0 ? <div>{recentTransactions.map(tx => {
+          const isIncome = tx.type === 'INCOME';
+          return <div key={tx.id} className="dashboard-transaction">
+            <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${isIncome ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300'}`}>{isIncome ? <ArrowDownLeft className="size-4.5" /> : <ArrowUpRight className="size-4.5" />}</span>
+            <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-ui-text">{tx.note || tx.category?.name}</p><p className="mt-1 text-[10px] text-ui-muted">{tx.category?.name} · {new Date(tx.transactionDate).toLocaleDateString('vi-VN')}</p></div>
+            <span data-money className={`max-w-full break-words text-right text-xs font-bold ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-ui-text'}`}>{isIncome ? '+' : '−'}{formatVND(Number(tx.amount))}</span>
+          </div>;
+        })}</div> : <div className="dashboard-empty min-h-[200px]"><span className="dashboard-empty-icon"><ReceiptText className="size-6" /></span><p className="max-w-xs text-xs leading-5">Chưa có giao dịch nào. Hãy ghi lại giao dịch đầu tiên để bắt đầu.</p><Link to={APP_ROUTES.transactions} className="app-secondary-button">Đến trang giao dịch<ArrowRight className="size-4" /></Link></div>}
+      </AppCard>
+      <AppCard padding="none" className="p-5 sm:p-6 xl:col-span-2">
+        <span className="mb-4 flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"><Target className="size-5" /></span>
+        <h2 className="text-base font-bold text-ui-text">Từng bước, gần hơn mục tiêu</h2>
+        <p className="mt-2 text-xs leading-6 text-ui-muted">Một kế hoạch rõ ràng hôm nay giúp bạn chủ động hơn với ngày mai.</p>
+        <div className="mt-5 space-y-2">
+          <Link to={APP_ROUTES.budgets} className="flex min-h-12 items-center gap-3 rounded-xl border border-ui-border px-3 text-xs font-semibold text-ui-text transition-colors hover:bg-ui-raised"><PiggyBank className="size-4 text-ui-muted" /><span className="flex-1">Lập ngân sách chi tiêu</span><ChevronRight className="size-3.5 text-ui-muted" /></Link>
+          <Link to={APP_ROUTES.savingGoals} className="flex min-h-12 items-center gap-3 rounded-xl border border-ui-border px-3 text-xs font-semibold text-ui-text transition-colors hover:bg-ui-raised"><ArrowDownRight className="size-4 text-ui-muted" /><span className="flex-1">Đặt mục tiêu tiết kiệm</span><ChevronRight className="size-3.5 text-ui-muted" /></Link>
+        </div>
+      </AppCard>
+    </div>
+    <p className="pt-1 text-center text-[10px] text-slate-400 dark:text-slate-500">MoneyMate · Từng bước vững vàng hơn với tài chính của bạn</p>
+  </div>;
 };
 
 export default DashboardPage;

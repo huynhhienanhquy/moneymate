@@ -1,12 +1,12 @@
 /** Web presentation tokens consumed by Tailwind and numeric chart props. */
 export const webTheme = {
   colors: {
-    surface: '#faf8ff', 'surface-dim': '#d2d9f4', 'surface-bright': '#faf8ff',
-    'surface-container-lowest': '#ffffff', 'surface-container-low': '#f2f3ff',
-    'surface-container': '#eaedff', 'surface-container-high': '#e2e7ff', 'surface-container-highest': '#dae2fd',
+    surface: '#f6f8fc', 'surface-dim': '#e2e8f0', 'surface-bright': '#f8fafc',
+    'surface-container-lowest': '#ffffff', 'surface-container-low': '#f1f5f9',
+    'surface-container': '#e9eef5', 'surface-container-high': '#e2e8f0', 'surface-container-highest': '#cbd5e1',
     'on-surface': '#131b2e', 'on-surface-variant': '#434655',
     'inverse-surface': '#283044', 'inverse-on-surface': '#eef0ff',
-    outline: '#737686', 'outline-variant': '#c3c6d7', 'surface-tint': '#0053db',
+    outline: '#64748b', 'outline-variant': '#e2e8f0', 'surface-tint': '#0053db',
     primary: '#004ac6', 'on-primary': '#ffffff', 'primary-container': '#2563eb', 'on-primary-container': '#eeefff',
     'inverse-primary': '#b4c5ff', 'primary-fixed': '#dbe1ff', 'primary-fixed-dim': '#b4c5ff',
     'on-primary-fixed': '#00174b', 'on-primary-fixed-variant': '#003ea8',
@@ -15,7 +15,7 @@ export const webTheme = {
     tertiary: '#ad0033', 'on-tertiary': '#ffffff', 'tertiary-container': '#d22348', 'on-tertiary-container': '#ffecec',
     'tertiary-fixed': '#ffdadb', 'tertiary-fixed-dim': '#ffb2b7', 'on-tertiary-fixed': '#40000d', 'on-tertiary-fixed-variant': '#92002a',
     error: '#ba1a1a', 'on-error': '#ffffff', 'error-container': '#ffdad6', 'on-error-container': '#93000a',
-    background: '#faf8ff', 'on-background': '#131b2e', 'surface-variant': '#dae2fd',
+    background: '#f6f8fc', 'on-background': '#131b2e', 'surface-variant': '#e2e8f0',
     'primary-hover': '#003ea8', logo: '#004ac6', action: '#004ac6', 'action-hover': '#003ea8',
     accent: '#006c49', 'accent-hover': '#005236', 'nav-active': '#dbe1ff', 'nav-surface': '#ffffff',
     'panel-muted': '#f2f3ff', 'panel-subtle': '#faf8ff', 'hero-dark': '#00174b',
@@ -23,9 +23,10 @@ export const webTheme = {
     'auth-surface': '#faf8ff', 'auth-start': '#004ac6', 'auth-middle': '#2563eb', 'auth-end': '#003ea8',
     'balance-positive': '#006c49', 'focus-accent': '#0053db',
   },
-  light: { surface: '#ffffff', raised: '#f2f3ff', text: '#131b2e', muted: '#434655', border: '#c3c6d7', grid: '#e2e7ff' },
-  dark: { surface: '#283044', raised: '#131b2e', text: '#eef0ff', muted: '#b4c5ff', border: '#434655', grid: '#434655' },
+  light: { surface: '#ffffff', raised: '#f6f8fc', text: '#172338', muted: '#64748b', border: '#e2e8f0', grid: '#e9eef5' },
+  dark: { surface: '#111c2f', raised: '#0b1220', text: '#f1f5f9', muted: '#94a3b8', border: '#243248', grid: '#243248' },
   chartColors: { income: '#006c49', expense: '#ad0033', savings: '#2563eb', warning: '#d22348', blue: '#004ac6', purple: '#003ea8', cyan: '#4edea3', orange: '#d22348', violet: '#0053db', pink: '#ad0033', teal: '#00714d' },
+  darkChartColors: { income: '#34d399', expense: '#fb7185', savings: '#60a5fa', warning: '#fbbf24' },
   backgroundImage: {
   "app": "radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.10) 0%, transparent 42%), radial-gradient(circle at 100% 0%, rgba(108, 248, 187, 0.10) 0%, transparent 42%), linear-gradient(135deg, #faf8ff 0%, #f2f3ff 55%, #eaedff 100%)",
   "app-dark": "radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.18) 0%, transparent 48%), linear-gradient(135deg, #131b2e 0%, #283044 100%)",
@@ -52,7 +53,7 @@ export const webTheme = {
   maxHeight: { modal: '90vh', 'copilot-viewport': 'calc(100dvh - 7rem)' },
   borderRadius: { compact: '9px', control: '10px', card: '16px', hero: '18px', inherit: 'inherit' },
   boxShadow: {
-    summary: '0 8px 28px rgba(19,27,46,0.07)', card: '0 7px 20px rgba(19,27,46,0.06)',
+    summary: '0 2px 8px rgba(19,27,46,0.025)', card: '0 2px 8px rgba(19,27,46,0.025)',
     wallet: '0 7px 18px rgba(19,27,46,0.05)', 'card-hover': '0 10px 24px rgba(19,27,46,0.08)',
     category: '0 6px 18px rgba(19,27,46,0.06)', 'category-system': '0 6px 18px rgba(19,27,46,0.05)', 'category-hover': '0 9px 24px rgba(19,27,46,0.09)',
     toolbar: '0 4px 18px rgba(19,27,46,0.07)', table: '0 5px 22px rgba(19,27,46,0.08)', 'icon-tile': '0 5px 18px rgba(19,27,46,0.10)',

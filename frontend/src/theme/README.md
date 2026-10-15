@@ -1,6 +1,6 @@
 # Theme web và design tokens
 
-> Đối chiếu source ngày 2026-10-13. Đây là hướng dẫn adapter web; theme native có adapter riêng ở `apps/mobile/src/theme/index.tsx`.
+> Đối chiếu source ngày 2026-10-15. Đây là hướng dẫn adapter web; theme native có adapter riêng ở `apps/mobile/src/theme/index.tsx`.
 
 ## Nguồn và luồng sử dụng
 
@@ -20,11 +20,14 @@ frontend/src/theme/charts.ts → Recharts
 | [index.ts](../../../packages/design-tokens/src/index.ts) | Tokens nền dùng chung/native, motion, kích thước; export `webTheme` |
 | [tailwind.config.js](../../tailwind.config.js) | Map tokens, palette aliases, CSS variables, utilities và font family |
 | [index.css](../styles/index.css) | Base styles, component classes, dark/focus/reduced-motion và layout |
+| [motion.css](../styles/motion.css) | Route entrance, hover/press, drawer/popover/chat, auth illustration và progress animations |
 | [charts.ts](charts.ts) | Recharts colors, tooltip và numeric geometry |
 | [copilotkit.css](../styles/copilotkit.css) | Overrides UI trợ lý |
 | [theme.store.ts](../stores/theme.store.ts) | Lưu preference web và áp `.dark` |
 
 Một số alias palette và utility vẫn được định nghĩa trực tiếp trong Tailwind; không phải toàn bộ giá trị style trong app đã được token hóa. Khi sửa foundation, kiểm tra cả shared token lẫn adapter/CSS đang ghi đè.
+
+Web dùng nền trung tính, card theo `ui.surface` và viền theo `ui.border`. Palette `slate`/`gray` giữ các cấp độ mặc định của Tailwind để chữ phụ và nền tối có độ tương phản rõ; các màu thương hiệu vẫn được ánh xạ riêng. PageHeader dùng chữ theo theme trên nền trang, điểm nhấn xanh dành cho hành động chính và thẻ tổng tài sản.
 
 ## Build và refresh token package
 
@@ -52,6 +55,8 @@ Sidebar và khoảng chừa nội dung dùng token `sidebar` để tránh lệch
 
 `chartTheme` lấy số đo từ `webTheme.chart`, dùng CSS variables cho màu chart/grid/muted và tooltip. Ví dụ gọi adapter hiện có:
 
+`webTheme.darkChartColors` ghi đè các biến màu biểu đồ trong `.dark` để tăng độ tương phản. Legend nên dùng cùng biến `chart` với series, ví dụ `bg-chart-income`, thay vì một màu cố định.
+
 ```tsx
 import { chartTheme } from '@/theme/charts';
 
@@ -68,6 +73,8 @@ Shared package chứa cả foundation và `webTheme`; mobile import foundation r
 Route, tiếng Việt hiển thị, format tiền, pagination, validation, số dư và quyền truy cập không phải CSS token. Giữ các quy tắc đó ở module chuyên trách thay vì đưa vào theme.
 
 ## Kiểm tra khi thay đổi giao diện
+
+Motion CSS được nạp sau `index.css` trong entry web và Storybook. `app-route-enter` dùng key theo pathname để phát lại khi chuyển trang, không remount khi đổi bộ lọc/query string. Chỉ các section xuất hiện lệch nhịp; wrapper không animate opacity/transform để modal fixed giữ đúng stacking và containing block. Hook `useReducedMotion` đồng bộ animation Recharts với `prefers-reduced-motion`; `useAnimatedPresence` giữ drawer/popover tối đa 180ms để chạy exit và hủy timer khi mở lại. Surface đang đóng phải có `aria-hidden`, `inert` và tắt pointer events. Toàn bộ motion CSS được tắt ở chế độ giảm chuyển động.
 
 1. Build tokens và frontend; kiểm tra không lỗi import/type.
 2. Xem màn hình liên quan ở light/dark, chiều rộng mobile/desktop, trạng thái loading/empty/error.

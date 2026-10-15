@@ -1,0 +1,188 @@
+/* Shared motion for the web app and Storybook. Transform/opacity drive entrances;
+   layout dimensions and financial values remain stable during transitions. */
+:root {
+  --motion-fast: 160ms;
+  --motion-normal: 260ms;
+  --motion-enter: 440ms;
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes app-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes app-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes app-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes app-drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@keyframes app-drawer-out {
+  to { transform: translateX(-100%); }
+}
+
+@keyframes app-popover-in {
+  from { opacity: 0; transform: translateY(-6px) scale(.97); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes app-popover-out {
+  to { opacity: 0; transform: translateY(-4px) scale(.98); }
+}
+
+@keyframes app-dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes auth-line-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes auth-orbit-drift {
+  from { transform: translate3d(0, -12px, 0) rotate(-5deg); }
+  to { transform: translate3d(-14px, 12px, 0) rotate(5deg); }
+}
+
+@keyframes app-fill-in {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+
+@keyframes app-ring-in {
+  from { stroke-dashoffset: var(--progress-circumference); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The route key changes only with pathname, so editing filters/forms never
+     remounts a page or restarts its entrance. Keep this wrapper free of opacity
+     and transforms: its fixed modal descendants must escape the page stack. */
+  .app-route-enter > .animate-fade-in { animation: none; }
+  .app-route-enter > * > :not(.fixed):not(.app-modal-overlay):not([role="dialog"]) {
+    animation: app-reveal var(--motion-enter) var(--motion-ease) backwards;
+  }
+  .app-route-enter > * > :nth-child(2) { animation-delay: 45ms; }
+  .app-route-enter > * > :nth-child(3) { animation-delay: 90ms; }
+  .app-route-enter > * > :nth-child(4) { animation-delay: 135ms; }
+  .app-route-enter > * > :nth-child(n + 5) { animation-delay: 180ms; }
+
+  .dashboard-balance,
+  .dashboard-page .app-stat-card {
+    animation: app-reveal 480ms var(--motion-ease) backwards;
+  }
+  .dashboard-page .app-stat-card:nth-child(2) { animation-delay: 70ms; }
+  .dashboard-page .app-stat-card:nth-child(3) { animation-delay: 120ms; }
+  .dashboard-page .app-stat-card:nth-child(4) { animation-delay: 170ms; }
+
+  .auth-story-copy > h2,
+  .auth-story-copy > p,
+  .auth-feature,
+  .auth-card > *,
+  .auth-form > * {
+    animation: app-reveal 560ms var(--motion-ease) backwards;
+  }
+  .auth-story-copy > p { animation-delay: 100ms; }
+  .auth-feature { animation-delay: 260ms; }
+  .auth-feature + .auth-feature { animation-delay: 340ms; }
+  .auth-card > :nth-child(2) { animation-delay: 60ms; }
+  .auth-card > :nth-child(3) { animation-delay: 100ms; }
+  .auth-form > :nth-child(2) { animation-delay: 140ms; }
+  .auth-form > :nth-child(3) { animation-delay: 200ms; }
+  .auth-form > :nth-child(n + 4) { animation-delay: 240ms; }
+  .auth-chart-line {
+    stroke-dasharray: 1;
+    animation: auth-line-draw 1400ms 160ms var(--motion-ease) both;
+  }
+  .auth-story::before { animation: auth-orbit-drift 14s ease-in-out infinite alternate; }
+
+  .app-drawer-backdrop[data-state="open"],
+  .app-modal-overlay { animation: app-fade-in 180ms ease-out; }
+  .app-drawer[data-state="open"] { animation: app-drawer-in 300ms var(--motion-ease); }
+  .app-drawer-backdrop[data-state="closed"] { animation: app-fade-out 160ms ease-in forwards; }
+  .app-drawer[data-state="closed"] { animation: app-drawer-out 160ms ease-in forwards; }
+  .app-popover { transform-origin: top right; }
+  .app-popover[data-state="open"] { animation: app-popover-in 220ms var(--motion-ease); }
+  .app-popover[data-state="closed"] { animation: app-popover-out 160ms ease-in forwards; }
+  .app-modal { animation: app-dialog-in 280ms var(--motion-ease); }
+  .app-chat-panel { transform-origin: bottom right; }
+  .app-chat-panel[data-state="open"] { animation: app-dialog-in 280ms var(--motion-ease); }
+  .app-chat-panel[data-state="closed"] { animation: app-popover-out 160ms ease-in forwards; }
+  .app-chat-message { animation: app-reveal 240ms var(--motion-ease) backwards; }
+  .app-chat-launcher { transition: transform var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) ease; }
+  .app-chat-launcher:active { transform: scale(.95); }
+  .app-progress-fill {
+    transform-origin: left center;
+    animation: app-fill-in 750ms var(--motion-ease) backwards;
+    transition: width 500ms var(--motion-ease);
+  }
+  .app-progress-ring {
+    animation: app-ring-in 800ms var(--motion-ease) backwards;
+    transition: stroke-dashoffset 500ms var(--motion-ease), stroke 200ms ease;
+  }
+  .app-layout, .dashboard-sidebar, .dashboard-topbar {
+    transition: background-color 220ms ease, border-color 220ms ease, color 180ms ease;
+  }
+
+  :is(.app-primary-button, .app-secondary-button, .app-danger-button, .auth-submit, .app-icon-button, .sidebar-control, .sidebar-link) {
+    transition-property: transform, background-color, color, border-color, box-shadow;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease);
+  }
+  :is(.app-card, .dashboard-balance, .dashboard-insight, .dashboard-transaction) {
+    transition-property: transform, border-color, background-color, box-shadow;
+    transition-duration: var(--motion-normal);
+    transition-timing-function: var(--motion-ease);
+  }
+  :is(.sidebar-link, .sidebar-control, .app-icon-button) > svg {
+    transition: transform var(--motion-normal) var(--motion-ease);
+  }
+  :is(.app-primary-button, .app-secondary-button, .app-danger-button, .auth-submit, .app-icon-button):active:not(:disabled) {
+    transform: scale(.97);
+  }
+  :is(.app-primary-button, .auth-submit):disabled { transform: none; }
+  .auth-input-wrap { transition: border-color 180ms ease, box-shadow 180ms ease; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .app-chat-launcher:hover:not(:active) { transform: translateY(-2px) scale(1.04); }
+    :is(.app-primary-button, .auth-submit):hover:not(:disabled):not(:active) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 18px rgb(0 74 198 / .2);
+    }
+    :is(.app-secondary-button, .app-danger-button):hover:not(:disabled):not(:active) { transform: translateY(-1px); }
+    .app-card-hover:hover { transform: translateY(-3px); }
+    .dashboard-page .app-stat-card:hover { border-color: rgb(var(--ui-muted) / .3); box-shadow: 0 6px 18px rgb(15 23 42 / .06); }
+    .dashboard-balance:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgb(0 74 198 / .2); }
+    .dashboard-insight:hover { transform: translateY(-2px); }
+    .dashboard-transaction:hover { background-color: rgb(var(--ui-raised)); }
+    .sidebar-link:hover > svg { transform: translateX(2px); }
+    .app-icon-button:hover > svg { transform: rotate(-8deg); }
+    .sidebar-control:hover > svg { transform: scale(1.1); }
+    .dashboard-insight > svg:last-child { transition: transform var(--motion-normal) var(--motion-ease); }
+    .dashboard-insight:hover > svg:last-child { transform: translateX(3px); }
+  }
+}
+
+/* Closing surfaces immediately stop receiving keyboard/pointer input. */
+:is(.app-drawer-backdrop, .app-popover, .app-chat-panel)[data-state="closed"] { pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  /* The legacy stagger helper hides items before animating; restore visibility
+     when animation is disabled so reduced-motion users always see the content. */
+  .animate-stagger > * { opacity: 1; transform: none; }
+  .auth-chart-line { stroke-dashoffset: 0; }
+}

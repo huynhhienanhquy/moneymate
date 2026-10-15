@@ -19,6 +19,7 @@ import { formatChartValue, formatVND } from '@/utils/formatCurrency';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
 
@@ -29,6 +30,7 @@ const MONTHS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T1
  * @returns The rendered monthly balance page interface.
  */
 const MonthlyBalancePage: React.FC = () => {
+  const reducedMotion = useReducedMotion();
   const [year, setYear] = useState(new Date().getFullYear());
 
   const { data, isLoading } = useQuery({
@@ -125,7 +127,7 @@ const MonthlyBalancePage: React.FC = () => {
                   formatter={(value: any) => formatVND(Number(value))}
                   contentStyle={chartTheme.tooltip}
                 />
-                <Bar dataKey="remaining" name="Tiết kiệm tháng" radius={[8, 8, 0, 0]}>
+                <Bar dataKey="remaining" name="Tiết kiệm tháng" radius={[8, 8, 0, 0]} isAnimationActive={!reducedMotion} animationDuration={650} animationEasing="ease-out">
                   {monthlyData.map((item: any) => (
                     <Cell key={item.month} fill={item.remaining >= 0 ? chartTheme.savings : chartTheme.expense} />
                   ))}

@@ -13,6 +13,7 @@ import { formatChartValue, formatVND } from '@/utils/formatCurrency';
 import SummaryCard from '@/components/common/SummaryCard/SummaryCard';
 import PageHeader from '@/components/common/PageHeader/PageHeader';
 import PeriodNavigator from '@/components/common/PeriodNavigator/PeriodNavigator';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 /**
  * Download file produced by the reports page workflow.
@@ -97,6 +98,7 @@ export const buildYearlyChartData = (
  * @returns The rendered reports page interface.
  */
 const ReportsPage: React.FC = () => {
+  const reducedMotion = useReducedMotion();
   const now = new Date();
   const [reportType, setReportType] = useState<'monthly' | 'yearly'>('monthly');
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -211,9 +213,9 @@ const ReportsPage: React.FC = () => {
         actions={(
           <div className="flex flex-col items-end gap-2">
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <div className="flex rounded-xl bg-blue-950/25 p-1">
+              <div className="flex rounded-xl border border-ui-border bg-ui-raised p-1">
                 {(['monthly', 'yearly'] as const).map((t) => (
-                  <AppButton unstyled key={t} onClick={() => setReportType(t)} className={`min-w-24 rounded-lg px-4 py-2 text-sm font-bold transition ${reportType === t ? 'bg-white text-primary shadow-sm' : 'text-blue-100 hover:bg-white/10'}`}>
+                  <AppButton unstyled key={t} aria-pressed={reportType === t} onClick={() => setReportType(t)} className={`min-h-9 min-w-24 rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${reportType === t ? 'bg-ui-surface text-blue-700 shadow-sm dark:text-blue-300' : 'text-ui-muted hover:text-ui-text'}`}>
                     {t === 'monthly' ? 'Theo tháng' : 'Theo năm'}
                   </AppButton>
                 ))}
@@ -258,18 +260,18 @@ const ReportsPage: React.FC = () => {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <SummaryCard icon={<TrendingUp className="size-4.5" />} label={reportType === 'monthly' ? 'Tổng thu nhập tháng này' : 'Tổng thu nhập năm này'} value={formatVND(summary?.totalIncome || 0)} tone="green" variant="solid" caption="Dòng tiền vào trong kỳ" />
-            <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Tổng chi tiêu" value={formatVND(summary?.totalExpense || 0)} tone="red" variant="solid" caption="Chi phí đã ghi nhận" />
-            <SummaryCard icon={<Sparkles className="size-4.5" />} label="Tiết kiệm" badge={`${savingsRate}%`} value={formatVND(summary?.netSavings || 0)} tone={(summary?.netSavings || 0) >= 0 ? 'blue' : 'red'} variant="solid" caption="Tỷ lệ tiết kiệm trong kỳ" />
+            <SummaryCard icon={<TrendingUp className="size-4.5" />} label={reportType === 'monthly' ? 'Tổng thu nhập tháng này' : 'Tổng thu nhập năm này'} value={formatVND(summary?.totalIncome || 0)} tone="green" caption="Dòng tiền vào trong kỳ" />
+            <SummaryCard icon={<TrendingDown className="size-4.5" />} label="Tổng chi tiêu" value={formatVND(summary?.totalExpense || 0)} tone="red" caption="Chi phí đã ghi nhận" />
+            <SummaryCard icon={<Sparkles className="size-4.5" />} label="Tiết kiệm" badge={`${savingsRate}%`} value={formatVND(summary?.netSavings || 0)} tone={(summary?.netSavings || 0) >= 0 ? 'blue' : 'red'} caption="Tỷ lệ tiết kiệm trong kỳ" />
           </div>
 
           {/* Charts */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-overview">
             {/* Bar/Line Chart */}
-            <div className="rounded-2xl bg-white p-6 shadow-summary dark:bg-slate-900">
+            <div className="app-card min-w-0 p-5 sm:p-6">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><AppTitle unstyled level={2} className="font-extrabold text-slate-950 dark:text-slate-100">
                 {reportType === 'yearly' ? 'Thu chi theo tháng' : 'Thu chi tháng này'}
-              </AppTitle><div className="flex gap-4 font-semibold"><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-emerald-500" />Thu nhập</span><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-red-600" />Chi tiêu</span></div></div>
+              </AppTitle><div className="flex gap-4 font-semibold"><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-chart-income" />Thu nhập</span><span className="flex items-center gap-2 text-slate-600 dark:text-slate-300"><i className="h-3 w-3 rounded-full bg-chart-expense" />Chi tiêu</span></div></div>
               <ResponsiveContainer width="100%" height={300}>
                 {reportType === 'yearly' ? (
                   <LineChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -280,8 +282,8 @@ const ReportsPage: React.FC = () => {
                       contentStyle={chartTheme.tooltip}
                       formatter={(value: any) => formatVND(value)}
                     />
-                    <Line type="monotone" dataKey="income" name="Thu nhập" stroke={chartTheme.income} strokeWidth={2} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="expense" name="Chi tiêu" stroke={chartTheme.expense} strokeWidth={2} dot={{ r: 3 }} />
+                    <Line isAnimationActive={!reducedMotion} animationDuration={700} animationEasing="ease-out" type="monotone" dataKey="income" name="Thu nhập" stroke={chartTheme.income} strokeWidth={2} dot={{ r: 3 }} />
+                    <Line isAnimationActive={!reducedMotion} animationDuration={700} animationEasing="ease-out" type="monotone" dataKey="expense" name="Chi tiêu" stroke={chartTheme.expense} strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 ) : (
                   <BarChart data={chartData} margin={{ top: 24, right: 10, left: -10, bottom: 0 }} barGap={16}>
@@ -292,14 +294,14 @@ const ReportsPage: React.FC = () => {
                       contentStyle={chartTheme.tooltip}
                       formatter={(value: any) => formatVND(value)}
                     />
-                    <Bar dataKey="income" name="Thu nhập" fill={chartTheme.income} radius={[chartTheme.reportBarRadius, chartTheme.reportBarRadius, 0, 0]} maxBarSize={chartTheme.maxBarSize}><LabelList dataKey="income" position="top" formatter={(v: unknown) => formatVND(Number(v))} fill={chartTheme.income} /></Bar>
-                    <Bar dataKey="expense" name="Chi tiêu" fill={chartTheme.expense} radius={[chartTheme.reportBarRadius, chartTheme.reportBarRadius, 0, 0]} maxBarSize={chartTheme.maxBarSize}><LabelList dataKey="expense" position="top" formatter={(v: unknown) => formatVND(Number(v))} fill={chartTheme.expense} /></Bar>
+                    <Bar isAnimationActive={!reducedMotion} animationDuration={650} animationEasing="ease-out" dataKey="income" name="Thu nhập" fill={chartTheme.income} radius={[chartTheme.reportBarRadius, chartTheme.reportBarRadius, 0, 0]} maxBarSize={chartTheme.maxBarSize}><LabelList dataKey="income" position="top" formatter={(v: unknown) => formatChartValue(Number(v))} fill={chartTheme.income} /></Bar>
+                    <Bar isAnimationActive={!reducedMotion} animationDuration={650} animationEasing="ease-out" dataKey="expense" name="Chi tiêu" fill={chartTheme.expense} radius={[chartTheme.reportBarRadius, chartTheme.reportBarRadius, 0, 0]} maxBarSize={chartTheme.maxBarSize}><LabelList dataKey="expense" position="top" formatter={(v: unknown) => formatChartValue(Number(v))} fill={chartTheme.expense} /></Bar>
                   </BarChart>
                 )}
               </ResponsiveContainer>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-summary dark:bg-slate-900">
+            <div className="app-card min-w-0 p-5 sm:p-6">
               <AppTitle unstyled level={2} className="mb-5 font-extrabold text-slate-950 dark:text-slate-100">Cơ cấu chi tiêu</AppTitle>
               {categoryExpenses.length > 0 ? (
                   <ul className="space-y-5">

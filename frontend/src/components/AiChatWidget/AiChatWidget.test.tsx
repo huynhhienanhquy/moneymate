@@ -1,3 +1,5 @@
+import { act } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { render, screen } from '@/test/render';
 import userEvent from '@testing-library/user-event';
 import AiChatWidget from './AiChatWidget';
@@ -47,6 +49,30 @@ describe('AiChatWidget', () => {
     expect(screen.getByText('Bạn đang chi tiêu ổn.')).toBeInTheDocument();
     await user.type(screen.getByPlaceholderText('Hỏi về tài chính của bạn...'), '{Enter}');
     expect(send).toHaveBeenCalledOnce();
+  });
+
+  it('returns focus and disables the closing panel until its exit finishes', () => {
+    vi.useFakeTimers();
+    try {
+      hookState.open = true;
+      const { rerender } = render(<AiChatWidget />);
+      const input = screen.getByPlaceholderText('Hỏi về tài chính của bạn...');
+      input.focus();
+      fireEvent.keyDown(input, { key: 'Escape' });
+      expect(setOpen).toHaveBeenCalledWith(false);
+      expect(screen.getByRole('button', { name: 'Mở trò chuyện MoneyMate AI' })).toHaveFocus();
+
+      hookState.open = false;
+      rerender(<AiChatWidget />);
+      const panel = document.getElementById('ai-chat-panel');
+      expect(panel).toHaveAttribute('data-state', 'closed');
+      expect(panel).toHaveAttribute('aria-hidden', 'true');
+      expect(panel).toHaveAttribute('inert');
+      act(() => vi.advanceTimersByTime(180));
+      expect(document.getElementById('ai-chat-panel')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('preserves message identity when identical messages are reordered or removed', () => {

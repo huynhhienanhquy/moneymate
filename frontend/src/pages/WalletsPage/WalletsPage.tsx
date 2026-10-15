@@ -148,7 +148,7 @@ const WalletsPage: React.FC = () => {
       <PageHeader
         eyebrow="Tài khoản"
         title="Ví tài khoản"
-        description={<>Tổng tài sản khả dụng: <span className="font-extrabold text-white">{formatVND(totalBalance)}</span></>}
+        description={<>Tổng tài sản khả dụng: <span className="font-bold text-ui-text">{formatVND(totalBalance)}</span></>}
         actions={(
           <>
             {wallets.length >= 2 && (

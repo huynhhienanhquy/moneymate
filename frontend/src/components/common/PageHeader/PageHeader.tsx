@@ -22,7 +22,7 @@ const PageHeader = ({ title, description, eyebrow, actions, className = '', size
     <div className="relative z-10 min-w-0 flex-1">
       <AppTitle eyebrow={eyebrow} description={description}>{title}</AppTitle>
     </div>
-    {actions && <div className="relative z-10 flex flex-wrap items-center gap-2 md:justify-end">{actions}</div>}
+    {actions && <div className="relative z-10 flex min-w-0 flex-wrap items-center gap-2 xl:max-w-[55%] xl:justify-end">{actions}</div>}
   </header>
 );
 

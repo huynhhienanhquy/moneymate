@@ -1,8 +1,11 @@
+import { useEffect, useRef } from 'react';
 import type { UserDto } from '@moneymate/contracts';
 import { Link } from 'react-router-dom';
-import { LogOut, Sun, User as UserIcon, X } from 'lucide-react';
+import { ChevronRight, LogOut, Moon, Sparkles, Sun, X } from 'lucide-react';
 import { APP_IMAGES } from '@/assets/images';
+import { APP_ROUTES } from '@/constants/routes';
 import { getNavigationItems, isRouteActive } from '@/helpers/navigation';
+import { useAnimatedPresence } from '@/hooks/useAnimatedPresence';
 
 type SidebarProps = {
   user: UserDto | null;
@@ -14,95 +17,103 @@ type SidebarProps = {
   onLogout: () => void;
 };
 
-/**
- * Render the navigation links interface.
- *
- * Use it to keep the sidebar workflow's presentation and interactions in one reusable UI boundary.
- * @param props - The properties that configure this React component.
- * @returns The rendered navigation links interface.
- */
-const NavigationLinks = ({ user, currentPath, onNavigate, mobile = false }: Pick<SidebarProps, 'user' | 'currentPath'> & { onNavigate?: () => void; mobile?: boolean }) => (
-  <nav aria-label="Điều hướng chính" className="flex-1 space-y-1 overflow-y-auto px-2">
-    {getNavigationItems(user?.role === 'ADMIN').map((item) => {
-      const Icon = item.icon;
-      const active = isRouteActive(currentPath, item.path);
-      return (
-        <Link
-          key={item.path}
-          to={item.path}
-          onClick={onNavigate}
-          aria-current={active ? 'page' : undefined}
-          className={mobile
-            ? `flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-normal ${active ? 'bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-500 text-white shadow-lg shadow-brand-600/20' : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'}`
-            : `group flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-normal ${active ? 'bg-indigo-50 text-blue-700 shadow-sm dark:bg-blue-500/15 dark:text-blue-300' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100'}`}
-        >
-          <Icon className={`${mobile ? 'size-4.5' : 'size-[18px]'} ${active ? 'text-blue-600 dark:text-blue-300' : 'text-slate-500 group-hover:text-slate-800 dark:text-slate-400'}`} />
-          <span className="min-w-0 flex-1">{item.name}</span>
-          {item.name === 'AI Tài chính' && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-mini font-extrabold uppercase tracking-wide text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">Pro</span>}
-        </Link>
-      );
-    })}
+const groups: { label: string; paths: string[] }[] = [
+  { label: 'Tổng quan', paths: [APP_ROUTES.dashboard, APP_ROUTES.wallets, APP_ROUTES.transactions, APP_ROUTES.categories] },
+  { label: 'Kế hoạch tài chính', paths: [APP_ROUTES.budgets, APP_ROUTES.savingGoals, APP_ROUTES.recurring, APP_ROUTES.reports, APP_ROUTES.monthlyBalance] },
+  { label: 'Tiện ích', paths: [APP_ROUTES.aiAdvisor, APP_ROUTES.profile, APP_ROUTES.admin] },
+];
+
+const NavigationLinks = ({ user, currentPath, onNavigate }: Pick<SidebarProps, 'user' | 'currentPath'> & { onNavigate?: () => void }) => (
+  <nav aria-label="Điều hướng chính" className="min-h-0 flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+    {groups.map((group) => (
+      <div key={group.label}>
+        <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{group.label}</p>
+        <div className="space-y-1">
+          {getNavigationItems(user?.role === 'ADMIN').filter((item) => group.paths.includes(item.path)).map((item) => {
+            const Icon = item.icon;
+            const active = isRouteActive(currentPath, item.path);
+            return (
+              <Link key={item.path} to={item.path} onClick={onNavigate} aria-current={active ? 'page' : undefined}
+                className={`sidebar-link group flex min-h-11 items-center gap-3 rounded-lg px-3 text-[13px] font-semibold transition-colors ${active ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'}`}>
+                <Icon aria-hidden="true" className={`size-[18px] shrink-0 ${active ? 'text-blue-600 dark:text-blue-300' : ''}`} strokeWidth={active ? 2.2 : 1.8} />
+                <span className="min-w-0 flex-1">{item.name}</span>
+                {item.path === APP_ROUTES.aiAdvisor && <span aria-hidden="true" className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">AI</span>}
+                {active && <span aria-hidden="true" className="size-1.5 rounded-full bg-blue-600 dark:bg-blue-300" />}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    ))}
   </nav>
 );
 
-/**
- * Render the sidebar interface.
- *
- * Use it to keep the sidebar workflow's presentation and interactions in one reusable UI boundary.
- * @param props - The properties that configure this React component.
- * @returns The rendered sidebar interface.
- */
-const Sidebar = ({ user, currentPath, theme, mobileOpen, onMobileOpenChange, onThemeToggle, onLogout }: SidebarProps) => (
-  <>
-    <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 hidden h-dvh w-sidebar flex-col py-4 md:flex">
-      <div className="mb-4 flex items-center gap-2.5 px-4 py-1">
-        <img src={APP_IMAGES.logo} alt="" className="h-9 w-9 rounded-xl object-cover shadow-sm" />
-        <div>
-          <span className="text-base font-extrabold tracking-tight text-blue-700 dark:text-blue-300">MoneyMate</span>
-          <p className="text-mini font-bold uppercase tracking-[0.13em] text-slate-500 dark:text-slate-400">Smart Finance</p>
-        </div>
-      </div>
+const Sidebar = ({ user, currentPath, theme, mobileOpen, onMobileOpenChange, onThemeToggle, onLogout }: SidebarProps) => {
+  const drawerRef = useRef<HTMLElement>(null);
+  const { isPresent, motionState } = useAnimatedPresence(mobileOpen);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    drawerRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onMobileOpenChange(false);
+      if (event.key !== 'Tab') return;
+      const items = drawerRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+      if (!items?.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    const handleResize = () => { if (window.innerWidth >= 768) onMobileOpenChange(false); };
+    document.addEventListener('keydown', handleKey);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener('keydown', handleKey);
+      window.removeEventListener('resize', handleResize);
+      previousFocus?.focus();
+    };
+  }, [mobileOpen, onMobileOpenChange]);
 
+  const brand = (
+    <div className="flex items-center gap-3">
+      <img src={APP_IMAGES.logo} alt="" className="size-10 rounded-xl object-cover" />
+      <div><span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">MoneyMate<span className="text-blue-600">.</span></span>
+        <p className="mt-0.5 text-[10px] font-medium tracking-wide text-slate-400">Tài chính trong tầm tay</p></div>
+    </div>
+  );
+  const controls = (
+    <div className="border-t border-ui-border p-3">
+      <button onClick={onThemeToggle} className="sidebar-control">
+        {theme === 'dark' ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
+        <span>{theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}</span>
+      </button>
+      <button onClick={onLogout} className="sidebar-control text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"><LogOut className="size-[18px]" /><span>Đăng xuất</span></button>
+    </div>
+  );
+
+  return <>
+    <aside className="dashboard-sidebar fixed inset-y-0 left-0 z-50 hidden h-dvh w-sidebar flex-col border-r border-ui-border bg-ui-surface md:flex">
+      <div className="px-6 pb-8 pt-7">{brand}</div>
       <NavigationLinks user={user} currentPath={currentPath} />
-
-      <div className="mt-4 flex flex-col gap-1 px-4 pb-1 pt-3">
-        <button onClick={onThemeToggle} className="flex min-h-11 w-full items-center justify-between rounded-xl bg-indigo-50/80 px-3 text-sm font-semibold text-slate-600 transition-all hover:bg-indigo-100 dark:bg-slate-800/70 dark:text-slate-300">
-          <div className="flex items-center gap-3">
-            {theme === 'dark' ? <Sun className="size-4.5 text-amber-400" /> : <Sun className="size-4.5 text-slate-500" />}
-            <span>{theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}</span>
-          </div>
-          <span className="rounded-full bg-white px-2 py-0.5 text-badge font-extrabold text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-300">{theme === 'dark' ? 'DARK' : 'LIGHT'}</span>
-        </button>
-        <button onClick={onLogout} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10">
-          <LogOut className="size-4.5" /><span>Đăng xuất</span>
-        </button>
-      </div>
+      <Link to={APP_ROUTES.aiAdvisor} className="mx-4 mb-5 rounded-xl border border-blue-100 bg-blue-50/60 p-3.5 transition-colors hover:bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/5 dark:hover:bg-blue-500/10">
+        <div className="mb-2 flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300"><Sparkles className="size-4" /> Trợ lý tài chính AI</div>
+        <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Hiểu chi tiêu, chủ động hơn với từng kế hoạch.</p>
+        <span className="mt-3 flex items-center gap-1 text-[11px] font-bold text-blue-700 dark:text-blue-300">Khám phá ngay <ChevronRight className="size-3" /></span>
+      </Link>
+      {controls}
     </aside>
-
-    {mobileOpen && (
-      <div className="fixed inset-0 z-50 flex md:hidden bg-slate-950/60 backdrop-blur-md">
-        <aside className="w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col h-full animate-slide-in shadow-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <img src={APP_IMAGES.logo} alt="" className="h-9 w-9 rounded-xl object-cover shadow-md shadow-brand-500/30" />
-              <span className="font-extrabold text-lg text-slate-900 dark:text-slate-100">MoneyMate</span>
-            </div>
-            <button aria-label="Đóng menu" onClick={() => onMobileOpenChange(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"><X className="size-5" /></button>
-          </div>
-
-          <NavigationLinks user={user} currentPath={currentPath} mobile onNavigate={() => onMobileOpenChange(false)} />
-
-          <div className="mt-auto pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
-            <div className="flex items-center gap-3 px-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-cyan-400 text-white font-bold">{user?.fullName ? user.fullName[0].toUpperCase() : <UserIcon className="size-4" />}</div>
-              <div className="min-w-0 flex-1"><p className="text-sm font-bold truncate text-slate-900 dark:text-slate-200">{user?.fullName}</p></div>
-            </div>
-            <button onClick={onLogout} className="flex items-center gap-3 w-full px-4 py-2.5 rounded-2xl text-sm font-semibold text-rose-500 hover:bg-rose-500/10 transition-all"><LogOut className="size-4.5" /><span>Đăng xuất</span></button>
-          </div>
-        </aside>
-      </div>
-    )}
-  </>
-);
+    {isPresent && <div data-state={motionState} aria-hidden={!mobileOpen || undefined} {...(!mobileOpen ? { inert: '' } : {})} className="app-drawer-backdrop fixed inset-0 z-overlay flex bg-slate-950/50 backdrop-blur-sm md:hidden" onMouseDown={(event) => { if (mobileOpen && event.target === event.currentTarget) onMobileOpenChange(false); }}>
+      <aside ref={drawerRef} data-state={motionState} role="dialog" aria-modal="true" aria-label="Menu điều hướng" className="app-drawer flex h-dvh w-[min(300px,85vw)] flex-col border-r border-ui-border bg-ui-surface shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-6">{brand}<button aria-label="Đóng menu" onClick={() => onMobileOpenChange(false)} className="app-icon-button"><X className="size-5" /></button></div>
+        <NavigationLinks user={user} currentPath={currentPath} onNavigate={() => onMobileOpenChange(false)} />
+        {controls}
+      </aside>
+    </div>}
+  </>;
+};
 
 export default Sidebar;

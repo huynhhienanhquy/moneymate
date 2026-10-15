@@ -26,11 +26,11 @@ const WalletModal = ({ wallet, onClose, onSave, loading }: WalletModalProps) => 
   const [form, setForm] = useState(wallet ? { name: wallet.name, type: wallet.type, currency: wallet.currency, initialBalance: Number(wallet.initialBalance) } : EMPTY_FORM);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="app-shell-card w-full max-w-md p-6 shadow-2xl">
+    <div className="app-modal-overlay">
+      <div role="dialog" aria-modal="true" aria-label={wallet ? 'Chỉnh sửa ví' : 'Thêm ví mới'} className="app-modal">
         <div className="flex items-center justify-between mb-5">
           <AppTitle unstyled level={2} className="text-lg font-extrabold text-slate-950 dark:text-slate-100">{wallet ? 'Chỉnh sửa ví' : 'Thêm ví mới'}</AppTitle>
-          <AppButton unstyled onClick={onClose} className="text-slate-500 hover:text-slate-300 transition"><X className="size-5" /></AppButton>
+          <AppButton unstyled aria-label="Đóng hộp thoại" onClick={onClose} className="app-icon-button min-h-8 min-w-8"><X className="size-5" /></AppButton>
         </div>
         <div className="space-y-4">
           <div>

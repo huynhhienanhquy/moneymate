@@ -319,7 +319,7 @@ const SavingGoalsPage: React.FC = () => {
                   <div className="mt-5">
                     <div className="mb-2 flex justify-between"><span className="text-slate-500 dark:text-slate-400">Đã góp</span><span className="text-slate-500 dark:text-slate-400">Đích đến</span></div>
                     <div className="flex justify-between"><span className="font-extrabold text-blue-600 dark:text-blue-400">{formatVND(g.currentAmount)}</span><span className="font-bold text-slate-900 dark:text-white">{formatVND(g.targetAmount)}</span></div>
-                    <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${Math.min(100, g.progress)}%` }} /></div>
+                    <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><div className="app-progress-fill h-full rounded-full bg-blue-600" style={{ width: `${Math.min(100, g.progress)}%` }} /></div>
                     <div className="mt-2 flex items-center justify-between text-slate-500 dark:text-slate-400"><span className="flex items-center gap-1.5"><Calendar className="size-3.5" />{new Date(g.targetDate).toLocaleDateString('vi-VN')}</span><span className="font-bold text-blue-600 dark:text-blue-400">{g.progress}%</span></div>
                   </div>
                   <div className="mt-auto flex gap-2 pt-4">

@@ -46,15 +46,15 @@ export const PageLayoutContent = ({ assistant = null }: { assistant?: ReactNode 
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans text-on-background dark:bg-on-background dark:text-inverse-on-surface">
+    <div className="app-layout min-h-screen bg-ui-raised font-sans text-ui-text">
       <a href="#main-content" className="app-skip-link">Đi tới nội dung chính</a>
       <Sidebar user={user} currentPath={location.pathname} theme={theme} mobileOpen={mobileMenuOpen} onMobileOpenChange={setMobileMenuOpen} onThemeToggle={toggleTheme} onLogout={handleLogout} />
 
       <div className="relative flex min-h-screen min-w-0 flex-1 flex-col md:ml-sidebar">
         <Topbar user={user} theme={theme} currentPage={getCurrentPageName(location.pathname, user?.role === 'ADMIN')} onMenuOpen={() => setMobileMenuOpen(true)} onThemeToggle={toggleTheme} />
 
-        <main id="main-content" tabIndex={-1} className="relative z-10 mx-auto w-full max-w-content flex-1 overflow-y-auto px-4 py-5 focus:outline-none md:px-8 md:py-8">
-          <div className="animate-fade-in"><Outlet /></div>
+        <main id="main-content" tabIndex={-1} className="relative mx-auto w-full min-w-0 max-w-content flex-1 px-4 py-6 pb-24 focus:outline-none sm:px-6 md:px-8 md:py-8 md:pb-24 xl:px-10">
+          <div key={location.pathname} className="app-route-enter"><Outlet /></div>
         </main>
         {assistant}
       </div>

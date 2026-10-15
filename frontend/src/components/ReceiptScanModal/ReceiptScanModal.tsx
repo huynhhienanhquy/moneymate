@@ -22,8 +22,8 @@ const ReceiptScanModal: React.FC<{
   const { file, setFile, result, isScanning, scan, reset } = useReceiptScanner();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl">
+    <div className="app-modal-overlay">
+      <div role="dialog" aria-modal="true" aria-label="Quét hóa đơn" className="app-modal">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <ScanLine  className="size-5 text-brand-400" />
